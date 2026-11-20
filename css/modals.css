@@ -422,9 +422,12 @@
 }
 .gallery-panel button { cursor: pointer; }
 #gallery-filter { margin: 0 0 10px 6px; }
-#gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(95px, 1fr)); gap: 8px; }
+#gallery-grid { display: grid; gap: 16px; }
+#gallery-grid h3 { margin-bottom: 6px; color: #a8f5f3; }
+.gallery-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(95px, 1fr)); gap: 8px; }
 #gallery-grid button { display: grid; gap: 6px; align-content: start; text-align: left; font-size: 12px; }
 #gallery-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 3px; }
+#gallery-grid [data-category="cards"] img { object-fit: contain; }
 #gallery-detail h3 { margin: 10px 0; }
 #gallery-full-art { display: grid; place-items: center; }
 #gallery-full-art img {

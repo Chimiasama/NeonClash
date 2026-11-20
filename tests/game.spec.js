@@ -1031,7 +1031,30 @@ test('archives only displayed artwork and reopens full art with its description 
   await expect(gallery.getByRole('button', { name: 'Mapa de Baixa Luz' })).toBeVisible();
   await expect(gallery.getByRole('button', { name: /Kira · contrabandista/ })).toHaveCount(0);
   await gallery.getByLabel('Categoria').selectOption('cards');
-  await expect(gallery.locator('#gallery-empty')).toHaveText('Nenhuma arte vista nesta categoria.');
+  await expect(gallery.getByRole('region', { name: 'Cenas e locais' })).toHaveCount(0);
+  await expect(gallery.getByRole('region', { name: 'Cartas' }).getByRole('button', { name: 'Aegis-Wall' })).toBeVisible();
+});
+
+test('offers starter cards immediately and keeps each kind of artwork in its own gallery section', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#btn-title-gallery').click();
+  const gallery = page.getByRole('dialog', { name: 'Galeria' });
+  const cards = gallery.getByRole('region', { name: 'Cartas', exact: true });
+  const count = await page.evaluate(() => NB.Cards.STARTER_CARD_IDS.length);
+  await expect(cards.getByRole('button')).toHaveCount(count);
+  await cards.getByRole('button', { name: 'Aegis-Wall' }).click();
+  await expect(gallery.locator('#gallery-full-art img[src="./cards/unit_03.webp"]')).toBeVisible();
+  await gallery.getByRole('button', { name: 'Voltar à galeria' }).click();
+  await expect(cards.getByRole('button', { name: 'Aegis-Wall' })).toBeFocused();
+  await gallery.getByRole('button', { name: 'Fechar', exact: true }).click();
+
+  await page.evaluate(() => NB.Input.startMatch({ mode: 'quick' }));
+  await expect.poll(() => page.evaluate(() => NB.Save.get().seenArt)).toContain('./avatars/kira.png');
+  await page.reload();
+  await page.locator('#btn-title-gallery').click();
+  await expect(gallery.getByRole('region', { name: 'Retratos' }).getByRole('button', { name: /Kira/ })).toBeVisible();
+  await expect(gallery.getByRole('region', { name: 'Cenas e locais' }).getByRole('button', { name: 'Baixa Luz sob a chuva' })).toBeVisible();
+  await expect(cards.getByRole('button')).toHaveCount(count);
 });
 
 test('counts card images in view without archiving offscreen or locked collection previews', async ({ page }) => {

@@ -4,6 +4,7 @@
   const $ = id => document.getElementById(id);
   const artNodes = 'img[src], [data-gallery-art]';
   const catalog = new Map();
+  const sections = { people: 'Retratos', cards: 'Cartas', scenes: 'Cenas e locais' };
   const scenery = {
     home: 'O quarto de Kairo no Viaduto. A chave antiga ainda abre a porta do prédio.',
     pension: 'A pensão de Cris no Canal do Jatobá. Os quartos servem de descanso para quem está longe de casa.',
@@ -65,6 +66,15 @@
       add(card.img, card.name, [card.lore, card.desc].filter(Boolean).join(' '), 'cards');
       catalog.get(card.img).card = card;
     }
+  }
+
+  function registerStarterArt() {
+    const save = NB.Save.get();
+    const seen = new Set(save.seenArt);
+    for (const id of NB.Cards.STARTER_CARD_IDS) seen.add(NB.Cards.CARD_DB[id].img);
+    if (seen.size === save.seenArt.length) return;
+    save.seenArt = [...seen];
+    NB.Save.save();
   }
 
   function sourceOf(element) {
@@ -141,20 +151,33 @@
     grid.replaceChildren();
     $('gallery-empty').hidden = items.length > 0;
     $('gallery-empty').textContent = entries.length ? 'Nenhuma arte vista nesta categoria.' : 'As artes que você vir durante o jogo aparecerão aqui.';
-    for (const entry of items) {
-      const tile = document.createElement('button');
-      tile.type = 'button';
-      tile.dataset.art = entry.source;
-      const title = document.createElement('span');
-      title.textContent = entry.title;
-      const thumb = image(entry);
-      thumb.loading = 'lazy';
-      tile.append(thumb, title);
-      tile.addEventListener('click', () => showArt(entry));
-      grid.append(tile);
+    for (const [category, name] of Object.entries(sections)) {
+      const group = items.filter(entry => entry.category === category);
+      if (!group.length) continue;
+      const section = document.createElement('section');
+      section.setAttribute('aria-label', name);
+      section.dataset.category = category;
+      const heading = document.createElement('h3');
+      heading.textContent = name;
+      const tiles = document.createElement('div');
+      tiles.className = 'gallery-tiles';
+      for (const entry of group) {
+        const tile = document.createElement('button');
+        tile.type = 'button';
+        tile.dataset.art = entry.source;
+        const title = document.createElement('span');
+        title.textContent = entry.title;
+        const thumb = image(entry);
+        thumb.loading = 'lazy';
+        tile.append(thumb, title);
+        tile.addEventListener('click', () => showArt(entry));
+        tiles.append(tile);
+      }
+      section.append(heading, tiles);
+      grid.append(section);
     }
     if (focusTarget instanceof HTMLElement) focusTarget.focus();
-    else [...grid.children].find(tile => tile.dataset.art === focusTarget)?.focus();
+    else [...grid.querySelectorAll('button[data-art]')].find(tile => tile.dataset.art === focusTarget)?.focus();
   }
 
   function showArt(entry) {
@@ -174,6 +197,7 @@
   }
 
   function open(event) {
+    registerStarterArt();
     origin = event.currentTarget;
     origin.closest('.full-modal').inert = true;
     $('gallery-modal').classList.add('open');
@@ -199,6 +223,7 @@
 
   function bindEvents() {
     setupCatalog();
+    registerStarterArt();
     bindDiscovery();
     $('btn-title-gallery').addEventListener('click', open);
     $('gallery-close').addEventListener('click', close);
