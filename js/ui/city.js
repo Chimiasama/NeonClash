@@ -117,7 +117,6 @@
     $('city-map-tab').setAttribute('aria-pressed', view === 'district');
     $('city-bag').setAttribute('aria-pressed', view === 'bag');
     $('city-story').setAttribute('aria-pressed', view === 'story');
-    $('city-story').classList.toggle('city-investigate', view !== 'story' && !NB.Story.has('epilogue'));
     $('city-atlas').setAttribute('aria-pressed', view === 'atlas');
     $('city-name').textContent = district.name;
     const portrait = $('city-portrait');

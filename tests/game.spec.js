@@ -199,20 +199,24 @@ test('shows each deck copy in a square, separate tile and keeps the same art fra
   await page.setViewportSize({ width: 360, height: 600 });
   await page.goto('/');
   await page.getByRole('button', { name: /Meu Deck/i }).click();
-  await page.getByRole('button', { name: 'NO DECK', exact: true }).click();
   const tiles = page.locator('#collection-grid .col-card');
-  await expect(tiles).toHaveCount(20);
-  const frames = await tiles.evaluateAll(cards => cards.map(card => {
-    const { x, y, width, height } = card.getBoundingClientRect();
-    const art = card.querySelector('.col-card-art').getBoundingClientRect();
-    return { x, y, width, height, artWidth: art.width, artHeight: art.height };
-  }));
-  for (const [index, frame] of frames.entries()) {
-    expect(frame.artHeight).toBeCloseTo(frame.artWidth, 0);
-    expect(frame.height).toBeCloseTo(frames[0].height, 0);
-    for (const other of frames.slice(index + 1)) {
-      expect(frame.x < other.x + other.width && frame.x + frame.width > other.x &&
-        frame.y < other.y + other.height && frame.y + frame.height > other.y).toBe(false);
+  const catalogCount = await page.evaluate(() => Object.keys(NB.Cards.CARD_DB).length);
+  for (const [filter, count] of [['all', catalogCount], ['unit'], ['exploit'], ['indeck', 20]]) {
+    await page.locator(`.deck-filter-btn[data-filter="${filter}"]`).click();
+    if (count) await expect(tiles).toHaveCount(count);
+    const frames = await tiles.evaluateAll(cards => cards.map(card => {
+      const { x, y, width, height } = card.getBoundingClientRect();
+      const art = card.querySelector('.col-card-art').getBoundingClientRect();
+      return { x, y, width, height, artWidth: art.width, artHeight: art.height };
+    }));
+    expect(frames.length).toBeGreaterThan(0);
+    for (const [index, frame] of frames.entries()) {
+      expect(frame.artHeight).toBeCloseTo(frame.artWidth, 0);
+      expect(frame.height).toBeCloseTo(frames[0].height, 0);
+      for (const other of frames.slice(index + 1)) {
+        expect(frame.x < other.x + other.width && frame.x + frame.width > other.x &&
+          frame.y < other.y + other.height && frame.y + frame.height > other.y).toBe(false);
+      }
     }
   }
   const aegis = page.getByRole('button', { name: /^Aegis-Wall · cópia/ }).first();
@@ -923,7 +927,8 @@ test('shows the illustrated prologue only when starting the adventure', async ({
   await page.reload();
   await page.locator('#btn-start-campaign').click();
   await expect(prologue).toBeHidden();
-  await expect(page.locator('#city-story')).toHaveClass('city-investigate');
+  await expect(page.locator('#city-story')).toHaveCSS('box-shadow', 'none');
+  await expect(page.locator('#city-map [data-district="home"] .city-badge-clue')).toHaveCSS('animation-name', 'city-clue-pulse');
   await page.locator('#city-story').click();
   await expect(page.getByRole('button', { name: 'Ir para Casa de Kairo' })).toBeVisible();
 });

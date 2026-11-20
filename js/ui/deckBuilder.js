@@ -179,14 +179,11 @@
         copyBadge.textContent = `${copy || copies}/${copy ? copies : NB.Cards.MAX_COPIES}`;
         tags.appendChild(copyBadge);
       } else {
-        const cipher = document.createElement('div');
-        cipher.className = 'locked-cipher-overlay';
-        cipher.innerHTML = `
-          <span class="locked-cipher-icon">🔒</span>
-          <span class="locked-cipher-label">BLOQUEADA</span>
-
-        `;
-        artBox.appendChild(cipher);
+        const lock = document.createElement('span');
+        lock.className = 'col-lock-tag';
+        lock.textContent = '🔒';
+        lock.setAttribute('aria-hidden', 'true');
+        tags.appendChild(lock);
       }
 
       const foot = document.createElement('div');

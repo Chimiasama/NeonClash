@@ -179,7 +179,9 @@
 
 .col-card {
   position: relative;
-  display: block;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
   min-width: 0;
   background: linear-gradient(180deg, #161C34 0%, #0A0D18 100%);
   border: 1.5px solid rgba(0, 240, 255, 0.35);
@@ -291,48 +293,12 @@
   overflow: hidden;
 }
 
-/* Efeito de Silhueta Criptografada ("DADOS BLOQUEADOS") */
 .col-card.locked {
   border-color: rgba(255, 0, 85, 0.35);
-  background: #080A12;
-  cursor: pointer;
 }
-.col-card.locked .col-card-art img {
-  filter: brightness(0.14) contrast(2.2) saturate(0) blur(1.4px);
-  opacity: 0.65;
-}
-.locked-cipher-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 6;
-  background:
-    repeating-linear-gradient(
-      0deg,
-      rgba(255, 0, 85, 0.08) 0px,
-      rgba(255, 0, 85, 0.08) 2px,
-      rgba(5, 7, 14, 0.62) 2px,
-      rgba(5, 7, 14, 0.62) 4px
-    );
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  padding: 6px;
-  text-align: center;
-}
-.locked-cipher-icon {
-  font-size: 16px;
-  color: var(--magenta);
-  text-shadow: 0 0 10px rgba(255, 0, 85, 0.7);
-}
-.locked-cipher-label {
-  font-family: var(--font-mono);
-  font-size: 8px;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  color: #FF7DA8;
-  line-height: 1.2;
+.col-lock-tag {
+  color: #ff9ac0;
+  font: 800 8.5px var(--font-mono);
 }
 
 

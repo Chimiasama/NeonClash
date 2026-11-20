@@ -282,11 +282,10 @@
 #story-options button { min-height: 42px; padding: 7px 10px; color: #e8f1ff; background: #141f30; border: 1px solid #3c546a; border-radius: 4px; cursor: pointer; }
 #story-options .story-primary { color: #0a1821; background: #9cf3ef; }
 
-#city-story.city-investigate, #city-content .city-investigate {
+#city-content .city-investigate {
   color: #e2fffb;
   border-color: #6af9ed;
   background: #164344;
-  box-shadow: 0 0 10px #36e1cb88, inset 0 0 10px #36e1cb55;
 }
 
 .workshop-collection summary {
