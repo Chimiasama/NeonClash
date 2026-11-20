@@ -10,7 +10,9 @@ Na Feira do Viaduto, a oficina recalibra as unidades da coleção por 15 crédit
 
 ## Expansão planejada
 
-[Plano da cidade, dos modos e das 500 cartas](docs/plano-expansao.md)
+- [Elenco de 100 NPCs e dez bairros](docs/baixa-luz-cidade.md)
+- [Roteiro de campanha e ordem de construção](docs/baixa-luz-campanha.md)
+- [Plano dos modos e das 500 cartas](docs/plano-expansao.md)
 
 ## Desenvolvimento web
 

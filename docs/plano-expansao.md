@@ -1,5 +1,7 @@
 # Plano de expansão do NeonClash
 
+A construção do [elenco e da cidade](baixa-luz-cidade.md) e da [campanha narrativa](baixa-luz-campanha.md) vem antes da expansão de cartas e combate. Este arquivo concentra o catálogo, suas rotas de aquisição e os modos de jogo.
+
 ## Catálogo de 500 cartas
 
 O catálogo final terá **495 cartas encontráveis por rotas normais** e **5 secretas**, distribuídas exclusivamente por cinco cadeias de missões. As 24 cartas existentes entram nas 495. A rota principal de obtenção é única para fins de contagem. Uma carta normal pode ganhar uma rota alternativa mais tarde.
@@ -56,6 +58,8 @@ Na expansão, separar **distrito**, **local**, **NPC**, **horário** e **ativida
 Cyberdecks de campanha entram depois do primeiro ciclo da cidade. Testar modelos de 0, +1 e +2 RAM inicial e alternativas situacionais. Modificações de carta devem ter custos ou trocas de atributos perceptíveis. Versões de uma carta compartilham o limite de cópias.
 
 ## Lotes de implantação
+
+O lote de 80 cartas começa depois da campanha narrativa jogável. Os lotes seguintes ampliam condições, bairros e modos já experimentados nessa campanha.
 
 | Etapa | Catálogo normal acumulado | Entrega |
 |---|---:|---|
