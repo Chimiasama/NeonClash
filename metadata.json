@@ -1,0 +1,6 @@
+{
+  "name": "NEON BREACH: CLASH",
+  "description": "Jogo de cartas tático 1v1 cyberpunk em modo retrato inspirado em Card Fighters' Clash, com áudio procedural Web Audio API e fallback vetorial Canvas.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

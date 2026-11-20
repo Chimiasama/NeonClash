@@ -1,0 +1,400 @@
+/* 1. Barra Superior do Console */
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 8px 4px;
+  border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+  flex-shrink: 0;
+}
+.brand-group {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+.brand-title {
+  font-family: var(--font-mono);
+  font-weight: 900;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  color: var(--cyan);
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.55);
+  white-space: nowrap;
+}
+.turn-counter {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--amber);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.top-controls {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.hud-btn {
+  appearance: none;
+  background: var(--panel-dark);
+  color: var(--text-main);
+  border: 1px solid rgba(0, 240, 255, 0.32);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 5px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.12s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+.hud-btn:active {
+  transform: scale(0.95);
+}
+.hud-btn.active-sound {
+  border-color: var(--ram);
+  color: var(--ram);
+  background: rgba(57, 255, 20, 0.08);
+  box-shadow: 0 0 10px rgba(57, 255, 20, 0.18);
+}
+.hud-btn.muted-sound {
+  border-color: rgba(132, 147, 181, 0.35);
+  color: var(--text-muted);
+}
+
+/* 2. Painel do Inimigo (VEX) */
+.enemy-panel {
+  display: grid;
+  grid-template-columns: 54px 1fr;
+  gap: 8px;
+  background: linear-gradient(135deg, rgba(255, 0, 85, 0.11), rgba(17, 21, 38, 0.94) 55%);
+  border: 1px solid rgba(255, 0, 85, 0.42);
+  padding: 6px 8px;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 18px rgba(255, 0, 85, 0.09);
+  position: relative;
+  transition: box-shadow 0.28s ease, border-color 0.28s ease;
+}
+.enemy-panel.hud-boot-glow {
+  border-color: var(--magenta);
+  box-shadow: 0 0 22px rgba(255, 0, 85, 0.45), inset 0 0 20px rgba(255, 0, 85, 0.2);
+}
+.enemy-panel.hit-flash {
+  animation: enemyHitFlash 0.35s ease;
+}
+@keyframes enemyHitFlash {
+  0% { background: rgba(255, 0, 85, 0.55); border-color: #fff; }
+  100% { background: linear-gradient(135deg, rgba(255, 0, 85, 0.11), rgba(17, 21, 38, 0.94) 55%); }
+}
+.avatar-frame {
+  position: relative;
+  width: 54px;
+  height: 54px;
+  background: #0B0D18;
+  border: 1.5px solid var(--magenta);
+  box-shadow: 0 0 12px rgba(255, 0, 85, 0.38);
+  overflow: hidden;
+}
+.avatar-frame img, .avatar-frame canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.avatar-frame img { z-index: 2; }
+.avatar-frame .art-fallback { z-index: 1; }
+
+.enemy-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 0;
+  gap: 3px;
+}
+.enemy-stats-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.hacker-name {
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--magenta);
+  text-shadow: 0 0 8px rgba(255, 0, 85, 0.45);
+  white-space: nowrap;
+}
+.stat-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.stat-hp-enemy { color: #FF5588; }
+.stat-ram { color: var(--ram); text-shadow: 0 0 8px rgba(57, 255, 20, 0.4); }
+.stat-deck { color: var(--text-muted); font-size: 10px; }
+
+.hp-track {
+  width: 100%;
+  height: 7px;
+  background: rgba(8, 9, 16, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  position: relative;
+  overflow: hidden;
+}
+.hp-fill {
+  height: 100%;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+.hp-fill.enemy {
+  background: linear-gradient(90deg, #B8003C, var(--magenta), #FF5C93);
+  box-shadow: 0 0 10px var(--magenta);
+}
+.hp-fill.player {
+  background: linear-gradient(90deg, #008DA6, var(--cyan), #8BF8FF);
+  box-shadow: 0 0 10px var(--cyan);
+}
+
+.dialogue-box {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  line-height: 1.25;
+  color: #FFD6E5;
+  background: rgba(8, 9, 16, 0.72);
+  border: 1px solid rgba(255, 0, 85, 0.25);
+  padding: 3px 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Barra Central Tática de Fase */
+.phase-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 4px 9px;
+  background: rgba(17, 21, 38, 0.92);
+  border-top: 1px solid rgba(0, 240, 255, 0.25);
+  border-bottom: 1px solid rgba(255, 0, 85, 0.25);
+  flex-shrink: 0;
+  min-height: 26px;
+}
+.phase-strip.mode-attack {
+  border-color: var(--amber);
+  background: rgba(255, 184, 0, 0.12);
+}
+.phase-strip.mode-defense {
+  border-color: var(--magenta);
+  background: rgba(255, 0, 85, 0.16);
+}
+.phase-strip.mode-target {
+  border-color: var(--ram);
+  background: rgba(57, 255, 20, 0.12);
+}
+.phase-strip.mode-overclock {
+  border-color: var(--ram);
+  background: linear-gradient(90deg, rgba(0, 240, 255, 0.16), rgba(57, 255, 20, 0.18));
+}
+.phase-label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  color: var(--cyan);
+}
+.phase-strip.mode-attack .phase-label { color: var(--amber); }
+.phase-strip.mode-defense .phase-label { color: #FF5588; }
+.phase-strip.mode-target .phase-label { color: var(--ram); }
+.phase-strip.mode-overclock .phase-label { color: var(--ram); text-shadow: 0 0 8px rgba(57, 255, 20, 0.5); }
+.phase-hint {
+  font-size: 10.5px;
+  color: var(--text-main);
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* 4. Barra de Status do Jogador + Ações */
+.player-hud {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.11), rgba(17, 21, 38, 0.96) 55%);
+  border: 1px solid rgba(0, 240, 255, 0.42);
+  padding: 6px 8px;
+  flex-shrink: 0;
+  transition: box-shadow 0.28s ease, border-color 0.28s ease;
+}
+.player-hud.hud-boot-glow {
+  border-color: var(--cyan);
+  box-shadow: 0 0 22px rgba(0, 240, 255, 0.45), inset 0 0 20px rgba(0, 240, 255, 0.18);
+}
+.player-hud-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+.player-hud.hit-flash {
+  animation: playerHitFlash 0.35s ease;
+}
+@keyframes playerHitFlash {
+  0% { background: rgba(255, 0, 85, 0.55); border-color: var(--magenta); }
+  100% { background: linear-gradient(135deg, rgba(0, 240, 255, 0.11), rgba(17, 21, 38, 0.96) 55%); }
+}
+.player-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.player-top-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.player-tag {
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+  color: var(--cyan);
+  white-space: nowrap;
+}
+.player-sub-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.ram-pill {
+  color: var(--ram);
+  text-shadow: 0 0 9px rgba(57, 255, 20, 0.45);
+}
+.summon-ind {
+  font-size: 9.5px;
+  color: var(--text-muted);
+}
+.summon-ind.avail {
+  color: var(--cyan);
+}
+
+.action-btns {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.btn-primary {
+  appearance: none;
+  background: linear-gradient(135deg, #00B8CC, #00F0FF);
+  color: #050911;
+  border: none;
+  font-family: var(--font-mono);
+  font-weight: 900;
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  padding: 9px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 0 16px rgba(0, 240, 255, 0.4);
+  transition: transform 0.12s ease, filter 0.15s ease;
+}
+.btn-primary:active { transform: scale(0.96); }
+.btn-primary:disabled {
+  opacity: 0.35;
+  filter: grayscale(0.7);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+.btn-primary.amber {
+  background: linear-gradient(135deg, #E59400, var(--amber));
+  box-shadow: 0 0 16px rgba(255, 184, 0, 0.45);
+}
+.btn-primary.magenta {
+  background: linear-gradient(135deg, #D90048, #FF2A70);
+  color: #FFFFFF;
+  box-shadow: 0 0 16px rgba(255, 0, 85, 0.45);
+}
+.btn-primary.ram-surge {
+  background: linear-gradient(135deg, #18C900, var(--ram));
+  color: #041106;
+  box-shadow: 0 0 18px rgba(57, 255, 20, 0.55);
+}
+.btn-secondary {
+  appearance: none;
+  background: var(--panel-deep);
+  color: var(--text-main);
+  border: 1px solid rgba(132, 160, 220, 0.4);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 10px;
+  padding: 9px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-secondary:active { transform: scale(0.95); }
+
+/* Botão dedicado OVERCLOCK (3 RAM) na barra de ação durante a Fase de Ataque */
+.overclock-bar {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(57, 255, 20, 0.2);
+}
+.overclock-bar.visible {
+  display: flex;
+}
+.btn-overclock {
+  appearance: none;
+  flex: 1;
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.16), rgba(57, 255, 20, 0.24));
+  color: var(--ram);
+  border: 1.5px solid var(--ram);
+  font-family: var(--font-mono);
+  font-weight: 900;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  padding: 7px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 0 14px rgba(57, 255, 20, 0.28);
+  transition: transform 0.12s ease, opacity 0.15s ease;
+}
+.btn-overclock:active { transform: scale(0.97); }
+.btn-overclock:disabled {
+  opacity: 0.38;
+  border-color: rgba(132, 147, 181, 0.35);
+  color: var(--text-muted);
+  background: rgba(12, 15, 29, 0.7);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+.overclock-sub {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}

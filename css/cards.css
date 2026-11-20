@@ -1,0 +1,445 @@
+/* 3. Arena de Batalha 3x3 */
+.arena {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 5px;
+  padding: 4px 2px;
+}
+#laser-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 20;
+  overflow: visible;
+}
+
+.board-row {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+  align-items: stretch;
+}
+
+/* Slot de Unidade na Arena */
+.slot {
+  position: relative;
+  background: rgba(12, 15, 29, 0.72);
+  border: 1px dashed rgba(132, 160, 220, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+  min-height: 0;
+}
+.slot.enemy-slot {
+  border-color: rgba(255, 0, 85, 0.26);
+}
+.slot.player-slot {
+  border-color: rgba(0, 240, 255, 0.26);
+}
+.slot-empty-tag {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: rgba(132, 147, 181, 0.42);
+  text-align: center;
+  pointer-events: none;
+}
+.slot.highlight-deploy {
+  border: 1.5px solid var(--cyan);
+  background: rgba(0, 240, 255, 0.1);
+  box-shadow: inset 0 0 14px rgba(0, 240, 255, 0.25), 0 0 12px rgba(0, 240, 255, 0.22);
+  cursor: pointer;
+}
+
+/* Carta no Campo (Unidade Ativa) */
+.field-card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(160deg, #1A223D 0%, #0D1120 65%, #161C34 100%);
+  border: 1.5px solid var(--cyan);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.16s ease, border-color 0.16s ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6), inset 0 0 12px rgba(0, 240, 255, 0.14);
+}
+.field-card.enemy-side {
+  border-color: var(--magenta);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6), inset 0 0 12px rgba(255, 0, 85, 0.16);
+}
+.field-card.booting {
+  border-color: rgba(132, 147, 181, 0.55);
+  filter: saturate(0.68);
+}
+.field-card.ready-glow {
+  box-shadow: 0 0 14px rgba(0, 240, 255, 0.42), inset 0 0 10px rgba(0, 240, 255, 0.22);
+}
+.field-card.selected-attacker {
+  border-color: var(--amber);
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 0 18px rgba(255, 184, 0, 0.65), inset 0 0 12px rgba(255, 184, 0, 0.25);
+  z-index: 6;
+}
+.field-card.enemy-attacking {
+  border-color: var(--amber);
+  transform: translateY(5px) scale(1.02);
+  box-shadow: 0 0 18px rgba(255, 0, 85, 0.72), 0 0 8px rgba(255, 184, 0, 0.6);
+  z-index: 6;
+}
+.field-card.selected-blocker {
+  border-color: var(--ram);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 0 18px rgba(57, 255, 20, 0.65);
+  z-index: 6;
+}
+.field-card.is-blocking {
+  border-color: var(--cyan);
+  box-shadow: 0 0 16px rgba(0, 240, 255, 0.65);
+}
+.field-card.targetable {
+  border-color: var(--ram);
+  box-shadow: 0 0 20px rgba(57, 255, 20, 0.78);
+  animation: targetPulse 0.9s infinite alternate ease-in-out;
+  z-index: 8;
+}
+.field-card.overclock-linked {
+  border-color: var(--ram);
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 0 24px rgba(57, 255, 20, 0.8), 0 0 10px rgba(0, 240, 255, 0.7);
+  z-index: 9;
+}
+.field-card.firewall-aura {
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.55), inset 0 0 14px rgba(56, 189, 248, 0.22);
+}
+@keyframes targetPulse {
+  from { transform: scale(1); }
+  to { transform: scale(1.04); }
+}
+
+/* Animações de combate e entrada */
+.field-card.anim-summon {
+  animation: cardSummon 0.34s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes cardSummon {
+  0% { transform: scale(1.18) translateY(14px); opacity: 0.2; filter: brightness(2.2); }
+  100% { transform: scale(1) translateY(0); opacity: 1; filter: brightness(1); }
+}
+.field-card.anim-lunge-up {
+  animation: lungeUp 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: 15;
+}
+@keyframes lungeUp {
+  0% { transform: translateY(0) scale(1); }
+  45% { transform: translateY(-30px) scale(1.09); box-shadow: 0 0 28px var(--amber); }
+  100% { transform: translateY(0) scale(1); }
+}
+.field-card.anim-unite-lunge {
+  animation: uniteLunge 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: 16;
+}
+@keyframes uniteLunge {
+  0% { transform: translateY(0) scale(1); filter: brightness(1); }
+  35% { transform: translateY(-38px) scale(1.13); filter: brightness(1.7); box-shadow: 0 0 34px var(--ram); }
+  100% { transform: translateY(0) scale(1); filter: brightness(1); }
+}
+.field-card.anim-lunge-down {
+  animation: lungeDown 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: 15;
+}
+@keyframes lungeDown {
+  0% { transform: translateY(0) scale(1); }
+  45% { transform: translateY(30px) scale(1.09); box-shadow: 0 0 28px var(--magenta); }
+  100% { transform: translateY(0) scale(1); }
+}
+.field-card.anim-hit {
+  animation: cardHit 0.32s ease;
+}
+@keyframes cardHit {
+  0% { filter: brightness(2.6); transform: translateX(-4px); }
+  35% { transform: translateX(5px); }
+  70% { transform: translateX(-3px); }
+  100% { filter: brightness(1); transform: translateX(0); }
+}
+
+/* Efeito holográfico metálico sobre a carta */
+.holo-sheen {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(125deg, transparent 28%, rgba(255, 255, 255, 0.08) 44%, rgba(0, 240, 255, 0.12) 50%, transparent 62%);
+  pointer-events: none;
+  z-index: 4;
+}
+
+.card-art-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  background: #080B14;
+  overflow: hidden;
+}
+.card-art-wrap img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 2;
+  display: block;
+}
+.card-art-wrap .art-fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+  display: block;
+}
+
+.field-card-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  padding: 2px 4px;
+  background: linear-gradient(180deg, rgba(8, 9, 16, 0.92), rgba(8, 9, 16, 0.45) 75%, transparent);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2px;
+}
+.field-card-name {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 800;
+  color: #FFFFFF;
+  text-shadow: 0 1px 3px #000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Ícones visuais de palavras-chave (ZERO-DAY, FIREWALL, VÍRUS, DRENO) */
+.kw-strip {
+  position: absolute;
+  bottom: 3px;
+  left: 3px;
+  right: 3px;
+  z-index: 6;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 3px;
+  pointer-events: none;
+}
+.kw-chip {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  font-weight: 900;
+  line-height: 1;
+  padding: 2px 3px;
+  background: rgba(6, 8, 16, 0.9);
+  border: 1px solid currentColor;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+.state-ribbon {
+  position: absolute;
+  top: 17px;
+  left: 3px;
+  z-index: 6;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 1px 4px;
+  background: rgba(8, 9, 16, 0.88);
+  border: 1px solid currentColor;
+}
+.state-ribbon.boot { color: var(--amber); }
+.state-ribbon.atk { color: var(--amber); background: rgba(255, 184, 0, 0.24); }
+.state-ribbon.blk { color: var(--cyan); background: rgba(0, 240, 255, 0.22); }
+.state-ribbon.zd { color: var(--ram); }
+.state-ribbon.oc { color: var(--ram); background: rgba(57, 255, 20, 0.24); }
+.state-ribbon.done { color: var(--text-muted); }
+
+.field-card-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: rgba(8, 10, 18, 0.95);
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  z-index: 5;
+  flex-shrink: 0;
+}
+.stat-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 3px 2px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 900;
+}
+.stat-box.atk {
+  color: var(--amber);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+.stat-box.def {
+  color: var(--cyan);
+}
+.field-card.enemy-side .stat-box.def {
+  color: #FF77A8;
+}
+.stat-box .lbl {
+  font-size: 8px;
+  font-weight: 700;
+  opacity: 0.72;
+}
+.stat-box.buffed {
+  color: var(--ram) !important;
+  text-shadow: 0 0 8px rgba(57, 255, 20, 0.55);
+}
+.stat-box.damaged, .stat-box.debuffed {
+  color: var(--magenta) !important;
+}
+
+/* 5. Mão do Jogador */
+.hand-zone {
+  flex-shrink: 0;
+  height: 118px;
+  background: linear-gradient(180deg, rgba(12, 15, 29, 0.55), rgba(17, 21, 38, 0.96));
+  border-top: 1px solid rgba(0, 240, 255, 0.25);
+  padding: 6px 4px 4px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 5px;
+  position: relative;
+  z-index: 32;
+}
+.hand-empty {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  align-self: center;
+}
+
+.hand-card {
+  position: relative;
+  flex: 1 1 0;
+  max-width: 78px;
+  min-width: 48px;
+  height: 104px;
+  background: linear-gradient(160deg, #1B2340 0%, #0E1222 70%, #19213B 100%);
+  border: 1.5px solid rgba(0, 240, 255, 0.6);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.16s ease, box-shadow 0.16s ease, opacity 0.16s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.65);
+}
+.hand-card.type-exploit {
+  border-color: rgba(57, 255, 20, 0.68);
+  background: linear-gradient(160deg, #162B24 0%, #0D1418 70%, #162922 100%);
+}
+.hand-card.unplayable {
+  opacity: 0.58;
+  filter: saturate(0.6);
+}
+.hand-card.selected {
+  transform: translateY(-13px) scale(1.06);
+  border-color: var(--amber);
+  box-shadow: 0 0 22px rgba(255, 184, 0, 0.72), 0 8px 18px rgba(0, 0, 0, 0.85);
+  z-index: 10;
+  opacity: 1;
+  filter: none;
+}
+.hand-card.anim-draw {
+  animation: cardDraw 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes cardDraw {
+  0% { transform: translateX(35px) translateY(20px) scale(0.8); opacity: 0; }
+  100% { transform: translateX(0) translateY(0) scale(1); opacity: 1; }
+}
+
+.hand-card-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  z-index: 6;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  font-weight: 900;
+  padding: 1px 4px;
+  background: rgba(8, 9, 16, 0.9);
+  border: 1px solid currentColor;
+}
+.hand-card-badge.ram-gain { color: var(--ram); }
+.hand-card-badge.ram-cost { color: var(--amber); }
+.hand-card-badge.zd-mark {
+  left: 2px;
+  right: auto;
+  color: var(--cyan);
+}
+
+.hand-card-footer {
+  background: rgba(8, 9, 16, 0.95);
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  padding: 2px 3px 3px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.hand-card-name {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  font-weight: 800;
+  color: #FFFFFF;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+.hand-card-nums {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 900;
+  text-align: center;
+  white-space: nowrap;
+}
+.hand-card-nums .a { color: var(--amber); }
+.hand-card-nums .d { color: var(--cyan); }
+.hand-card-nums .e { color: var(--ram); }
+
+.tap-again-cue {
+  position: absolute;
+  bottom: 30px;
+  left: 2px;
+  right: 2px;
+  z-index: 8;
+  background: rgba(255, 184, 0, 0.92);
+  color: #080910;
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  font-weight: 900;
+  text-align: center;
+  padding: 2px 1px;
+  letter-spacing: 0.04em;
+}

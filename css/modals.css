@@ -1,0 +1,370 @@
+/* Visor Tático Ampliado (1o toque na carta) - não bloqueia a mão */
+#visor-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 124px;
+  z-index: 30;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background: rgba(4, 6, 12, 0.72);
+  backdrop-filter: blur(3px);
+}
+#visor-layer.open {
+  display: flex;
+  animation: fadeInFast 0.15s ease;
+}
+@keyframes fadeInFast {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.visor-card {
+  width: 100%;
+  max-width: 320px;
+  background: linear-gradient(165deg, #171E38 0%, #0C1020 100%);
+  border: 1.5px solid var(--cyan);
+  box-shadow: 0 0 34px rgba(0, 240, 255, 0.3), 0 18px 40px rgba(0, 0, 0, 0.85);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: visorPop 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.visor-card.exploit-theme {
+  border-color: var(--ram);
+  box-shadow: 0 0 34px rgba(57, 255, 20, 0.25), 0 18px 40px rgba(0, 0, 0, 0.85);
+}
+.visor-card.enemy-theme {
+  border-color: var(--magenta);
+  box-shadow: 0 0 34px rgba(255, 0, 85, 0.28), 0 18px 40px rgba(0, 0, 0, 0.85);
+}
+@keyframes visorPop {
+  from { transform: scale(0.92) translateY(10px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.visor-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+.visor-title {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: #FFFFFF;
+}
+.visor-type {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--cyan);
+  letter-spacing: 0.08em;
+}
+.visor-card.exploit-theme .visor-type { color: var(--ram); }
+.visor-card.enemy-theme .visor-type { color: var(--magenta); }
+
+.visor-art-box {
+  position: relative;
+  width: 100%;
+  height: 146px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: #070912;
+  overflow: hidden;
+}
+.visor-art-box img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 2;
+}
+.visor-art-box .art-fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+}
+
+.visor-stats-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  background: rgba(8, 9, 16, 0.86);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 800;
+}
+.visor-kw-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.visor-kw-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  background: rgba(8, 9, 16, 0.9);
+  border: 1px solid currentColor;
+  letter-spacing: 0.04em;
+}
+.visor-desc {
+  font-size: 12.5px;
+  line-height: 1.42;
+  color: #D2E0FA;
+}
+.visor-warning {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--amber);
+  background: rgba(255, 184, 0, 0.12);
+  border: 1px solid rgba(255, 184, 0, 0.38);
+  padding: 5px 8px;
+}
+.visor-actions {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+.visor-actions.single-col {
+  grid-template-columns: 1fr;
+}
+
+/* Popups flutuantes de dano / RAM */
+#float-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 42;
+  overflow: hidden;
+}
+.float-pop {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-weight: 900;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  text-shadow: 0 2px 8px #000, 0 0 12px currentColor;
+  transform: translate(-50%, -50%);
+  animation: floatUp 0.95s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  white-space: nowrap;
+}
+@keyframes floatUp {
+  0% { transform: translate(-50%, -40%) scale(0.75); opacity: 0; }
+  20% { transform: translate(-50%, -70%) scale(1.15); opacity: 1; }
+  100% { transform: translate(-50%, -170%) scale(0.95); opacity: 0; }
+}
+
+/* Banner toast rápido */
+#toast-banner {
+  position: absolute;
+  top: 44%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.9);
+  z-index: 46;
+  pointer-events: none;
+  background: rgba(8, 9, 16, 0.94);
+  border: 1.5px solid var(--amber);
+  color: var(--amber);
+  font-family: var(--font-mono);
+  font-weight: 900;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  padding: 8px 16px;
+  box-shadow: 0 0 24px rgba(255, 184, 0, 0.38);
+  opacity: 0;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  text-align: center;
+  max-width: 88%;
+}
+#toast-banner.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* Telas de Modal (Título, Arquivos PNG, Fim de Jogo) */
+.full-modal {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  background: rgba(6, 8, 15, 0.94);
+  backdrop-filter: blur(5px);
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 18px 14px;
+}
+.full-modal.open {
+  display: flex;
+  animation: fadeInFast 0.2s ease;
+}
+
+.modal-panel {
+  width: 100%;
+  max-width: 390px;
+  max-height: 92dvh;
+  background: linear-gradient(170deg, #151B31 0%, #0B0E1A 100%);
+  border: 1.5px solid var(--cyan);
+  box-shadow: 0 0 40px rgba(0, 240, 255, 0.22);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden;
+}
+.modal-panel.victory {
+  border-color: var(--ram);
+  box-shadow: 0 0 40px rgba(57, 255, 20, 0.25);
+}
+.modal-panel.defeat {
+  border-color: var(--magenta);
+  box-shadow: 0 0 40px rgba(255, 0, 85, 0.28);
+}
+
+/* Tela Título */
+.title-logo {
+  font-family: var(--font-mono);
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  line-height: 1.05;
+  color: var(--cyan);
+  text-shadow: 0 0 18px rgba(0, 240, 255, 0.65);
+}
+.title-sub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: var(--magenta);
+  font-weight: 800;
+}
+.story-box {
+  background: rgba(8, 9, 16, 0.78);
+  border: 1px solid rgba(0, 240, 255, 0.22);
+  padding: 10px;
+  font-size: 12.5px;
+  line-height: 1.48;
+  color: #CFDDF8;
+}
+.rules-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.38;
+}
+.rules-list strong {
+  color: var(--text-main);
+  font-family: var(--font-mono);
+}
+.rules-list .c-ram { color: var(--ram); }
+.rules-list .c-cyan { color: var(--cyan); }
+.rules-list .c-amber { color: var(--amber); }
+
+.title-cta-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 2px;
+}
+.btn-launch {
+  appearance: none;
+  width: 100%;
+  padding: 13px 16px;
+  background: linear-gradient(135deg, #00B8CC, var(--cyan));
+  color: #050911;
+  border: none;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  box-shadow: 0 0 24px rgba(0, 240, 255, 0.45);
+}
+.btn-launch:active { transform: scale(0.98); }
+
+.title-secondary-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+/* Lista de Arquivos PNG */
+.png-list-scroll {
+  overflow-y: auto;
+  max-height: 52dvh;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-right: 4px;
+}
+.png-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  background: rgba(8, 9, 16, 0.8);
+  border: 1px solid rgba(132, 160, 220, 0.18);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+}
+.png-path {
+  color: var(--cyan);
+  font-weight: 700;
+  word-break: break-all;
+}
+.png-card-label {
+  color: var(--text-muted);
+  font-size: 9.5px;
+  display: block;
+}
+.png-status {
+  font-size: 9px;
+  font-weight: 800;
+  white-space: nowrap;
+  padding: 2px 5px;
+  border: 1px solid currentColor;
+}
+.png-status.loaded { color: var(--ram); }
+.png-status.fallback { color: var(--amber); }
+
+/* Estatísticas Fim de Jogo */
+.end-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 7px;
+}
+.end-stat-box {
+  background: rgba(8, 9, 16, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 8px;
+  text-align: center;
+}
+.end-stat-val {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--cyan);
+}
+.end-stat-lbl {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}

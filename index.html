@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>NEON BREACH // CARD FIGHTERS</title>
+  <meta name="description" content="Jogo de cartas tático 1v1 cyberpunk em modo retrato inspirado em Card Fighters' Clash, com campanha de vingança, Mapa da Net e salvamento local." />
+  <meta property="og:title" content="NEON BREACH // CARD FIGHTERS" />
+  <meta property="og:description" content="Jogo de cartas tático 1v1 cyberpunk com campanha de vingança, Overclock e arquitetura modular para Android Studio WebView." />
+  <meta property="og:type" content="website" />
+
+  <!-- Estilos Modulares (caminhos estritamente relativos para Android Studio WebView) -->
+  <link rel="stylesheet" href="./css/base.css" />
+  <link rel="stylesheet" href="./css/hud.css" />
+  <link rel="stylesheet" href="./css/cards.css" />
+  <link rel="stylesheet" href="./css/modals.css" />
+  <link rel="stylesheet" href="./css/campaign.css" />
+  <link rel="stylesheet" href="./css/deckbuilder.css" />
+</head>
+<body>
+  <div id="console-shell">
+    <canvas id="bg-canvas"></canvas>
+    <canvas id="fx-canvas"></canvas>
+    <div class="crt-overlay"></div>
+
+    <div id="game-ui">
+      <!-- 1. Topo do Console -->
+      <header class="top-bar">
+        <div class="brand-group">
+          <button id="btn-top-menu" class="hud-btn chamfer-sm" type="button" style="padding:4px 7px">MAPA</button>
+          <span class="brand-title">NEON BREACH</span>
+          <span id="turn-badge" class="turn-counter tabular">T1</span>
+        </div>
+        <div class="top-controls">
+          <button id="btn-png-modal" class="hud-btn chamfer-sm" type="button">ARQUIVOS PNG</button>
+          <button id="btn-sound" class="hud-btn chamfer-sm muted-sound" type="button">SOM: OFF</button>
+        </div>
+      </header>
+
+      <!-- 2. Inimigo + Fala Reativa -->
+      <section id="enemy-panel" class="enemy-panel chamfer-md">
+        <div class="avatar-frame chamfer-sm" id="enemy-avatar-box"></div>
+        <div class="enemy-info">
+          <div class="enemy-stats-row">
+            <span id="enemy-name-label" class="hacker-name">KIRA // Rato de Sub-rede</span>
+            <div class="stat-inline tabular">
+              <span id="enemy-hp-text" class="stat-hp-enemy">18/18 HP</span>
+              <span id="enemy-ram-text" class="stat-ram">0 RAM</span>
+              <span id="enemy-deck-text" class="stat-deck">D:16 M:4</span>
+            </div>
+          </div>
+          <div class="hp-track">
+            <div id="enemy-hp-bar" class="hp-fill enemy" style="width:100%"></div>
+          </div>
+          <div id="enemy-dialogue" class="dialogue-box">"Rápido demais pro seu firewall velho, Kairo!"</div>
+        </div>
+      </section>
+
+      <!-- 3. Arena 3x3 -->
+      <main class="arena" id="arena-container">
+        <svg id="laser-svg"></svg>
+
+        <!-- Slots Inimigos -->
+        <div class="board-row" id="enemy-board">
+          <div class="slot enemy-slot chamfer-sm" data-side="enemy" data-slot="0"></div>
+          <div class="slot enemy-slot chamfer-sm" data-side="enemy" data-slot="1"></div>
+          <div class="slot enemy-slot chamfer-sm" data-side="enemy" data-slot="2"></div>
+        </div>
+
+        <!-- Faixa Central de Fase -->
+        <div id="phase-strip" class="phase-strip">
+          <span id="phase-label" class="phase-label">FASE PRINCIPAL</span>
+          <span id="phase-hint" class="phase-hint">Toque numa carta para inspecionar</span>
+        </div>
+
+        <!-- Slots Jogador -->
+        <div class="board-row" id="player-board">
+          <div class="slot player-slot chamfer-sm" data-side="player" data-slot="0"></div>
+          <div class="slot player-slot chamfer-sm" data-side="player" data-slot="1"></div>
+          <div class="slot player-slot chamfer-sm" data-side="player" data-slot="2"></div>
+        </div>
+      </main>
+
+      <!-- 4. HUD Jogador + Botões de Comando -->
+      <section id="player-hud" class="player-hud chamfer-md">
+        <div class="player-hud-row">
+          <div class="player-metrics">
+            <div class="player-top-line">
+              <span class="player-tag">KAIRO · VOCÊ</span>
+              <div class="player-sub-stats tabular">
+                <span id="player-hp-text" style="color:var(--cyan)">20/20 HP</span>
+                <span id="player-ram-text" class="ram-pill">0 RAM</span>
+              </div>
+            </div>
+            <div class="hp-track">
+              <div id="player-hp-bar" class="hp-fill player" style="width:100%"></div>
+            </div>
+            <div class="player-top-line tabular" style="font-size:9.5px;color:var(--text-muted)">
+              <span id="player-deck-text">DECK: 16 · DESC: 0</span>
+              <span id="player-summon-text" class="summon-ind avail">UNIDADE: 1/1</span>
+            </div>
+          </div>
+
+          <div class="action-btns">
+            <button id="btn-secondary-action" class="btn-secondary chamfer-sm" type="button" style="display:none">VOLTAR</button>
+            <button id="btn-primary-action" class="btn-primary chamfer-sm" type="button">ENCERRAR</button>
+          </div>
+        </div>
+
+        <!-- Barra de Ataque Combinado OVERCLOCK (visível na Fase de Ataque) -->
+        <div id="overclock-bar" class="overclock-bar">
+          <button id="btn-overclock" class="btn-overclock chamfer-sm" type="button" disabled>⚡ OVERCLOCK (3 RAM)</button>
+          <span class="overclock-sub">UNITE · PERFURAÇÃO</span>
+        </div>
+      </section>
+
+      <!-- 5. Mão do Jogador -->
+      <section id="hand-zone" class="hand-zone" aria-label="Cartas na mão"></section>
+    </div>
+
+    <!-- Visor Tático Ampliado (1o toque na carta) -->
+    <div id="visor-layer">
+      <div id="visor-card" class="visor-card chamfer-md">
+        <div class="visor-top">
+          <div>
+            <div id="visor-type" class="visor-type">UNIDADE</div>
+            <div id="visor-title" class="visor-title">KUROI-01</div>
+          </div>
+          <button id="btn-visor-close" class="hud-btn chamfer-sm" type="button">FECHAR</button>
+        </div>
+        <div id="visor-art" class="visor-art-box chamfer-sm"></div>
+        <div id="visor-stats" class="visor-stats-bar tabular"></div>
+        <div id="visor-keywords" class="visor-kw-list" style="display:none"></div>
+        <div id="visor-desc" class="visor-desc"></div>
+        <div id="visor-warning" class="visor-warning" style="display:none"></div>
+        <div id="visor-actions" class="visor-actions">
+          <button id="btn-visor-exec" class="btn-primary chamfer-sm" type="button">EXECUTAR</button>
+          <button id="btn-visor-cancel" class="btn-secondary chamfer-sm" type="button">VOLTAR</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Camada de popups flutuantes e toast -->
+    <div id="float-layer"></div>
+    <div id="toast-banner" class="chamfer-sm"></div>
+
+    <!-- Modal 1: Tela Inicial (NEON BREACH // CARD FIGHTERS) -->
+    <div id="title-modal" class="full-modal title-screen open">
+      <div class="modal-panel chamfer-md">
+        <div class="title-hero">
+          <div class="title-sub">PROTOCOLO DE VINGANÇA · DUELO 1V1</div>
+          <h1 class="title-logo-main">NEON BREACH<br /><span class="title-logo-slash">//</span> CARD FIGHTERS</h1>
+        </div>
+        <div id="title-progress-strip" class="title-progress-strip tabular">
+          <span>NÓS INVADIDOS: 0/4</span>
+          <span>CARTAS: 12/20</span>
+          <span>PISTAS: 0/4</span>
+        </div>
+        <div class="story-box">
+          Você é <strong style="color:var(--cyan)">KAIRO</strong>, ex-netrunner traído em uma emboscada corporativa. Invada 4 nós da rede neural, desbloqueie cartas raras e descubra quem ordenou sua execução.
+        </div>
+        <div class="title-cta-row">
+          <button id="btn-start-campaign" class="btn-launch chamfer-sm" type="button">INICIAR INVASÃO</button>
+          <button id="btn-quick-duel" class="btn-quick-duel chamfer-sm" type="button">DUELO RÁPIDO</button>
+          <button id="btn-title-deck" class="btn-my-deck chamfer-sm" type="button">MEU DECK · BANCO DE DADOS</button>
+          <div class="title-secondary-row">
+            <button id="btn-title-png" class="hud-btn chamfer-sm" type="button" style="padding:9px">ARQUIVOS PNG</button>
+            <button id="btn-title-settings" class="hud-btn chamfer-sm" type="button" style="padding:9px">CONFIG / SAVE</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal 2: Mapa da Net (Campanha 4 Nós) -->
+    <div id="netmap-modal" class="full-modal">
+      <div class="modal-panel netmap-panel chamfer-md">
+        <div class="netmap-header">
+          <div>
+            <div class="title-sub" style="color:var(--cyan)">REDE NEURAL CLANDESTINA</div>
+            <div style="font-family:var(--font-mono);font-size:16px;font-weight:900;">MAPA DA NET</div>
+          </div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;">
+            <button id="btn-netmap-deck" class="hud-btn chamfer-sm" type="button" style="border-color:var(--cyan);color:var(--cyan)">MEU DECK</button>
+            <button id="btn-toggle-clues" class="hud-btn chamfer-sm" type="button" style="border-color:var(--amber);color:var(--amber)">PISTAS (0/4)</button>
+            <button id="btn-netmap-settings" class="hud-btn chamfer-sm" type="button">CONFIG</button>
+            <button id="btn-netmap-back" class="hud-btn chamfer-sm" type="button">INÍCIO</button>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);line-height:1.35;">
+          Toque em um nó desbloqueado para abrir o <strong style="color:var(--cyan)">Dossiê do Alvo</strong> e invadir o servidor. Cada vitória desbloqueia 2 cartas novas e uma pista.
+        </div>
+        <div id="netmap-nodes" class="netmap-nodes"></div>
+        <div id="clues-drawer" class="clues-drawer"></div>
+      </div>
+    </div>
+
+    <!-- Modal 3: Dossiê do Alvo -->
+    <div id="dossier-modal" class="full-modal">
+      <div class="modal-panel chamfer-md" style="border-color:var(--magenta)">
+        <div class="netmap-header">
+          <div>
+            <div id="dossier-node-code" class="title-sub" style="color:var(--amber)">NÓ 01 · 18 HP</div>
+            <div style="font-family:var(--font-mono);font-size:15px;font-weight:900;">DOSSIÊ DO ALVO</div>
+          </div>
+          <button id="btn-dossier-back" class="hud-btn chamfer-sm" type="button">VOLTAR</button>
+        </div>
+        <div class="dossier-head">
+          <div id="dossier-avatar" class="dossier-avatar chamfer-sm"></div>
+          <div style="display:flex;flex-direction:column;gap:4px;min-width:0;">
+            <div id="dossier-title" style="font-family:var(--font-mono);font-size:13px;font-weight:900;color:#fff;">KIRA // Rato de Sub-rede</div>
+            <div id="dossier-archetype" style="font-family:var(--font-mono);font-size:10.5px;color:var(--cyan);">Agressivo · [ZERO-DAY]</div>
+            <div id="dossier-reward-line" style="font-size:10.5px;color:var(--ram);line-height:1.3;">Recompensa: 2 cartas + Pista</div>
+          </div>
+        </div>
+        <div id="dossier-dialogue" class="dossier-dialogue"></div>
+        <button id="btn-dossier-duel" class="btn-launch chamfer-sm" type="button" style="background:linear-gradient(135deg,#D90048,#FF2A70);color:#fff;box-shadow:0 0 22px rgba(255,0,85,0.45)">CONECTAR E DUELAR</button>
+      </div>
+    </div>
+
+    <!-- Modal 4: Configurações & Resetar Save -->
+    <div id="settings-modal" class="full-modal">
+      <div class="modal-panel chamfer-md">
+        <div class="netmap-header">
+          <div>
+            <div class="title-sub" style="color:var(--cyan)">SISTEMA &amp; ARMAZENAMENTO LOCAL</div>
+            <div style="font-family:var(--font-mono);font-size:15px;font-weight:900;">CONFIGURAÇÕES</div>
+          </div>
+          <button id="btn-settings-close" class="hud-btn chamfer-sm" type="button">FECHAR</button>
+        </div>
+        <div class="settings-row">
+          <span>SINTETIZADOR DE ÁUDIO</span>
+          <button id="btn-settings-sound" class="hud-btn chamfer-sm muted-sound" type="button">SOM: OFF</button>
+        </div>
+        <div class="settings-row tabular">
+          <span>CHEFES DERROTADOS</span>
+          <strong id="settings-bosses" style="color:var(--ram)">0/4</strong>
+        </div>
+        <div class="settings-row tabular">
+          <span>CARTAS DESBLOQUEADAS</span>
+          <strong id="settings-cards" style="color:var(--cyan)">12/20</strong>
+        </div>
+        <div class="settings-row tabular">
+          <span>PISTAS COLETADAS</span>
+          <strong id="settings-clues" style="color:var(--amber)">0/4</strong>
+        </div>
+        <div class="settings-row" style="border-color:rgba(255,0,85,0.3)">
+          <span style="color:var(--text-muted);font-size:10px;">APAGAR PROGRESSO SALVO</span>
+          <button id="btn-reset-save" class="btn-danger-subtle chamfer-sm" type="button" data-confirm="0">RESETAR SAVE</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal 5: Arquivos PNG Esperados -->
+    <div id="png-modal" class="full-modal">
+      <div class="modal-panel chamfer-md">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+          <div>
+            <div class="title-sub" style="color:var(--cyan)">ASSETS LOCAIS (CAMINHO RELATIVO)</div>
+            <div style="font-family:var(--font-mono);font-size:15px;font-weight:900;">ARQUIVOS PNG ESPERADOS</div>
+          </div>
+          <button id="btn-png-close" class="hud-btn chamfer-sm" type="button">FECHAR</button>
+        </div>
+        <div style="font-size:11.5px;color:var(--text-muted);line-height:1.4;">
+          No Android Studio, copie <strong style="color:var(--cyan)">index.html</strong> e as pastas <strong style="color:var(--text-main)">css/</strong>, <strong style="color:var(--text-main)">js/</strong>, <strong style="color:var(--text-main)">cards/</strong>, <strong style="color:var(--text-main)">avatars/</strong> e <strong style="color:var(--text-main)">audio/</strong> para <span class="tabular" style="color:var(--amber)">app/src/main/assets/</span>.
+        </div>
+        <div id="png-list" class="png-list-scroll"></div>
+      </div>
+    </div>
+
+    <!-- Modal 6: Extração de Dados Concluída / Fim de Jogo -->
+    <div id="gameover-modal" class="full-modal">
+      <div id="gameover-panel" class="modal-panel chamfer-md">
+        <div>
+          <div id="go-kicker" class="title-sub">NÓ INVADIDO</div>
+          <div id="go-title" class="title-logo" style="font-size:20px;">EXTRAÇÃO DE DADOS CONCLUÍDA</div>
+        </div>
+
+        <div id="go-clue-box" class="extraction-clue-box chamfer-sm" style="display:none">
+          <div id="go-clue-title" class="extraction-clue-title">PISTA DESCOBERTA</div>
+          <div id="go-clue-text" class="extraction-clue-text"></div>
+        </div>
+
+        <div id="go-rewards-wrap" style="display:none;flex-direction:column;gap:5px;">
+          <div id="go-rewards-label" style="font-family:var(--font-mono);font-size:9.5px;font-weight:800;color:var(--ram)">2 NOVAS CARTAS DESBLOQUEADAS:</div>
+          <div id="go-rewards-grid" class="reward-cards-grid"></div>
+        </div>
+
+        <div id="go-next-node" class="next-node-banner chamfer-sm" style="display:none"></div>
+
+        <div class="end-stats-grid tabular">
+          <div class="end-stat-box">
+            <div id="stat-turns" class="end-stat-val">0</div>
+            <div class="end-stat-lbl">TURNOS</div>
+          </div>
+          <div class="end-stat-box">
+            <div id="stat-dmg" class="end-stat-val" style="color:var(--amber)">0</div>
+            <div class="end-stat-lbl">DANO CAUSADO</div>
+          </div>
+          <div class="end-stat-box">
+            <div id="stat-kills" class="end-stat-val" style="color:var(--magenta)">0</div>
+            <div class="end-stat-lbl">DESTRUÍDAS</div>
+          </div>
+          <div class="end-stat-box">
+            <div id="stat-exploits" class="end-stat-val" style="color:var(--ram)">0</div>
+            <div class="end-stat-lbl">EXPLOITS</div>
+          </div>
+        </div>
+
+        <div class="end-action-row">
+          <button id="btn-go-primary" class="btn-launch chamfer-sm" type="button" data-action="netmap" style="padding:11px 12px;font-size:12px;">VOLTAR AO MAPA DA NET</button>
+          <button id="btn-go-secondary" class="btn-secondary chamfer-sm" type="button" data-action="rematch">REVANCHE</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal 7: Banco de Dados (Coleção + Editor de Baralho 20/20) -->
+    <div id="deck-modal" class="full-modal">
+      <div class="modal-panel deck-modal-panel chamfer-md">
+        <div class="deck-header">
+          <div>
+            <div id="deck-unlocked-sub" class="title-sub" style="color:var(--cyan)">BANCO DE DADOS · 12/20 DESBLOQUEADAS</div>
+            <div style="font-family:var(--font-mono);font-size:15px;font-weight:900;">MEU DECK</div>
+          </div>
+          <button id="btn-deck-close" class="hud-btn chamfer-sm" type="button">VOLTAR</button>
+        </div>
+
+        <div class="deck-status-bar chamfer-sm">
+          <div class="deck-status-top tabular">
+            <span id="deck-count-badge" class="deck-count-badge">20/20 CARTAS</span>
+            <span id="deck-save-state" class="deck-save-state saved">SALVO ✓</span>
+          </div>
+          <div class="deck-dist-row tabular">
+            <span id="deck-dist-units" class="deck-dist-units">UNIDADES: 15</span>
+            <span id="deck-dist-exploits" class="deck-dist-exploits">EXPLOITS: 5</span>
+          </div>
+          <div class="deck-dist-bar">
+            <div id="deck-fill-units" class="deck-dist-fill-units" style="width:75%"></div>
+            <div id="deck-fill-exploits" class="deck-dist-fill-exploits" style="width:25%"></div>
+          </div>
+        </div>
+
+        <div class="deck-tools-row">
+          <div class="deck-filter-tabs">
+            <button class="deck-filter-btn chamfer-sm active" type="button" data-filter="all">TODAS</button>
+            <button class="deck-filter-btn chamfer-sm" type="button" data-filter="unit">UNID.</button>
+            <button class="deck-filter-btn chamfer-sm" type="button" data-filter="exploit">EXPLOIT</button>
+            <button class="deck-filter-btn chamfer-sm" type="button" data-filter="indeck">NO DECK</button>
+          </div>
+          <button id="btn-deck-autocomplete" class="btn-autocomplete chamfer-sm" type="button">⚡ AUTO-COMPLETAR</button>
+        </div>
+
+        <div id="collection-grid" class="collection-grid" aria-label="Grade de cartas da coleção"></div>
+
+        <div class="deck-footer-bar">
+          <div id="deck-footer-hint" class="deck-footer-hint">
+            Toque em qualquer carta desbloqueada para inspecionar a arte e editar o baralho.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal 8: Inspetor de Carta em Tela Cheia (Alta Visibilidade da Arte) -->
+    <div id="card-inspector-modal" class="full-modal">
+      <div id="inspector-panel" class="inspector-panel chamfer-md">
+        <div class="inspector-topbar">
+          <div class="inspector-nav-group">
+            <button id="btn-insp-prev" class="inspector-nav-btn chamfer-sm" type="button" aria-label="Carta anterior">◀</button>
+            <button id="btn-insp-next" class="inspector-nav-btn chamfer-sm" type="button" aria-label="Próxima carta">▶</button>
+          </div>
+          <button id="btn-insp-close" class="hud-btn chamfer-sm" type="button">FECHAR</button>
+        </div>
+
+        <div>
+          <div id="insp-subtitle" class="inspector-subtitle">UNIDADE · SAMURAI CIBERNÉTICO</div>
+          <div class="inspector-title-row">
+            <div id="insp-name" class="inspector-name">KUROI-01</div>
+          </div>
+        </div>
+
+        <div id="insp-art-stage" class="inspector-art-stage chamfer-sm"></div>
+
+        <div id="insp-lore" class="inspector-lore"></div>
+
+        <div id="insp-stats" class="inspector-stats-strip chamfer-sm tabular"></div>
+
+        <div id="insp-keywords" class="visor-kw-list" style="display:none"></div>
+
+        <div id="insp-desc" class="inspector-desc"></div>
+
+        <div class="inspector-deck-controls">
+          <div class="inspector-copy-status tabular">
+            <span id="insp-copy-count">CÓPIAS NO DECK: 0/2</span>
+            <span id="insp-deck-total">BARALHO: 20/20</span>
+          </div>
+          <div class="inspector-btn-row">
+            <button id="btn-insp-remove" class="btn-deck-remove chamfer-sm" type="button">- REMOVER</button>
+            <button id="btn-insp-add" class="btn-deck-add chamfer-sm" type="button">+ ADICIONAR</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts Modulares (classic defer + namespace NB -> 100% compatível com file:///android_asset/) -->
+  <script defer src="./js/data/cards.js"></script>
+  <script defer src="./js/data/campaign.js"></script>
+  <script defer src="./js/data/dialogue.js"></script>
+  <script defer src="./js/core/saveManager.js"></script>
+  <script defer src="./js/sprites/proceduralArt.js"></script>
+  <script defer src="./js/audio/soundEngine.js"></script>
+  <script defer src="./js/physics/fxEngine.js"></script>
+  <script defer src="./js/core/gameState.js"></script>
+  <script defer src="./js/core/combatEngine.js"></script>
+  <script defer src="./js/core/aiController.js"></script>
+  <script defer src="./js/ui/renderer.js"></script>
+  <script defer src="./js/ui/deckBuilder.js"></script>
+  <script defer src="./js/ui/inputController.js"></script>
+  <script defer src="./js/main.js"></script>
+</body>
+</html>
