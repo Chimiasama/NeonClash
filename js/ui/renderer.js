@@ -28,12 +28,12 @@
     const interference = document.getElementById('enemy-interference');
     interference.hidden = !state.cipherInterference;
     interference.textContent = state.cipherInterference ? NB.Dialogue.cipherInterference : '';
-    document.getElementById('enemy-hp-text').textContent = `${state.enemy.hp}/${state.enemy.maxHp} HP`;
+    document.getElementById('enemy-hp-text').textContent = `${state.enemy.hp}/${state.enemy.maxHp} HP${state.enemy.hpShield ? ` · 🛡 ${state.enemy.hpShield}` : ''}`;
     document.getElementById('enemy-ram-text').textContent = `${state.enemy.ram} RAM`;
     document.getElementById('enemy-deck-text').textContent = `D:${state.enemy.deck.length} M:${state.enemy.hand.length}`;
     document.getElementById('enemy-hp-bar').style.width = `${(state.enemy.hp / state.enemy.maxHp) * 100}%`;
 
-    document.getElementById('player-hp-text').textContent = `${state.player.hp}/${state.player.maxHp} HP`;
+    document.getElementById('player-hp-text').textContent = `${state.player.hp}/${state.player.maxHp} HP${state.player.hpShield ? ` · 🛡 ${state.player.hpShield}` : ''}`;
     document.getElementById('player-ram-text').textContent = `${state.player.ram} RAM`;
     document.getElementById('player-deck-text').textContent = `DECK: ${state.player.deck.length} · DESC: ${state.player.discard.length}`;
     document.getElementById('player-hp-bar').style.width = `${(state.player.hp / state.player.maxHp) * 100}%`;
@@ -108,7 +108,7 @@
     btnS.style.display = 'none';
     ocBar.classList.remove('visible');
 
-    const readyUnits = state.player.field.filter(u => u && !u.booting && !u.attacked);
+    const readyUnits = state.player.field.filter(u => NB.Combat.canAttack(u, state.player.field));
     const readyCount = readyUnits.length;
 
     if (state.phase === 'PLAYER_MAIN') {
@@ -244,8 +244,7 @@
       if (unit.booting) cardEl.classList.add('booting');
       if (
         side === 'player' &&
-        !unit.booting &&
-        !unit.attacked &&
+        NB.Combat.canAttack(unit, state.player.field) &&
         (state.phase === 'PLAYER_MAIN' || state.phase === 'PLAYER_ATTACK' || state.phase === 'PLAYER_OVERCLOCK')
       ) {
         cardEl.classList.add('ready-glow');
@@ -310,12 +309,14 @@
         ribText = 'SELECIONADO'; ribCls = 'zd';
       } else if (side === 'player' && state.phase === 'PLAYER_DEFENSE' && Object.values(state.defenseMap).includes(i)) {
         ribText = 'BLOQUEANDO'; ribCls = 'blk';
+      } else if (side === 'player' && state.phase === 'PLAYER_DEFENSE' && !NB.Combat.canBlock(unit, state.player)) {
+        ribText = 'SEM BLOQUEIO'; ribCls = 'done';
       } else if (unit.booting) {
         ribText = 'BOOTING'; ribCls = 'boot';
       } else if (NB.Cards.hasKeyword(def, 'ZERO_DAY') && unit.justEntered) {
         ribText = 'ZERO-DAY'; ribCls = 'zd';
       } else if (unit.attacked) {
-        ribText = 'EXAUSTO'; ribCls = 'done';
+        ribText = NB.Combat.canBlock(unit, state[side]) ? 'ATACOU' : 'EXAUSTO'; ribCls = 'done';
       }
 
       if (ribText) {

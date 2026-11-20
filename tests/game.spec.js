@@ -242,7 +242,9 @@ test('shows each deck copy in a square, separate tile and keeps the same art fra
 test('previews locked cards without making them available to edit', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: /Meu Deck/i }).click();
-  await page.getByRole('button', { name: 'Bastion-Core · bloqueada' }).click();
+  const lockedCard = page.getByRole('button', { name: 'Bastion-Core · bloqueada' });
+  await expect(lockedCard.locator('.col-card-art img').first()).toHaveCSS('filter', 'grayscale(1)');
+  await lockedCard.click();
   const inspector = page.getByRole('dialog', { name: 'BASTION-CORE' });
   await expect(inspector).toBeVisible();
   await expect(inspector).toContainText('Recompensa de um encontro da aventura.');
@@ -450,7 +452,7 @@ test('applies affinity in a clash and a mixed Overclock, and recompiles a unit i
     NB.Input.startMatch({ mode: 'quick' });
     NB.State.wait = async () => true;
     const state = NB.State.get();
-    const make = (id, uid) => ({ ...NB.State.createFieldUnit(id, uid), atk: 4, def: 14 });
+    const make = (id, uid) => ({ ...NB.State.createFieldUnit(id, uid), atk: 4, def: 14, booting: false });
     state.player.field[0] = make('unit_05', 97); // Pulso
     state.enemy.field[0] = make('unit_03', 98); // Malha
     await NB.Combat.resolveCombatSequence('player', [0], { 0: 0 });
@@ -463,6 +465,7 @@ test('applies affinity in a clash and a mixed Overclock, and recompiles a unit i
     NB.State.executeExploit('player', 99, 0);
     const afterCast = state.player.field[0].affinity;
     const ramAfterCast = state.player.ram;
+    NB.Input.startPlayerTurn();
     state.player.field[1] = make('unit_04', 100); // Sombra
     state.enemy.field[0].def = 8;
     state.enemy.hand = [];
@@ -868,6 +871,80 @@ test('hides late archetypes until the encounter or a completed adventure restart
   expect(await page.evaluate(() => [NB.State.get().mode, NB.State.get().boss.id])).toEqual(['challenge', 'archon']);
 });
 
+test('exhausts attacking units on both sides and rejects them as manual or automatic blockers', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(async () => {
+    NB.Input.startMatch({ mode: 'quick' });
+    NB.State.wait = async () => true;
+    const state = NB.State.get();
+    state.player.field[0] = NB.State.createFieldUnit('unit_03', 901, 'player');
+    state.enemy.field[0] = NB.State.createFieldUnit('unit_04', 902, 'enemy');
+    state.player.field[0].booting = false;
+    state.enemy.field[0].booting = false;
+    await NB.Combat.resolveCombatSequence('player', [0], {});
+    state.enemyAttackers = [0];
+    state.defenseMap = {};
+    state.phase = 'PLAYER_DEFENSE';
+    NB.UI.renderAll();
+  });
+  await expect(page.locator('.player-slot .field-card')).toContainText('SEM BLOQUEIO');
+  await page.locator('.player-slot:has(.field-card)').click();
+  expect(await page.evaluate(() => NB.State.get().activeDefenderSlot)).toBeNull();
+  const result = await page.evaluate(async () => {
+    const state = NB.State.get();
+    const previousHp = state.player.hp;
+    state.defenseMap[0] = 0;
+    await NB.Combat.confirmPlayerDefense();
+    return {
+      playerDamage: previousHp - state.player.hp,
+      enemyBlocked: NB.Combat.canBlock(state.enemy.field[0], state.enemy),
+      aiBlocks: NB.AI.computeAiBlocks([0]),
+      playerReady: NB.Combat.canBlock(state.player.field[0], state.player)
+    };
+  });
+  expect(result).toMatchObject({ enemyBlocked: false, aiBlocks: {}, playerReady: true });
+  expect(result.playerDamage).toBeGreaterThan(0);
+});
+
+test('supports vigilance, specialized units and temporary protection exploits', async ({ page }) => {
+  await page.goto('/');
+  const result = await page.evaluate(() => {
+    NB.Input.startMatch({ mode: 'quick' });
+    const state = NB.State.get();
+    const player = state.player;
+    const units = ['unit_32', 'unit_33', 'unit_34'].map((id, i) => NB.State.createFieldUnit(id, 950 + i, 'player'));
+    player.field = units;
+    for (const unit of units) unit.booting = false;
+    const [vigilant, striker, guard] = units;
+    const roles = units.map(unit => [NB.Combat.canAttack(unit, units), NB.Combat.canBlock(unit, player)]);
+    vigilant.attacked = true;
+    const vigilance = NB.Combat.canBlock(vigilant, player);
+    const tired = NB.State.createFieldUnit('unit_03', 960, 'player');
+    tired.attacked = true;
+    player.field = [tired, striker, guard];
+    striker.attacked = true;
+    const cast = id => {
+      const card = NB.Cards.CARD_DB[id];
+      NB.CardEffects.resolve(card, card.effects, 'player');
+    };
+    cast('exploit_17');
+    const formation = [NB.Combat.canBlock(tired, player), NB.Combat.canBlock(striker, player)];
+    cast('exploit_18');
+    cast('exploit_18');
+    const shield = player.hpShield;
+    const hp = player.hp;
+    NB.State.applyDirectDamage('player', 5, false);
+    const damage = hp - player.hp;
+    cast('exploit_18');
+    NB.Input.startPlayerTurn();
+    return { roles, vigilance, formation, shield, damage, expired: !player.hpShield && !player.counterFormation };
+  });
+  expect(result).toEqual({
+    roles: [[true, true], [true, false], [false, true]], vigilance: true,
+    formation: [true, false], shield: 4, damage: 1, expired: true
+  });
+});
+
 test('limits repair, protects RAM on invalid targets and previews affinity damage', async ({ page }) => {
   await page.goto('/');
   const repair = await page.evaluate(() => {
@@ -1068,12 +1145,17 @@ test('counts card images in view without archiving offscreen or locked collectio
   await page.locator('#btn-title-deck').click();
   const seen = source => page.evaluate(file => NB.Save.get().seenArt.includes(file), source);
   await expect.poll(() => seen('./cards/unit_01.webp')).toBe(true);
-  expect(await seen('./cards/exploit_11.webp')).toBe(false);
-  await page.getByRole('searchbox', { name: 'Buscar cartas' }).fill('Ponte Dupla');
-  await expect(page.getByRole('button', { name: 'Ponte Dupla · bloqueada' })).toBeVisible();
-  expect(await seen('./cards/exploit_11.webp')).toBe(false);
-  await page.getByRole('button', { name: 'Ponte Dupla · bloqueada' }).click();
-  await expect.poll(() => seen('./cards/exploit_11.webp')).toBe(true);
+  expect(await seen('./cards/exploit_18.webp')).toBe(false);
+  await page.getByRole('searchbox', { name: 'Buscar cartas' }).fill('Escudo de Emergência');
+  await expect(page.getByRole('button', { name: 'Escudo de Emergência · bloqueada' })).toBeVisible();
+  expect(await seen('./cards/exploit_18.webp')).toBe(false);
+  await page.getByRole('button', { name: 'Escudo de Emergência · bloqueada' }).click();
+  await expect.poll(() => seen('./cards/exploit_18.webp')).toBe(true);
+  await page.locator('#btn-insp-close').click();
+  await page.locator('#btn-deck-close').click();
+  await page.locator('#btn-title-gallery').click();
+  const thumbnail = page.getByRole('button', { name: 'Escudo de Emergência', exact: true }).locator('img');
+  await expect.poll(() => thumbnail.evaluate(img => img.naturalWidth)).toBeGreaterThan(0);
 });
 
 test('keeps city navigation in place when reading investigation or district details', async ({ page }) => {
@@ -1169,6 +1251,7 @@ test('resonates on deployment and uses attack resonance without changing printed
     NB.State.deployUnit('player', 902, 1);
     const charged = player.field[1].def;
     player.field = [unit('unit_05', 903), unit('unit_30', 904), null];
+    player.field[1].booting = false;
     enemy.field = [null, null, null];
     const before = enemy.hp;
     await NB.Combat.resolveCombatSequence('player', [1], {});

@@ -135,7 +135,9 @@
 
   function image(entry) {
     const art = document.createElement('img');
-    art.src = entry.source;
+    art.src = entry.card?.proceduralOnly
+      ? NB.Sprites.generateProceduralArt(entry.card.id)
+      : entry.source;
     art.alt = '';
     return art;
   }

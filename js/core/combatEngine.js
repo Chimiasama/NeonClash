@@ -1,6 +1,16 @@
 (function (NB) {
   'use strict';
 
+  function canAttack(unit, field) {
+    return Boolean(unit && !unit.booting && !unit.attacked &&
+      !NB.Cards.hasKeyword(unit, 'GUARD_ONLY') && NB.CardEffects.attackPower(unit, field) > 0);
+  }
+
+  function canBlock(unit, actor) {
+    return Boolean(unit && unit.def > 0 && !NB.Cards.hasKeyword(unit, 'ATTACK_ONLY') &&
+      (!unit.attacked || actor.counterFormation || NB.Cards.hasKeyword(unit, 'VIGILANCE')));
+  }
+
   function affinityBonus(attacker, defender) {
     return Number(attacker.atk > 0 && Boolean(defender.affinity)
       && NB.Cards.AFFINITIES[attacker.affinity]?.beats === defender.affinity);
@@ -24,12 +34,19 @@
     state.phase = 'COMBAT_ANIM';
     const defenderSide = attackerSide === 'player' ? 'enemy' : 'player';
     NB.UI.renderAll();
+    const assigned = new Set();
+    blockMap = Object.fromEntries(Object.entries(blockMap).filter(([attackSlot, defenseSlot]) => {
+      if (!attackerSlots.includes(Number(attackSlot)) || assigned.has(defenseSlot) ||
+          !canBlock(state[defenderSide].field[defenseSlot], state[defenderSide])) return false;
+      assigned.add(defenseSlot);
+      return true;
+    }));
     NB.Physics.drawDefenseLasers(attackerSide, blockMap);
 
     for (const atkSlot of attackerSlots) {
       if (NB.State.checkWinCondition()) return;
       const attacker = state[attackerSide].field[atkSlot];
-      if (!attacker) continue;
+      if (!canAttack(attacker, state[attackerSide].field)) continue;
 
       const defSlot = blockMap[atkSlot];
       const defender = defSlot !== undefined ? state[defenderSide].field[defSlot] : null;
@@ -95,11 +112,11 @@
       } else {
         // Ataque direto ao HP do hacker!
         const attack = NB.CardEffects.attackPower(attacker, state[attackerSide].field);
-        NB.State.applyDirectDamage(defenderSide, attack, attackerSide === 'player');
+        const hpDamage = NB.State.applyDirectDamage(defenderSide, attack, attackerSide === 'player');
         attacker.attacked = true;
 
         // [DRENO]: Ao causar dano direto ao HP do hacker inimigo, rouba 1 RAM dele
-        if (attack > 0 && NB.Cards.hasKeyword(attacker, 'DRENO')) {
+        if (hpDamage > 0 && NB.Cards.hasKeyword(attacker, 'DRENO')) {
           NB.State.applyRamDrain(attackerSide, 1);
           NB.UI.renderAll();
         }
@@ -125,7 +142,7 @@
     const [slotA, slotB] = state.overclockUnits;
     const unitA = state.player.field[slotA];
     const unitB = state.player.field[slotB];
-    if (!unitA || !unitB) return;
+    if (slotA === slotB || !canAttack(unitA, state.player.field) || !canAttack(unitB, state.player.field)) return;
 
     // Deduz 3 RAM
     state.player.ram -= NB.Cards.OVERCLOCK_COST;
@@ -219,7 +236,12 @@
       } else {
         unitA.attacked = true;
       }
-      unitB.attacked = true;
+      if (NB.Cards.hasKeyword(unitB, 'ATTACK_ONLY')) {
+        NB.State.destroyUnit('player', slotB, false);
+        if (slotElB) NB.Physics.spawnFloatText(slotElB, 'DESTRUÍDO!', '#FF0055');
+      } else {
+        unitB.attacked = true;
+      }
       NB.UI.renderAll();
 
       // PERFURAÇÃO: dano excedente atravessa direto para o HP de VEX!
@@ -228,8 +250,8 @@
         NB.Audio.playLaser();
         NB.Physics.fireLaserBeam(blockerSlotEl, enemyPanel, '#FFB800', 9);
         NB.Physics.showToast(`PERFURAÇÃO! -${overflowDmg} HP DIRETO`, 'var(--amber)');
-        NB.State.applyDirectDamage('enemy', overflowDmg, true, 'PERFURAÇÃO ');
-        if (hasDreno) {
+        const hpDamage = NB.State.applyDirectDamage('enemy', overflowDmg, true, 'PERFURAÇÃO ');
+        if (hasDreno && hpDamage > 0) {
           NB.State.applyRamDrain('player', 1);
           NB.UI.renderAll();
         }
@@ -240,8 +262,8 @@
       NB.Physics.fireLaserBeam(slotElB, enemyPanel, '#00F0FF', 9);
       if (!(await NB.State.wait(240))) return;
 
-      NB.State.applyDirectDamage('enemy', combinedAtk, true, 'OVERCLOCK ');
-      if (hasDreno) {
+      const hpDamage = NB.State.applyDirectDamage('enemy', combinedAtk, true, 'OVERCLOCK ');
+      if (hasDreno && hpDamage > 0) {
         NB.State.applyRamDrain('player', 1);
         NB.UI.renderAll();
       }
@@ -254,7 +276,7 @@
     if (!(await NB.State.wait(420))) return;
 
     // Se ainda sobrar uma 3ª unidade pronta no campo, permite continuar na Fase de Ataque
-    const stillReady = state.player.field.some(u => u && !u.booting && !u.attacked);
+    const stillReady = state.player.field.some(u => canAttack(u, state.player.field));
     if (stillReady) {
       state.phase = 'PLAYER_ATTACK';
       state.selectedAttackers = [];
@@ -267,11 +289,11 @@
   async function confirmPlayerAttack() {
     const state = NB.State.get();
     if (state.phase !== 'PLAYER_ATTACK') return;
-    if (state.selectedAttackers.length === 0) {
+    const attackers = [...new Set(state.selectedAttackers)].filter(slot => canAttack(state.player.field[slot], state.player.field));
+    if (attackers.length === 0) {
       NB.AI.startEnemyTurn();
       return;
     }
-    const attackers = [...state.selectedAttackers];
     state.selectedAttackers = [];
     const aiBlocks = NB.AI.computeAiBlocks(attackers);
     const bossName = state.boss ? state.boss.name : 'INIMIGO';
@@ -311,7 +333,7 @@
     const defSlot = blockMap[slotA];
     const blocker = defSlot !== undefined ? state.player.field[defSlot] : null;
 
-    if (blocker) {
+    if (canBlock(blocker, state.player)) {
       const defSlotEl = NB.State.getSlotEl('player', defSlot);
       NB.Physics.fireLaserBeam(slotElA, defSlotEl, '#FF0055', 8);
       NB.Physics.fireLaserBeam(slotElB, defSlotEl, '#FFB800', 8);
@@ -350,7 +372,12 @@
       } else {
         unitA.attacked = true;
       }
-      unitB.attacked = true;
+      if (NB.Cards.hasKeyword(unitB, 'ATTACK_ONLY')) {
+        NB.State.destroyUnit('enemy', slotB, true);
+        if (slotElB) NB.Physics.spawnFloatText(slotElB, 'DESTRUÍDO!', '#FF0055');
+      } else {
+        unitB.attacked = true;
+      }
       NB.UI.renderAll();
 
       if (overflowDmg > 0 && !NB.State.checkWinCondition()) {
@@ -358,8 +385,8 @@
         NB.Audio.playLaser();
         NB.Physics.fireLaserBeam(defSlotEl, playerHud, '#FFB800', 9);
         NB.Physics.showToast(`PERFURAÇÃO INIMIGA! -${overflowDmg} HP`, 'var(--magenta)');
-        NB.State.applyDirectDamage('player', overflowDmg, false, 'PERFURAÇÃO ');
-        if (hasDreno) {
+        const hpDamage = NB.State.applyDirectDamage('player', overflowDmg, false, 'PERFURAÇÃO ');
+        if (hasDreno && hpDamage > 0) {
           NB.State.applyRamDrain('enemy', 1);
           NB.UI.renderAll();
         }
@@ -368,8 +395,8 @@
       NB.Physics.fireLaserBeam(slotElA, playerHud, '#FF0055', 9);
       NB.Physics.fireLaserBeam(slotElB, playerHud, '#FFB800', 9);
       if (!(await NB.State.wait(240))) return;
-      NB.State.applyDirectDamage('player', combinedAtk, false, 'OVERCLOCK ');
-      if (hasDreno) {
+      const hpDamage = NB.State.applyDirectDamage('player', combinedAtk, false, 'OVERCLOCK ');
+      if (hasDreno && hpDamage > 0) {
         NB.State.applyRamDrain('enemy', 1);
         NB.UI.renderAll();
       }
@@ -385,10 +412,18 @@
     const state = NB.State.get();
     if (state.phase !== 'PLAYER_DEFENSE') return;
 
-    const usedDefenders = new Set(Object.values(state.defenseMap));
+    const usedDefenders = new Set();
+    for (const [attackSlot, defenseSlot] of Object.entries(state.defenseMap)) {
+      if (!state.enemyAttackers.includes(Number(attackSlot)) || usedDefenders.has(defenseSlot) ||
+          !canBlock(state.player.field[defenseSlot], state.player)) {
+        delete state.defenseMap[attackSlot];
+      } else {
+        usedDefenders.add(defenseSlot);
+      }
+    }
     const freePlayerSlots = [];
     state.player.field.forEach((u, idx) => {
-      if (u && !usedDefenders.has(idx)) freePlayerSlots.push(idx);
+      if (canBlock(u, state.player) && !usedDefenders.has(idx)) freePlayerSlots.push(idx);
     });
 
     const unblockedEnemyFirewall = state.enemyAttackers.find(eSlot => {
@@ -434,6 +469,8 @@
   }
 
   NB.Combat = {
+    canAttack,
+    canBlock,
     affinityBonus,
     clashDamage,
     overclockSynergy,

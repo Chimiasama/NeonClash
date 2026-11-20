@@ -81,6 +81,8 @@
     state.enemyOverclock = null;
     state.selectedHandUid = null;
     state.pendingExploit = null;
+    state.player.counterFormation = false;
+    state.player.hpShield = 0;
     state.player.field.forEach(u => {
       if (u) {
         u.booting = false;
@@ -181,7 +183,7 @@
 
     if (state.phase === 'PLAYER_OVERCLOCK') {
       if (side === 'player' && unit) {
-        if (unit.booting || unit.attacked) {
+        if (!NB.Combat.canAttack(unit, state.player.field)) {
           NB.Physics.showToast('APENAS UNIDADES PRONTAS PODEM USAR OVERCLOCK', 'var(--amber)');
           return;
         }
@@ -205,7 +207,10 @@
           NB.Physics.showToast('UNIDADE EM BOOTING (AGUARDE PRÓX. TURNO)', 'var(--amber)');
           return;
         }
-        if (unit.attacked) return;
+        if (!NB.Combat.canAttack(unit, state.player.field)) {
+          NB.Physics.showToast('ESTA UNIDADE NÃO PODE ATACAR', 'var(--amber)');
+          return;
+        }
         const pos = state.selectedAttackers.indexOf(slotIdx);
         if (pos === -1) state.selectedAttackers.push(slotIdx);
         else state.selectedAttackers.splice(pos, 1);
@@ -220,6 +225,10 @@
 
     if (state.phase === 'PLAYER_DEFENSE') {
       if (side === 'player' && unit) {
+        if (!NB.Combat.canBlock(unit, state.player)) {
+          NB.Physics.showToast('ESTA UNIDADE NÃO PODE BLOQUEAR', 'var(--amber)');
+          return;
+        }
         const existingEnemy = Object.keys(state.defenseMap).find(k => state.defenseMap[k] === slotIdx);
         if (state.activeDefenderSlot === slotIdx) {
           if (existingEnemy !== undefined) delete state.defenseMap[existingEnemy];
@@ -395,7 +404,7 @@
       if (!state || state.phase !== 'PLAYER_ATTACK') return;
       const readySlots = [];
       state.player.field.forEach((u, idx) => {
-        if (u && !u.booting && !u.attacked) readySlots.push(idx);
+        if (NB.Combat.canAttack(u, state.player.field)) readySlots.push(idx);
       });
       if (state.player.ram < NB.Cards.OVERCLOCK_COST || readySlots.length < 2) return;
 
@@ -415,7 +424,7 @@
       if (state.phase === 'PLAYER_MAIN') {
         NB.UI.closeVisor();
         state.selectedHandUid = null;
-        const hasReady = state.player.field.some(u => u && !u.booting && !u.attacked);
+        const hasReady = state.player.field.some(u => NB.Combat.canAttack(u, state.player.field));
         if (hasReady) {
           state.phase = 'PLAYER_ATTACK';
           state.selectedAttackers = [];

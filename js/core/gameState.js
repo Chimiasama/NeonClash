@@ -53,6 +53,8 @@
         hand: [],
         discard: [],
         field: [null, null, null],
+        counterFormation: false,
+        hpShield: 0,
         summonedThisTurn: false
       },
       enemy: {
@@ -63,6 +65,8 @@
         hand: [],
         discard: [],
         field: [null, null, null],
+        counterFormation: false,
+        hpShield: 0,
         summonedThisTurn: false
       },
       selectedHandUid: null,
@@ -282,8 +286,17 @@
   }
 
   function applyDirectDamage(targetSide, amount, countedForPlayer, labelPrefix = '') {
-    if (amount <= 0) return;
+    if (amount <= 0) return 0;
     const target = state[targetSide];
+    const absorbed = Math.min(target.hpShield, amount);
+    target.hpShield -= absorbed;
+    amount -= absorbed;
+    const panel = document.getElementById(targetSide === 'enemy' ? 'enemy-panel' : 'player-hud');
+    if (absorbed && panel) NB.Physics.spawnFloatText(panel, `ESCUDO · ${absorbed}`, '#62e8fd');
+    if (!amount) {
+      NB.UI.renderAll();
+      return 0;
+    }
     target.hp = Math.max(0, target.hp - amount);
     if (countedForPlayer) state.stats.damageDealt += amount;
 
@@ -293,7 +306,6 @@
       NB.Physics.vibrateDamage();
     }
 
-    const panel = document.getElementById(targetSide === 'enemy' ? 'enemy-panel' : 'player-hud');
     if (panel) {
       panel.classList.remove('hit-flash');
       void panel.offsetWidth;
@@ -310,6 +322,7 @@
       NB.Dialogue.setDialogue(NB.Dialogue.pickLine('playerCritical'));
     }
     NB.UI.renderAll();
+    return amount;
   }
 
   function destroyUnit(side, slotIdx, countedAsPlayerKill) {

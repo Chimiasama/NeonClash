@@ -25,6 +25,12 @@
 
   /* Metadados das palavras-chave com ícones e cores. */
   const KEYWORDS = {
+    VIGILANCE: { tag: 'VIGILÂNCIA', short: 'VG', icon: '◈', color: '#a8f5f3',
+      desc: 'Pode bloquear mesmo depois de atacar.' },
+    ATTACK_ONLY: { tag: 'SÓ ATAQUE', short: 'AT', icon: '▲', color: '#ffad62',
+      desc: 'Sem DEF. Não pode bloquear e é destruída ao colidir com um bloqueador.' },
+    GUARD_ONLY: { tag: 'SÓ DEFESA', short: 'DF', icon: '■', color: '#62e8fd',
+      desc: 'Sem ATK. Pode bloquear, mas não ataca nem contra-ataca.' },
     ZERO_DAY: {
       id: 'ZERO_DAY',
       tag: 'ZERO-DAY',
@@ -39,7 +45,7 @@
       short: 'FW',
       icon: '🛡',
       color: '#38BDF8',
-      desc: 'Obriga o oponente a atacá-la ou bloqueá-la primeiro antes de atingir o HP diretamente.'
+      desc: 'Tem prioridade no bloqueio quando estiver apta a defender ou quando estiver atacando.'
     },
     VIRUS: {
       id: 'VIRUS',
@@ -480,7 +486,20 @@
     'Ao entrar, reduz em 1 o ATK da unidade inimiga com maior ATK. Empates favorecem a primeira posição.',
     [{ type: 'atk', target: 'strongestEnemy', value: -1 }]);
 
-  for (const id of ['unit_28', 'unit_29', 'unit_30', 'exploit_12', 'exploit_13', 'exploit_14', 'exploit_15', 'exploit_16', 'unit_31']) {
+  addUnit('unit_32', 'Vigia de Turno', 'Vigilância', 2, 3, 'malha', ['VIGILANCE'],
+    'Pode bloquear mesmo depois de atacar.');
+  addUnit('unit_33', 'Estilhaço de Pulso', 'Só ataque', 4, 0, 'pulso', ['ATTACK_ONLY'],
+    'Sem DEF. Só pode atacar e é destruída se for bloqueada.');
+  addUnit('unit_34', 'Anteparo de Rua', 'Só defesa', 0, 6, 'malha', ['GUARD_ONLY', 'FIREWALL'],
+    'Sem ATK. Bloqueia como Firewall, mas não ataca nem causa dano no contra-ataque.');
+  addExploit('exploit_17', 'Formação de Retaguarda', 'Proteção', 3, 'none',
+    'Até o início do seu próximo turno, unidades aliadas que atacaram podem bloquear se forem capazes de defender.',
+    [{ type: 'counterFormation' }]);
+  addExploit('exploit_18', 'Escudo de Emergência', 'Proteção', 2, 'none',
+    'Absorve até 4 de dano ao seu HP até o início do seu próximo turno. O escudo não acumula.',
+    [{ type: 'hpShield', value: 4 }]);
+
+  for (const id of ['unit_28', 'unit_29', 'unit_30', 'exploit_12', 'exploit_13', 'exploit_14', 'exploit_15', 'exploit_16', 'unit_31', 'unit_32', 'unit_33', 'unit_34', 'exploit_17', 'exploit_18']) {
     CARD_DB[id].proceduralOnly = true;
   }
 

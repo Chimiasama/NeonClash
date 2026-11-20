@@ -8,7 +8,7 @@
     const state = NB.State.get();
     const blocks = {};
     const availableDefenders = state.enemy.field
-      .map((u, idx) => u ? { idx, u, isFirewall: NB.Cards.hasKeyword(u, 'FIREWALL') } : null)
+      .map((u, idx) => NB.Combat.canBlock(u, state.enemy) ? { idx, u, isFirewall: NB.Cards.hasKeyword(u, 'FIREWALL') } : null)
       .filter(Boolean);
 
     const sortedAtks = [...playerAttackers].sort((a, b) => {
@@ -53,7 +53,7 @@
   function pickOverclockBlocker(combinedAtk) {
     const state = NB.State.get();
     const defenders = state.enemy.field
-      .map((u, idx) => u ? { idx, u, isFirewall: NB.Cards.hasKeyword(u, 'FIREWALL') } : null)
+      .map((u, idx) => NB.Combat.canBlock(u, state.enemy) ? { idx, u, isFirewall: NB.Cards.hasKeyword(u, 'FIREWALL') } : null)
       .filter(Boolean);
     if (defenders.length === 0) return -1;
 
@@ -71,7 +71,7 @@
   function pickBestAiExploit() {
     const state = NB.State.get();
     const { enemy, boss } = state;
-    const readyCount = enemy.field.filter(unit => unit && !unit.booting && !unit.attacked).length;
+    const readyCount = enemy.field.filter(unit => NB.Combat.canAttack(unit, enemy.field)).length;
     const reserve = boss?.canOverclock && readyCount >= 2 && enemy.ram >= NB.Cards.OVERCLOCK_COST;
     let best = null;
     let bestScore = 0;
@@ -105,6 +105,8 @@
     NB.UI.closeVisor();
 
     state.enemy.summonedThisTurn = false;
+    state.enemy.counterFormation = false;
+    state.enemy.hpShield = 0;
     state.enemy.field.forEach(u => {
       if (u) {
         u.booting = false;
@@ -161,7 +163,7 @@
     // 3) Verifica se ARCHON ativa OVERCLOCK (Unite Attack inimigo com Perfuração!)
     const readyEnemySlots = [];
     state.enemy.field.forEach((u, idx) => {
-      if (u && !u.booting && !u.attacked && attackingPower(u, state.enemy.field) > 0) readyEnemySlots.push(idx);
+      if (NB.Combat.canAttack(u, state.enemy.field)) readyEnemySlots.push(idx);
     });
 
     if (boss && boss.canOverclock && state.enemy.ram >= NB.Cards.OVERCLOCK_COST && readyEnemySlots.length >= 2) {
@@ -177,7 +179,7 @@
       state.activeDefenderSlot = null;
 
       // Pré-conecta Firewall do jogador se existir
-      const pFw = state.player.field.findIndex(u => u && NB.Cards.hasKeyword(u, 'FIREWALL'));
+      const pFw = state.player.field.findIndex(u => NB.Combat.canBlock(u, state.player) && NB.Cards.hasKeyword(u, 'FIREWALL'));
       if (pFw !== -1) state.defenseMap[slotA] = pFw;
 
       state.phase = 'PLAYER_DEFENSE';
@@ -192,14 +194,15 @@
 
     // 4) Ataque normal
     const chosenAttackers = [];
-    const playerStrongestAtk = Math.max(0, ...state.player.field.filter(Boolean).map(u => u.atk));
+    const playerDefenders = state.player.field.filter(u => NB.Combat.canBlock(u, state.player));
+    const playerStrongestAtk = Math.max(0, ...playerDefenders.map(u => u.atk));
     const totalAiAtk = readyEnemySlots.reduce((sum, idx) => sum + attackingPower(state.enemy.field[idx], state.enemy.field), 0);
 
     for (const idx of readyEnemySlots) {
       const u = state.enemy.field[idx];
-      const noPlayerUnits = !state.player.field.some(Boolean);
+      const noPlayerDefenders = playerDefenders.length === 0;
       const aggressive = boss && boss.id === 'kira';
-      if (noPlayerUnits || totalAiAtk >= state.player.hp || aggressive || u.def > playerStrongestAtk || attackingPower(u, state.enemy.field) >= 3 || Math.random() < 0.65) {
+      if (noPlayerDefenders || totalAiAtk >= state.player.hp || aggressive || u.def > playerStrongestAtk || attackingPower(u, state.enemy.field) >= 3 || Math.random() < 0.65) {
         chosenAttackers.push(idx);
       }
     }
@@ -215,7 +218,7 @@
 
     const playerFirewalls = [];
     state.player.field.forEach((u, idx) => {
-      if (u && NB.Cards.hasKeyword(u, 'FIREWALL')) playerFirewalls.push(idx);
+      if (NB.Combat.canBlock(u, state.player) && NB.Cards.hasKeyword(u, 'FIREWALL')) playerFirewalls.push(idx);
     });
     playerFirewalls.forEach((pSlot, i) => {
       if (chosenAttackers[i] !== undefined) {

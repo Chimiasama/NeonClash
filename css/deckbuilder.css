@@ -296,6 +296,7 @@
 .col-card.locked {
   border-color: rgba(255, 0, 85, 0.35);
 }
+.col-card.locked .col-card-art img { filter: grayscale(1); }
 .col-lock-tag {
   color: #ff9ac0;
   font: 800 8.5px var(--font-mono);

@@ -23,7 +23,12 @@
     { id: 'exploit_07', price: 30 },
     { id: 'unit_28', price: 48 },
     { id: 'exploit_12', price: 36 },
-    { id: 'exploit_13', price: 40 }
+    { id: 'exploit_13', price: 40 },
+    { id: 'unit_32', price: 55 },
+    { id: 'unit_33', price: 46 },
+    { id: 'unit_34', price: 60 },
+    { id: 'exploit_17', price: 65 },
+    { id: 'exploit_18', price: 50 }
   ];
 
   const traces = {

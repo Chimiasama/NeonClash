@@ -39,6 +39,8 @@
   const actorPanel = side => document.getElementById(side === 'player' ? 'player-hud' : 'enemy-panel');
 
   function adjustUnit(type, unit, value) {
+    if (type === 'atk' && NB.Cards.hasKeyword(unit, 'GUARD_ONLY')) return 'SEM ATK';
+    if ((type === 'def' || type === 'repair') && NB.Cards.hasKeyword(unit, 'ATTACK_ONLY')) return 'SEM DEF';
     if (type === 'atk') {
       const before = unit.atk;
       unit.atk = Math.max(0, before + value);
@@ -114,6 +116,10 @@
         NB.State.drawCard(side);
         if (bonus) NB.State.drawCard(side);
         if (top && side === 'player') NB.Physics.showToast(`VARREDURA · ${NB.Cards.CARD_DB[top.cardId].name}${bonus ? ' · COMPRA EXTRA' : ''}`, 'var(--cyan)');
+      } else if (type === 'counterFormation') {
+        actor.counterFormation = true;
+      } else if (type === 'hpShield') {
+        actor.hpShield = Math.max(actor.hpShield, value);
       } else if (type === 'heal') {
         const healed = Math.min(value, actor.maxHp - actor.hp);
         actor.hp += healed;
@@ -132,7 +138,7 @@
         for (const target of targets(state, card, effect, side, slot)) {
           const node = NB.State.getSlotEl(target.side, target.slot);
           const label = adjustUnit(type, target.unit, value);
-          if (type === 'destroy' || target.unit.def <= 0) NB.State.destroyUnit(target.side, target.slot, side === 'player' && target.side !== side);
+          if (type === 'destroy' || (type === 'damage' && target.unit.def <= 0)) NB.State.destroyUnit(target.side, target.slot, side === 'player' && target.side !== side);
           if (node) {
             NB.Physics.fireLaserBeam(caster, node, card.accent, 5);
             NB.Physics.spawnFloatText(node, label, card.accent);
@@ -157,6 +163,12 @@
         const damage = type === 'direct' ? value : discardDamage(actor, effect);
         return sum + (damage >= opponent.hp ? 100 : damage * 1.3);
       }
+      if (type === 'counterFormation') {
+        const candidates = actor.field.filter(unit => NB.Combat.canAttack(unit, actor.field) &&
+          NB.Combat.canBlock(unit, actor) && !NB.Cards.hasKeyword(unit, 'VIGILANCE'));
+        return sum + (!actor.counterFormation && opponent.field.some(Boolean) ? candidates.length * 1.5 : 0);
+      }
+      if (type === 'hpShield') return sum + (opponent.field.some(Boolean) ? Math.max(0, value - actor.hpShield) : 0);
       if (type === 'heal') return sum + Math.min(value, actor.maxHp - actor.hp) * 0.8;
       if (type === 'drain') return sum + Math.min(value, opponent.ram) * 1.4;
       if (type === 'draw') return sum + Math.min(value, NB.Cards.MAX_HAND - actor.hand.length + 1,
