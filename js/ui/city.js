@@ -25,11 +25,13 @@
   }
 
   function move(id) {
-    if (!districts.some(district => district.id === id)) return;
+    const district = districts.find(item => item.id === id);
+    if (!district) return;
     NB.Save.get().city.district = id;
     NB.Save.save();
     view = 'district';
     cancelJob();
+    NB.Audio.setScene(district.music || district.id);
     render();
   }
 
@@ -334,7 +336,9 @@
       pin.append(icon, label);
     }
     $('city-journal').addEventListener('click', () => {
+      const district = districtAtPosition();
       view = view === 'journal' ? 'district' : 'journal';
+      NB.Audio.setScene(view === 'journal' ? 'city' : district.music || district.id);
       cancelJob();
       announce('');
       render();

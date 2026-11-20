@@ -17,7 +17,7 @@
     NB.Physics.cancelUiTransitions();
     NB.State.cancelPending();
     document.getElementById('game-ui').inert = true;
-    NB.Audio.setScene('city');
+    NB.Audio.setScene('title');
     NB.UI.renderTitleStats();
     document.getElementById('title-modal').classList.add('open');
   }
@@ -40,7 +40,7 @@
 
     hideAllScreens();
     document.getElementById('game-ui').inert = false;
-    NB.Audio.setScene('duel');
+    NB.Audio.setScene(boss.id, true);
     NB.State.reset({ mode, boss, stake: options.stake });
     NB.UI.closeVisor();
     NB.Physics.clearLasers();
@@ -356,6 +356,10 @@
       if (e.target.id === 'visor-layer') dismissVisor();
     });
 
+    // A WebView inicia a abertura automaticamente. No navegador, use uma interação.
+    document.getElementById('title-modal').addEventListener('click', (event) => {
+      if (!event.target.closest('button')) NB.Audio.activateOnEntry();
+    });
     // Navegação Tela Inicial
     document.getElementById('btn-start-campaign').addEventListener('click', () => {
       NB.Audio.activateOnEntry();

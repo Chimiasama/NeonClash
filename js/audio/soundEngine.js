@@ -1,20 +1,8 @@
 (function (NB) {
   'use strict';
 
-  const tracks = {
-    city: {
-      bpm: 116,
-      chords: [[38, 50, 53, 57, 60], [34, 46, 50, 53, 57], [41, 53, 57, 60, 64], [36, 48, 52, 55, 62]],
-      bass: [0, -1, 0, 1, -1, 0, 3, -1, 0, -1, 0, 1, -1, 1, 3, -1],
-      lead: [1, -1, 2, -1, 3, -1, 4, -1, -1, 3, -1, 2, 4, -1, 3, 2]
-    },
-    duel: {
-      bpm: 142,
-      chords: [[40, 52, 55, 59, 62], [40, 52, 55, 59, 65], [36, 48, 52, 55, 59], [38, 50, 53, 57, 60]],
-      bass: [-1, 0, 0, 1, -1, 0, 0, 3, -1, 0, 0, 1, -1, 1, 0, 0],
-      lead: [-1, -1, 3, -1, -1, 4, -1, 2, -1, -1, 3, 3, -1, 4, -1, 2]
-    }
-  };
+  const tracks = NB.MusicTracks;
+  const preferenceKey = 'neon_breach_sound';
   const frequency = midi => 440 * 2 ** ((midi - 69) / 12);
 
   /* Motor de Áudio: Sintetizador Synthwave/Chiptune 100% Web Audio API
@@ -22,13 +10,15 @@
   const SoundEngine = {
     ctx: null,
     enabled: false,
-    scene: 'city',
-    chosen: false,
+    scene: 'title',
+    battle: false,
+    preference: null,
     nextBeat: 0,
     musicTimer: null,
     step: 0,
     masterGain: null,
     musicGain: null,
+    trackGain: null,
     sfxGain: null,
     audioCache: {},
 
@@ -47,7 +37,7 @@
       this.masterGain.connect(this.ctx.destination);
 
       this.musicGain = this.ctx.createGain();
-      this.musicGain.gain.value = 0.22;
+      this.musicGain.gain.value = 0.28;
       this.musicGain.connect(this.masterGain);
 
       this.sfxGain = this.ctx.createGain();
@@ -72,13 +62,23 @@
       if (NB.UI && NB.UI.updateSoundButtons) NB.UI.updateSoundButtons();
     },
 
+    restorePreference() {
+      try {
+        const stored = window.localStorage.getItem(preferenceKey);
+        if (stored === 'on' || stored === 'off') this.preference = stored === 'on';
+      } catch (_) {}
+    },
+
     activateOnEntry() {
-      if (!this.chosen) this.setEnabled(true);
+      if (this.preference !== false && !this.enabled) this.setEnabled(true);
     },
 
     toggle() {
-      this.chosen = true;
-      this.setEnabled(!this.enabled);
+      this.preference = !this.enabled;
+      try {
+        window.localStorage.setItem(preferenceKey, this.preference ? 'on' : 'off');
+      } catch (_) {}
+      this.setEnabled(this.preference);
       if (this.enabled) this.playSelect();
     },
 
@@ -95,7 +95,9 @@
       } catch (_) {}
     },
 
-    setScene(scene) {
+    setScene(scene, battle = false) {
+      this.battle = battle;
+      if (!Object.hasOwn(tracks, scene)) scene = 'city';
       if (scene === this.scene) return;
       this.scene = scene;
       this.stopMusic();
@@ -105,9 +107,15 @@
 
     startMusic() {
       if (!this.ctx || this.musicTimer) return;
+      const now = this.ctx.currentTime;
+      this.trackGain = this.ctx.createGain();
+      this.trackGain.gain.setValueAtTime(0.001, now);
+      this.trackGain.gain.linearRampToValueAtTime(1, now + 0.14);
+      this.trackGain.connect(this.musicGain);
+
       const track = tracks[this.scene];
       const interval = 60 / track.bpm / 4;
-      this.nextBeat = this.ctx.currentTime + 0.04;
+      this.nextBeat = now + 0.04;
       this.musicTimer = setInterval(() => {
         if (!this.enabled || this.ctx.state !== 'running') return;
         const now = this.ctx.currentTime;
@@ -121,30 +129,41 @@
     },
 
     playBeat(track, time, interval) {
-      const s = this.step % 16;
+      const step = this.step % 16;
       const bar = Math.floor(this.step / 16);
-      const chord = track.chords[bar % track.chords.length];
-      const duel = this.scene === 'duel';
-      if (s % 4 === 0) this.musicNote(time, 'sine', 145, 43, 0.18, duel ? 0.72 : 0.58);
-      if (s % 8 === 4) this.playNoise(time, 0.13, 0.28, 1250, this.musicGain);
-      if (s % 2 === 0 || duel) this.playNoise(time, s % 4 === 2 ? 0.075 : 0.027, s % 4 === 2 ? 0.17 : 0.046, 6200, this.musicGain);
-
-      const bass = track.bass[s];
-      if (bass >= 0) {
-        const note = frequency(chord[bass]);
-        this.musicNote(time, 'sawtooth', note, note, interval * 0.95, 0.29, duel ? 650 : 430);
+      const root = track.roots[bar % track.roots.length];
+      const battle = this.battle;
+      if (track.kick.includes(step) || (battle && step % 4 === 0)) {
+        this.musicNote(time, 'sine', 128, 40, 0.23, battle ? 0.80 : 0.54);
       }
-      if (s === 0 || s === 8) {
-        for (const pitch of chord.slice(1)) {
-          const note = frequency(pitch);
-          this.musicNote(time, 'triangle', note, note, interval * 7.5, duel ? 0.035 : 0.055, 1600);
+      if (track.snare.includes(step)) {
+        this.playNoise(time, 0.12, battle ? 0.28 : 0.16, 1000, this.trackGain);
+        this.musicNote(time, 'triangle', 173, 103, 0.08, 0.08, 900);
+      }
+      if (track.hats.includes(step) || (battle && step % 4 === 3)) {
+        const accent = step % 4 === 2;
+        this.playNoise(time, accent ? 0.09 : 0.035, accent ? 0.11 : 0.042, 5800, this.trackGain);
+      }
+
+      const bass = track.bass[step];
+      if (bass >= 0) {
+        const pitch = frequency(root + bass);
+        this.musicNote(time, 'sawtooth', pitch, pitch, interval * 1.35, battle ? 0.3 : 0.22, track.color);
+        if (battle && step % 2 === 0) this.musicNote(time, 'sine', pitch / 2, pitch / 2, interval, 0.14);
+      }
+      if (step === 0) {
+        for (const offset of track.pad) {
+          const pitch = frequency(root + offset);
+          this.musicNote(time, 'triangle', pitch, pitch, interval * 14, battle ? 0.039 : 0.062, track.color * 1.2);
         }
       }
-      const lead = track.lead[s];
-      if (lead >= 0) {
-        const note = frequency(chord[lead] + (duel ? 24 : 12));
-        this.musicNote(time, duel ? 'square' : 'triangle', note, note, interval * 1.55, 0.085, 2200);
-        if (!duel) this.musicNote(time + interval * 3, 'triangle', note, note, interval * 1.15, 0.028, 1600);
+      const motif = track.motif[step];
+      if (motif >= 0 && (battle || bar % 4 !== 2)) {
+        const pitch = frequency(root + motif);
+        this.musicNote(time, track.lead, pitch, pitch, interval * 2, 0.10, track.color * 2);
+        if (track.echo && !battle) {
+          this.musicNote(time + interval * 3, 'sine', pitch, pitch, interval * 2, 0.045, track.color * 2);
+        }
       }
     },
 
@@ -164,7 +183,7 @@
       } else {
         osc.connect(envelope);
       }
-      envelope.connect(this.musicGain);
+      envelope.connect(this.trackGain);
       osc.start(time);
       osc.stop(time + duration);
     },
@@ -173,6 +192,14 @@
       if (this.musicTimer) {
         clearInterval(this.musicTimer);
         this.musicTimer = null;
+      }
+      const gain = this.trackGain;
+      if (gain) {
+        const now = this.ctx.currentTime;
+        gain.gain.cancelScheduledValues(now);
+        gain.gain.setTargetAtTime(0, now, 0.035);
+        window.setTimeout(() => gain.disconnect(), 220);
+        this.trackGain = null;
       }
     },
 

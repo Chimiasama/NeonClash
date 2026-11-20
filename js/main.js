@@ -13,6 +13,10 @@
     NB.UI.renderTitleStats();
     NB.UI.renderAll();
     document.getElementById('game-ui').inert = true;
+    NB.Audio.restorePreference();
+    if (new URLSearchParams(window.location.search).get('android') === '1') {
+      NB.Audio.activateOnEntry();
+    }
   }
 
   if (document.readyState === 'loading') {

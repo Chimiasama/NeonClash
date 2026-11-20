@@ -116,3 +116,44 @@ test('starts a campaign duel, deploys a unit, and advances the turn', async ({ p
   await expect(page.locator('#turn-badge')).toHaveText('T2');
   expect(errors).toEqual([]);
 });
+
+test('plays distinct music themes and keeps the player’s mute preference', async ({ page }) => {
+  await page.goto('/');
+  const readScene = () => page.evaluate(() => NB.Audio.scene);
+  await expect.poll(readScene).toBe('title');
+  await page.locator('#btn-title-sound').click();
+  await page.waitForFunction(() => NB.Audio.ctx.state === 'running' && NB.Audio.step > 0);
+
+  await page.evaluate(() => {
+    const analyser = NB.Audio.ctx.createAnalyser();
+    NB.Audio.musicGain.connect(analyser);
+    window.musicIsAudible = () => {
+      const samples = new Float32Array(analyser.fftSize);
+      analyser.getFloatTimeDomainData(samples);
+      return samples.some(sample => Math.abs(sample) > 0.001);
+    };
+  });
+  await page.waitForFunction(() => window.musicIsAudible());
+  await page.getByRole('button', { name: 'Entrar na cidade' }).click();
+  await expect.poll(readScene).toBe('city');
+
+  const themes = {
+    market: 'market', relay: 'relay', arena: 'risco', kira: 'kira',
+    cipher: 'cipher', vex: 'vex', archon: 'archon'
+  };
+  for (const [district, theme] of Object.entries(themes)) {
+    await page.locator(`[data-district="${district}"]`).click();
+    await expect.poll(readScene).toBe(theme);
+  }
+
+  await page.locator('[data-district="kira"]').click();
+  await page.getByRole('button', { name: 'Abrir dossiê' }).click();
+  await page.getByRole('button', { name: 'Conectar e duelar' }).click();
+  await expect.poll(readScene).toBe('kira');
+  expect(await page.evaluate(() => NB.Audio.battle)).toBe(true);
+
+  await page.locator('#btn-sound').click();
+  await page.reload();
+  await page.getByRole('button', { name: 'Entrar na cidade' }).click();
+  expect(await page.evaluate(() => NB.Audio.enabled)).toBe(false);
+});

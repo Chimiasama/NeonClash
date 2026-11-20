@@ -423,6 +423,7 @@
   /* Modal Dossiê do Alvo */
   function openDossier(bossId) {
     const boss = NB.Campaign.getNodeById(bossId);
+    NB.Audio.setScene(boss.id);
     document.getElementById('dossier-node-code').textContent = `${boss.nodeCode} · ${boss.hp} HP`;
     document.getElementById('dossier-title').textContent = boss.fullTitle;
     document.getElementById('dossier-archetype').textContent = boss.archetype;
