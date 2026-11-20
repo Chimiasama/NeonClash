@@ -195,7 +195,7 @@
     { when: 'vexResolution', next: true, evidence: 'O aviso de baixa de Kairo precede o incidente. A ordem de recolher sua cópia traz a assinatura de Archon.' });
 
   scene('renan', 5, 'docks', 'Reproduzir os dois comandos com Renan', ['vexProof'], 'grid', [
-    'Renan carrega uma cópia isolada do painel. Kairo digita o número do medidor de Dona Nair.',
+    'Renan carrega uma cópia isolada do painel. O visor da esquerda recebe os pedidos. O da direita registra o que a rede pode executar. Kairo digita o número do medidor de Dona Nair.',
     'Na primeira versão, o endereço entra na fila de verificação. Na segunda, some da lista e o painel permite desligá-lo.',
     'Renan — Os anexos da Holding Meridiano mostram o que Archon fez para manter a concessão. Contou como estáveis os bairros ricos e apagou da amostra as ruas em que a gente mais precisou trocar bateria.',
     'Renan — Eu consigo transferir o controle. A clínica precisa de uma bateria carregada e a equipe precisa de um canal para confirmar cada linha.',
@@ -204,7 +204,7 @@
 
   scene('reserve', 5, 'clinic', 'Preparar a reserva de energia da Clínica', ['grid'], 'reserve', [
     'Ada confere as baterias com Omar e escolhe a que vai permanecer na casa durante a troca.',
-    'Kairo deixa os horários em papel. Se a luz falhar, a equipe tem como ler os passos mesmo sem o painel.'
+    'Ada — Deixa os horários ao lado da bateria. Se o painel apagar, o Omar ainda vai saber quando ligar o equipamento e quando esperar a confirmação do Cais.'
   ], { minutes: 25 });
 
   scene('radio', 5, 'relay', 'Reservar o canal com Nina', ['grid'], 'communication', [
@@ -249,7 +249,7 @@
   scene('epilogue', 6, 'home', 'Voltar à Casa e falar com Dona Nair', ['ending'], 'epilogue', [
     'A chave antiga ainda serve. Dentro de casa, Dona Nair pede para Kairo escrever a nova leitura do contador no verso do primeiro recibo.',
     'Kira compartilhou os horários que pode divulgar. A Pensão continua aberta, com o registro de hóspedes sob guarda de Cris. Vex deixou uma via protegida para as testemunhas. A escala de Cipher foi devolvida à equipe que acompanha a transição.',
-    'Nair coloca outra solicitação sobre a mesa. Desta vez, há lugar para anotar o que a cidade respondeu.'
+    'Nair coloca outra solicitação sobre a mesa. É de uma casa que ainda aparece como vazia. No verso do primeiro recibo, ao lado da leitura nova, as duas anotam o endereço e deixam um espaço para a resposta.'
   ]);
 
   const alliedLines = {
@@ -300,6 +300,12 @@
   const theatreProof = evidenceArt('conferencia-no-teatro', 'A conferência nos bastidores do Teatro');
 
   const beats = {
+    renan: [{ ...evidenceArt('paineis-do-cais', 'Os dois painéis da Subestação do Cais'), camera: 'wide' }],
+    reserve: [{ art: './src/assets/comic/bateria-da-clinica.webp', artTitle: 'A bateria de reserva da Clínica',
+      camera: 'zoom-in', mood: 'tense' }],
+    press: [evidenceArt('via-da-praca', 'A via de serviço de Isa na Praça')],
+    epilogue: [{ art: './src/assets/comic/recibo-ao-amanhecer.webp', artTitle: 'O recibo ao amanhecer',
+      camera: 'zoom-in', mood: 'memory' }],
     kiraPeace: [kiraReceipt, { speaker: 'kira', bubbleType: 'speech', expression: 'whisper' }],
     kiraProof: [kiraReceipt, { speaker: 'kira', bubbleType: 'speech' }],
     cipherToken: [opticalFilter],
