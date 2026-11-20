@@ -4,8 +4,6 @@
   const { districts, stock, traces, sparringBoss, wagerBoss } = NB.CityData;
   const $ = id => document.getElementById(id);
   const symbols = ['▲', '●', '◆', '■'];
-  const previewMs = 3500;
-  const workMs = 12000;
   const errorPenaltyMs = 2000;
   let job = null;
   let jobTimer = null;
@@ -21,7 +19,8 @@
   const residentDuels = {
     10: { hp: 10, credits: 5, deck: ['unit_01', 'unit_02', 'unit_08', 'unit_09', 'exploit_01'] },
     33: { hp: 14, credits: 7, card: 'unit_21', deck: sparringBoss.deckList },
-    39: { hp: 22, credits: 12, card: 'unit_23', deck: wagerBoss.deckList, canOverclock: true }
+    39: { hp: 22, credits: 12, card: 'unit_23', deck: wagerBoss.deckList, canOverclock: true },
+    ...NB.CityAtlas.residentDuels
   };
   let destination = null;
 
@@ -149,6 +148,7 @@
     if (view === 'district') {
       NB.StoryUI.local(content, district);
       renderContactServices(content, district.id);
+      renderJobs(content, district.id, life);
       renderResidents(content, district.id);
     }
   }
@@ -166,6 +166,57 @@
         addButton(group, place.name, () => selectDestination(id));
       }
       content.append(group);
+    }
+  }
+
+  function demandText(status) {
+    if (!status.available) return 'Demanda esgotada por hoje';
+    return status.count === 2 ? '3ª execução · recompensa pela metade' : `${status.count + 1}ª execução · recompensa integral`;
+  }
+
+  function renderJobs(content, location, life) {
+    const { jobs } = NB.CityAtlas;
+    const delivery = life.activeDelivery;
+    const dispatch = jobs.delivery.locations.includes(location);
+    if (delivery || dispatch) {
+      const row = document.createElement('div');
+      row.className = 'city-life-row';
+      addText(row, 'Correio Expresso · Delivery Clandestino', 'city-clue-title');
+      if (delivery) {
+        const place = districts.find(item => item.id === delivery.targetId);
+        const elapsed = life.minute - delivery.startMinute;
+        addText(row, `Destino: ${place.name} · Prazo sem multa: ${8 * delivery.distance} min · Decorridos: ${elapsed} min`);
+        addButton(row, `Ir para ${place.name} (entrega)`, () => selectDestination(place.id));
+        addButton(row, 'Cancelar entrega', () => {
+          if (NB.CityLife.cancelDelivery()) refreshStory('Entrega cancelada.');
+        });
+      } else {
+        const status = NB.CityLife.demand('delivery');
+        addText(row, demandText(status));
+        addButton(row, 'Iniciar Correio Expresso', () => {
+          if (NB.CityLife.startDelivery()) refreshStory('Entrega aceita. Consulte o destino do pacote.');
+        }, !status.available);
+      }
+      content.append(row);
+    }
+
+    for (const [id, job] of Object.entries(jobs)) {
+      if (id === 'delivery' || !job.locations.includes(location)) continue;
+      const quote = NB.CityLife.jobQuote(id);
+      const row = document.createElement('div');
+      row.className = 'city-life-row';
+      addText(row, `${job.minutes} min · −${job.energy} energia · +${quote.pay} créditos`);
+      addText(row, demandText(quote));
+      if (job.hours) addText(row, `Horário de início: ${job.hours[0]}h às ${job.hours[1]}h (limite exclusivo).`);
+      if (id === 'drones') addText(row, NB.CityLife.bagCount(life) < NB.CityLife.bagLimit
+        ? 'Inclui café ou energético.' : 'Mochila cheia. A compensação em créditos está incluída.');
+      addButton(row, job.name, () => {
+        const result = NB.CityLife.work(id);
+        if (!result) return;
+        const item = result.item ? ` · ${NB.CityLife.items[result.item].name} na mochila` : '';
+        refreshStory(`${job.name}: +${result.credits} créditos${item}.`);
+      }, !quote.open || !quote.available);
+      content.append(row);
     }
   }
 
@@ -223,7 +274,7 @@
               ...sparringBoss, name: person.name, fullTitle: `${person.name} // Duelo de bairro`,
               hp: duel.hp, deckList: duel.deck.length === 20 ? duel.deck : Array.from({ length: 20 }, (_, index) => duel.deck[index % duel.deck.length]),
               canOverclock: Boolean(duel.canOverclock),
-              lines: { start: [residentNotes[person.id][0]] },
+              lines: { start: [residentNotes[person.id]?.[0] || person.line] },
               residentId: person.id
             }
           });
@@ -373,11 +424,9 @@
       const owned = save.unlockedCards.includes(id);
       const row = document.createElement('div');
       row.className = 'city-sale';
-      const art = document.createElement('img');
-      art.src = card.img;
-      art.alt = '';
-      art.width = 42;
-      art.height = 42;
+      const art = document.createElement('div');
+      art.className = 'city-sale-art';
+      art.append(NB.Sprites.createArtMarkup(card.id, card.img, ''));
       row.append(art);
       const details = document.createElement('div');
       addText(details, card.name, 'city-clue-title');
@@ -495,12 +544,20 @@
       if (lead) {
         addButton(content, 'Rastrear pista', () => startJob(lead.bossId), false, 'city-primary');
       }
-      addButton(content, 'Trabalho de hacker · +20 créditos', () => startJob(null));
-      addText(content, 'Memorize 6 símbolos em 3,5 s. Você tem 12 s para repetir a sequência. Cada erro custa 2 s.');
+      for (const [id, mode] of Object.entries(NB.CityLife.relayModes)) {
+        const status = NB.CityLife.demand(id, mode.pay);
+        const row = document.createElement('div');
+        row.className = 'city-life-row';
+        addButton(row, mode.name, () => startJob(null, id), !status.available);
+        addText(row, `${mode.symbols} símbolos · ${(mode.previewMs / 1000).toLocaleString('pt-BR')} s para memorizar · 12 s para enviar`);
+        addText(row, `${mode.minutes} min · −${mode.energy} energia · +${status.pay} créditos · ${demandText(status)}`);
+        content.append(row);
+      }
+      addText(content, 'Cada erro reinicia a sequência e custa 2 s.');
       return;
     }
 
-    addText(content, job.lead ? 'Rastreamento de pista' : 'Reparo de pacotes · +20 créditos', 'city-clue-title');
+    addText(content, job.lead ? 'Rastreamento de pista' : NB.CityLife.relayModes[job.modeId].name, 'city-clue-title');
     addText(content, job.lead ? 'Toque nos símbolos na ordem exibida.' :
       (job.revealing ? 'Memorize a sequência.' : 'Repita a sequência de memória.'));
     if (!job.lead) {
@@ -541,8 +598,8 @@
   function tickJob() {
     const now = performance.now();
     if (now >= job.deadline) {
+      NB.CityLife.finishSignal(job.modeId, false);
       cancelJob();
-      NB.CityLife.advance(45, 8);
       const notice = NB.CityLife.takeNotice();
       announce(`Tempo esgotado. Nenhum crédito recebido.${notice ? ' ' + notice : ''}`);
       render();
@@ -563,15 +620,17 @@
     job = null;
   }
 
-  function startJob(lead) {
-    const revealUntil = performance.now() + previewMs;
+  function startJob(lead, modeId) {
+    const mode = NB.CityLife.relayModes[modeId];
+    if (!lead && (!mode || !NB.CityLife.demand(modeId).available)) return;
+    const revealUntil = performance.now() + (mode?.previewMs || 0);
     job = {
-      lead,
+      lead, modeId,
       index: 0,
       revealing: !lead,
       revealUntil,
-      deadline: revealUntil + workMs,
-      sequence: Array.from({ length: lead ? 4 : 6 }, () => symbols[Math.floor(Math.random() * symbols.length)])
+      deadline: revealUntil + (mode?.inputMs || 0),
+      sequence: Array.from({ length: lead ? 4 : mode.symbols }, () => symbols[Math.floor(Math.random() * symbols.length)])
     };
     announce('');
     render();
@@ -611,12 +670,12 @@
       if (job.lead) {
         save.city.traced.push(job.lead);
         announce(traces[job.lead]);
+        NB.CityLife.advance(45, 8);
       } else {
-        save.city.credits += 20;
-        announce('Trabalho concluído. Você recebeu 20 créditos.');
+        const credits = NB.CityLife.finishSignal(job.modeId, true);
+        announce(`Trabalho concluído. Você recebeu ${credits} créditos.`);
       }
       cancelJob();
-      NB.CityLife.advance(45, 8);
       const notice = NB.CityLife.takeNotice();
       if (notice) announce(`${$('city-feedback').textContent} ${notice}`);
     }

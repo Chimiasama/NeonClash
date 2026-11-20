@@ -1,5 +1,3 @@
-import tailwindcss from '@tailwindcss/vite';
-import react from '@vitejs/plugin-react';
 import fs from 'fs';
 import path from 'path';
 import {defineConfig} from 'vite';
@@ -8,10 +6,8 @@ export default defineConfig(() => {
   return {
     base: './',
     plugins: [
-      react(),
-      tailwindcss(),
       // Copies unbundled static game folders into dist/ so relative URLs
-      // (./css, ./js, ./cards, ./avatars, ./audio) resolve cleanly in builds
+      // (./js, ./cards, ./avatars, ./audio) resolve cleanly in builds
       // and Android Studio WebView exports.
       {
         name: 'copy-unbundled-game-assets',
@@ -21,7 +17,7 @@ export default defineConfig(() => {
             return;
           }
           const distDir = path.resolve(import.meta.dirname, 'dist');
-          const folders = ['src/assets', 'css', 'js', 'cards', 'avatars', 'audio'];
+          const folders = ['src/assets', 'js', 'cards', 'avatars', 'audio'];
           for (const folder of folders) {
             const srcPath = path.resolve(import.meta.dirname, folder);
             const destPath = path.resolve(distDir, folder);

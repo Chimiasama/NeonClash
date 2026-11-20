@@ -18,7 +18,7 @@ test('earns credits, buys a card, and keeps the purchase after reloading', async
   await enterCity(page);
   await walkTo(page, page.getByRole('button', { name: 'Antena Comunitária' }));
   await page.clock.install();
-  await page.getByRole('button', { name: 'Trabalho de hacker' }).click();
+  await page.getByRole('button', { name: 'Sinal Criptografado' }).click();
 
   const symbols = await page.locator('.city-sequence span').allTextContents();
   expect(symbols).toHaveLength(6);
@@ -29,15 +29,15 @@ test('earns credits, buys a card, and keeps the purchase after reloading', async
   for (const symbol of symbols) {
     await page.getByRole('button', { name: symbol, exact: true }).click();
   }
-  await expect(page.locator('#city-credits')).toHaveText('55 créditos');
+  await expect(page.locator('#city-credits')).toHaveText('57 créditos');
   await walkTo(page, page.getByRole('button', { name: 'Feira do Viaduto' }));
   await page.getByRole('button', { name: 'Comprar · 45' }).click();
-  await expect(page.locator('#city-credits')).toHaveText('10 créditos');
+  await expect(page.locator('#city-credits')).toHaveText('12 créditos');
 
   await page.reload();
   await enterCity(page);
   await expect(page.getByRole('heading', { name: 'Feira do Viaduto' })).toBeVisible();
-  await expect(page.locator('#city-credits')).toHaveText('10 créditos');
+  await expect(page.locator('#city-credits')).toHaveText('12 créditos');
   await expect(page.getByRole('button', { name: 'Adquirida' })).toBeDisabled();
 });
 
@@ -46,7 +46,7 @@ test('penalizes wrong symbols and ends a paid job when time runs out', async ({ 
   await enterCity(page);
   await walkTo(page, page.getByRole('button', { name: 'Antena Comunitária' }));
   await page.clock.install();
-  const start = page.getByRole('button', { name: 'Trabalho de hacker' });
+  const start = page.getByRole('button', { name: 'Sinal Criptografado' });
   await start.click();
   const firstSymbol = await page.locator('.city-sequence span').first().textContent();
   await page.clock.fastForward(3600);
@@ -234,9 +234,9 @@ test('Back unwinds the inspector, deck, city overlays and dossier one at a time'
   await expect(page.locator('#city-journal')).toHaveAttribute('aria-pressed', 'false');
 
   await walkTo(page, page.getByRole('button', { name: 'Antena Comunitária' }));
-  await page.getByRole('button', { name: 'Trabalho de hacker' }).click();
+  await page.getByRole('button', { name: 'Sinal Criptografado' }).click();
   expect(await back()).toBe(true);
-  await expect(page.getByRole('button', { name: 'Trabalho de hacker' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Sinal Criptografado' })).toBeVisible();
 
   await walkTo(page, page.getByRole('button', { name: 'Estação Fantasma' }));
   await page.getByRole('button', { name: 'Abrir dossiê' }).click();
@@ -976,4 +976,114 @@ test('returns to the title after abandoning a quick duel at no cost', async ({ p
   await expect(dialog).toBeHidden();
   await expect(page.locator('#gameover-modal')).toBeVisible();
   expect(await page.evaluate(() => [NB.Save.get().matches, NB.Save.get().wins])).toEqual([2, 1]);
+});
+
+test('resonates on deployment and uses attack resonance without changing printed ATK', async ({ page }) => {
+  await page.goto('/');
+  const result = await page.evaluate(async () => {
+    NB.Input.startMatch({ mode: 'quick' });
+    NB.State.wait = async () => true;
+    const state = NB.State.get();
+    const { player, enemy } = state;
+    const unit = (id, uid) => NB.State.createFieldUnit(id, uid, 'player');
+    player.field = [unit('unit_03', 901), null, null];
+    player.hand = [{ cardId: 'unit_28', uid: 902 }];
+    NB.State.deployUnit('player', 902, 1);
+    const charged = player.field[1].def;
+    player.field = [unit('unit_05', 903), unit('unit_30', 904), null];
+    enemy.field = [null, null, null];
+    const before = enemy.hp;
+    await NB.Combat.resolveCombatSequence('player', [1], {});
+    const power = NB.CardEffects.attackPower(player.field[1], [player.field[1]]);
+    return [charged, before - enemy.hp, player.field[1].atk, power];
+  });
+  expect(result).toEqual([5, 4, 3, 3]);
+});
+
+test('recycles only eligible discarded cards and varredura draws extra on a matching top', async ({ page }) => {
+  await page.goto('/');
+  const result = await page.evaluate(() => {
+    NB.Input.startMatch({ mode: 'quick' });
+    const { player } = NB.State.get();
+    player.ram = 10;
+    player.hand = [{ cardId: 'exploit_12', uid: 900 }, { cardId: 'exploit_13', uid: 901 }];
+    player.discard = [{ cardId: 'unit_08', uid: 902 }, { cardId: 'unit_03', uid: 903 }, { cardId: 'exploit_01', uid: 904 }];
+    player.deck = [{ cardId: 'unit_04', uid: 905 }, { cardId: 'unit_05', uid: 906 }];
+    NB.State.executeExploit('player', 900);
+    const recycled = player.hand.some(item => item.uid === 903) && !player.discard.some(item => item.uid === 903);
+    NB.State.executeExploit('player', 901);
+    const drawn = player.hand.map(item => item.uid);
+    player.hand = [{ cardId: 'exploit_13', uid: 907 }];
+    player.deck = [{ cardId: 'unit_05', uid: 908 }, { cardId: 'unit_04', uid: 909 }];
+    NB.State.executeExploit('player', 907);
+    return { recycled, drawn, nonmatch: player.hand.map(item => item.uid), remaining: player.deck.length };
+  });
+  expect(result).toEqual({ recycled: true, drawn: [903, 906, 905], nonmatch: [909], remaining: 1 });
+});
+
+test('offers accessible standard and encrypted signals with independent rewards and costs', async ({ page }) => {
+  await page.goto('/');
+  await enterCity(page);
+  await walkTo(page, page.getByRole('button', { name: 'Antena Comunitária' }));
+  await page.clock.install();
+  const before = await page.evaluate(() => ({ ...NB.Save.get().city.life }));
+  for (const [name, length, reveal] of [['Sinal Padrão', 4, 4000], ['Sinal Criptografado', 6, 3500]]) {
+    await page.getByRole('button', { name, exact: true }).click();
+    const symbols = await page.locator('.city-sequence span').allTextContents();
+    expect(symbols).toHaveLength(length);
+    await page.clock.fastForward(reveal);
+    await expect(page.locator('.city-sequence span')).toHaveText(Array(length).fill('·'));
+    for (const symbol of symbols) await page.getByRole('button', { name: symbol, exact: true }).click();
+  }
+  const after = await page.evaluate(() => NB.Save.get().city);
+  expect([after.credits, after.life.minute - before.minute, before.energy - after.life.energy]).toEqual([69, 75, 13]);
+  expect(after.life.dailyJobCounts).toEqual({ signal: 1, encrypted: 1 });
+});
+
+test('persists daily demand, halves the third job payout, and resets after sleeping or midnight', async ({ page }) => {
+  await page.goto('/');
+  await enterCity(page);
+  await page.evaluate(() => { NB.Save.get().city.district = 'depots'; NB.City.resetView(); });
+  const task = page.getByRole('button', { name: 'Triagem de Sucata', exact: true });
+  await task.click();
+  await task.click();
+  await expect(page.getByText(/3ª execução · recompensa pela metade/)).toBeVisible();
+  await page.reload();
+  await enterCity(page);
+  await task.click();
+  await expect(page.locator('#city-credits')).toHaveText('67 créditos');
+  await expect(task).toBeDisabled();
+  await expect(task.locator('..')).toContainText('Demanda esgotada por hoje');
+  const reset = await page.evaluate(() => {
+    const { city } = NB.Save.get();
+    city.district = 'home';
+    NB.CityLife.sleep('home');
+    const slept = NB.CityLife.demand('scrap').count;
+    city.district = 'depots';
+    NB.CityLife.work('scrap');
+    NB.CityLife.advance(1440 - city.life.minute % 1440, 0);
+    return [slept, NB.CityLife.demand('scrap').count];
+  });
+  expect(reset).toEqual([0, 0]);
+});
+
+test('persists one Correio Expresso package and awards the speed bonus after ordinary travel', async ({ page }) => {
+  await page.goto('/');
+  await enterCity(page);
+  await page.evaluate(() => { Math.random = () => 0; NB.Save.get().city.life.vehicles.push('motorbike'); });
+  await page.getByRole('button', { name: 'Iniciar Correio Expresso' }).click();
+  const listing = await page.evaluate(() => {
+    const { activeDelivery } = NB.Save.get().city.life;
+    const place = NB.CityData.districts.find(location => location.id === activeDelivery.targetId);
+    return { ...activeDelivery, name: place.name };
+  });
+  expect(listing.distance).toBeGreaterThanOrEqual(4);
+  await page.reload();
+  await enterCity(page);
+  await expect(page.getByRole('button', { name: 'Iniciar Correio Expresso' })).toHaveCount(0);
+  await page.getByRole('button', { name: `Ir para ${listing.name} (entrega)` }).click();
+  await page.getByRole('button', { name: 'Moto', exact: true }).click();
+  await expect(page.locator('#city-feedback')).toContainText('bônus de velocidade: +7');
+  await expect(page.locator('#city-credits')).toHaveText(`${35 + 6 + 2 * listing.distance + 7} créditos`);
+  expect(await page.evaluate(() => NB.Save.get().city.life.activeDelivery)).toBeNull();
 });

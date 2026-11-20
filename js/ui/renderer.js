@@ -79,7 +79,7 @@
       const partner = overclock && Number(attackSlot) === overclock.slots[0]
         ? state.enemy.field[overclock.slots[1]] : null;
       const attack = partner ? overclock.combinedAtk + NB.Combat.overclockSynergy(attacker, partner)
-        : NB.Combat.clashDamage(attacker, defender);
+        : NB.Combat.clashDamage(attacker, defender, state.enemy.field);
       const counter = partner ? defender.atk : NB.Combat.clashDamage(defender, attacker);
       const pierce = partner ? Math.max(0, attack - defender.def) : 0;
       const clash = document.createElement('span');
@@ -150,7 +150,7 @@
       lbl.textContent = 'OVERCLOCK · UNITE';
       const sel = state.overclockUnits;
       if (sel.length === 2) {
-        const totalAtk = (state.player.field[sel[0]]?.atk || 0) + (state.player.field[sel[1]]?.atk || 0);
+        const totalAtk = sel.reduce((sum, slot) => sum + NB.CardEffects.attackPower(state.player.field[slot], state.player.field), 0);
         const first = state.player.field[sel[0]];
         const second = state.player.field[sel[1]];
         hint.textContent = NB.Combat.overclockSynergy(first, second)

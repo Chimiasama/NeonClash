@@ -76,6 +76,16 @@
     drawCyberGrid(ctx, w, h, 'rgba(0, 240, 255, 0.07)');
     drawCircuitTraces(ctx, w, h, accent + '66');
 
+    if (card?.proceduralOnly) {
+      const seed = Number(id.slice(-2));
+      ctx.strokeStyle = accent;
+      for (let ring = 0; ring < 3; ring++) {
+        ctx.beginPath();
+        ctx.ellipse(w / 2, h / 2, 48 + ring * 14, 24 + ring * 8, seed * 0.4, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+
     ctx.save();
     ctx.translate(w / 2, h / 2);
 
@@ -775,6 +785,10 @@
 
   function initAssets() {
     NB.Cards.ASSET_LIST.forEach(item => {
+      if (NB.Cards.CARD_DB[item.id]?.proceduralOnly) {
+        assetStatus[item.id] = 'fallback';
+        return;
+      }
       assetStatus[item.id] = 'loading';
       const probe = new Image();
       probe.onload = function () {

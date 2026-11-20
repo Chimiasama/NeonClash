@@ -20,7 +20,10 @@
     { id: 'unit_21', price: 45 },
     { id: 'unit_22', price: 65 },
     { id: 'unit_23', price: 85 },
-    { id: 'exploit_07', price: 30 }
+    { id: 'exploit_07', price: 30 },
+    { id: 'unit_28', price: 48 },
+    { id: 'exploit_12', price: 36 },
+    { id: 'exploit_13', price: 40 }
   ];
 
   const traces = {

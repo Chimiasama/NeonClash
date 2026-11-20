@@ -10,8 +10,9 @@
     return Number(Boolean(first.affinity && second.affinity && first.affinity !== second.affinity));
   }
 
-  function clashDamage(attacker, defender) {
-    return attacker.atk + affinityBonus(attacker, defender);
+  function clashDamage(attacker, defender, attackingField) {
+    const atk = attackingField ? NB.CardEffects.attackPower(attacker, attackingField) : attacker.atk;
+    return atk + affinityBonus({ ...attacker, atk }, defender);
   }
 
   /* Motor de Combate:
@@ -45,9 +46,10 @@
         if (defEl) defEl.classList.add('anim-hit');
         if (atkEl) atkEl.classList.add('anim-hit');
 
-        const atkBonus = affinityBonus(attacker, defender);
+        const attack = NB.CardEffects.attackPower(attacker, state[attackerSide].field);
+        const atkDmg = clashDamage(attacker, defender, state[attackerSide].field);
+        const atkBonus = atkDmg - attack;
         const defBonus = affinityBonus(defender, attacker);
-        const atkDmg = clashDamage(attacker, defender);
         const defDmg = clashDamage(defender, attacker);
         defender.def -= atkDmg;
         attacker.def -= defDmg;
@@ -92,11 +94,12 @@
         NB.UI.renderAll();
       } else {
         // Ataque direto ao HP do hacker!
-        NB.State.applyDirectDamage(defenderSide, attacker.atk, attackerSide === 'player');
+        const attack = NB.CardEffects.attackPower(attacker, state[attackerSide].field);
+        NB.State.applyDirectDamage(defenderSide, attack, attackerSide === 'player');
         attacker.attacked = true;
 
         // [DRENO]: Ao causar dano direto ao HP do hacker inimigo, rouba 1 RAM dele
-        if (attacker.atk > 0 && NB.Cards.hasKeyword(attacker, 'DRENO')) {
+        if (attack > 0 && NB.Cards.hasKeyword(attacker, 'DRENO')) {
           NB.State.applyRamDrain(attackerSide, 1);
           NB.UI.renderAll();
         }
@@ -129,7 +132,7 @@
     state.overclockUnits = [];
     state.phase = 'COMBAT_ANIM';
 
-    const combinedAtk = unitA.atk + unitB.atk;
+    const combinedAtk = [unitA, unitB].reduce((sum, unit) => sum + NB.CardEffects.attackPower(unit, state.player.field), 0);
     const hasVirus = NB.Cards.hasKeyword(unitA, 'VIRUS') || NB.Cards.hasKeyword(unitB, 'VIRUS');
     const hasDreno = NB.Cards.hasKeyword(unitA, 'DRENO') || NB.Cards.hasKeyword(unitB, 'DRENO');
 

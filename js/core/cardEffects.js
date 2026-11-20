@@ -6,6 +6,10 @@
   const indexed = field => field.flatMap((unit, slot) => unit ? [{ unit, slot }] : []);
 
   function targets(state, card, effect, side, slot) {
+    if (effect.target === 'self') {
+      const unit = state[side].field[slot];
+      return unit ? [{ unit, slot, side }] : [];
+    }
     if (effect.target === 'selected') {
       const targetSide = selectedSide(card, side);
       const unit = state[targetSide].field[slot];
@@ -54,6 +58,29 @@
     return 'ELIMINADO!';
   }
 
+  function resonates(field, unit) {
+    return Boolean(unit?.affinity && field.some(other => other && other !== unit && other.affinity === unit.affinity));
+  }
+
+  function attackPower(unit, field) {
+    const effects = NB.Cards.CARD_DB[unit.cardId]?.onAttack || [];
+    return effects.reduce((attack, effect) => attack +
+      (effect.type === 'atk' && (!effect.resonance || resonates(field, unit)) ? effect.value : 0), unit.atk);
+  }
+
+  function recyclable(actor, effect) {
+    return actor.discard.map((item, index) => ({ item, index })).filter(({ item }) =>
+      (!effect.cardId || item.cardId === effect.cardId) &&
+      (!effect.kind || NB.Cards.CARD_DB[item.cardId].kind === effect.kind));
+  }
+
+  function scanBonus(actor, side, effect) {
+    const top = actor.deck.at(-1);
+    return Number(Boolean(top && NB.State.getMatchAffinity(top.cardId, side) === effect.affinity));
+  }
+
+  const discardDamage = (actor, effect) => Math.min(effect.cap, Math.floor(actor.discard.length / effect.divisor));
+
   function resolve(card, effects, side, slot = null) {
     const state = NB.State.get();
     const actor = state[side];
@@ -61,9 +88,25 @@
     const caster = actorPanel(side);
     for (const effect of effects) {
       const { type, value } = effect;
-      if (type === 'direct') {
-        NB.Physics.fireLaserBeam(caster, actorPanel(enemy), card.accent, 7);
-        NB.State.applyDirectDamage(enemy, value, side === 'player');
+      if (effect.resonance && !resonates(actor.field, actor.field[slot])) continue;
+      if (type === 'direct' || type === 'discardDamage') {
+        const damage = type === 'direct' ? value : discardDamage(actor, effect);
+        if (damage > 0) {
+          NB.Physics.fireLaserBeam(caster, actorPanel(enemy), card.accent, 7);
+          NB.State.applyDirectDamage(enemy, damage, side === 'player');
+        }
+      } else if (type === 'recycle') {
+        const options = recyclable(actor, effect);
+        if (!options.length || actor.hand.length >= NB.Cards.MAX_HAND) continue;
+        const pick = effect.order === 'latest' ? options.at(-1) : options[Math.floor(Math.random() * options.length)];
+        actor.hand.push(...actor.discard.splice(pick.index, 1));
+        if (side === 'player') NB.Audio.playDraw();
+      } else if (type === 'scan') {
+        const top = actor.deck.at(-1);
+        const bonus = scanBonus(actor, side, effect);
+        NB.State.drawCard(side);
+        if (bonus) NB.State.drawCard(side);
+        if (top && side === 'player') NB.Physics.showToast(`VARREDURA · ${NB.Cards.CARD_DB[top.cardId].name}${bonus ? ' · COMPRA EXTRA' : ''}`, 'var(--cyan)');
       } else if (type === 'heal') {
         const healed = Math.min(value, actor.maxHp - actor.hp);
         actor.hp += healed;
@@ -95,9 +138,18 @@
   function score(state, card, side, slot) {
     const actor = state[side];
     const opponent = state[opposing(side)];
-    return card.effects.reduce((sum, effect) => {
+    const handRoom = NB.Cards.MAX_HAND - actor.hand.length + 1;
+    const drawn = actor.deck.length + actor.discard.length;
+    return (card.effects || card.onDeploy || []).reduce((sum, effect) => {
       const { type, value } = effect;
-      if (type === 'direct') return sum + (value >= opponent.hp ? 100 : value * 1.3);
+      if (effect.resonance && !resonates(actor.field, card)) return sum;
+      if (effect.target === 'self') return sum + value;
+      if (type === 'recycle') return sum + (handRoom > 0 && recyclable(actor, effect).length ? 3 : 0);
+      if (type === 'scan') return sum + Math.min(1 + scanBonus(actor, side, effect), handRoom, drawn) * 2;
+      if (type === 'direct' || type === 'discardDamage') {
+        const damage = type === 'direct' ? value : discardDamage(actor, effect);
+        return sum + (damage >= opponent.hp ? 100 : damage * 1.3);
+      }
       if (type === 'heal') return sum + Math.min(value, actor.maxHp - actor.hp) * 0.8;
       if (type === 'drain') return sum + Math.min(value, opponent.ram) * 1.4;
       if (type === 'draw') return sum + Math.min(value, NB.Cards.MAX_HAND - actor.hand.length + 1,
@@ -120,5 +172,5 @@
     }, 0);
   }
 
-  NB.CardEffects = { legalSlots, resolve, score };
+  NB.CardEffects = { legalSlots, resolve, score, attackPower };
 })(window.NB = window.NB || {});

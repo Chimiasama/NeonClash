@@ -1,6 +1,8 @@
 (function (NB) {
   'use strict';
 
+  const attackingPower = (unit, field) => unit ? NB.CardEffects.attackPower(unit, field) : 0;
+
   /* Controlador de IA tática — adapta estilo por chefe (Kira, Cipher, Vex e Archon com Overclock) */
   function computeAiBlocks(playerAttackers) {
     const state = NB.State.get();
@@ -15,10 +17,10 @@
       const fwA = NB.Cards.hasKeyword(uA, 'FIREWALL') ? 1 : 0;
       const fwB = NB.Cards.hasKeyword(uB, 'FIREWALL') ? 1 : 0;
       if (fwB !== fwA) return fwB - fwA;
-      return (uB?.atk || 0) - (uA?.atk || 0);
+      return attackingPower(uB, state.player.field) - attackingPower(uA, state.player.field);
     });
 
-    const totalIncoming = sortedAtks.reduce((acc, s) => acc + (state.player.field[s]?.atk || 0), 0);
+    const totalIncoming = sortedAtks.reduce((acc, s) => acc + attackingPower(state.player.field[s], state.player.field), 0);
     const mustBlockLethal = totalIncoming >= state.enemy.hp;
 
     for (const pSlot of sortedAtks) {
@@ -26,14 +28,14 @@
       if (!atkU || availableDefenders.length === 0) continue;
 
       const attackerIsFirewall = NB.Cards.hasKeyword(atkU, 'FIREWALL');
-      const survives = d => d.u.def > atkU.atk + NB.Combat.affinityBonus(atkU, d.u);
+      const survives = d => d.u.def > NB.Combat.clashDamage(atkU, d.u, state.player.field);
       const destroys = d => d.u.atk + NB.Combat.affinityBonus(d.u, atkU) >= atkU.def;
       let pickIdx = availableDefenders.findIndex(d => d.isFirewall);
 
       if (pickIdx === -1) {
         pickIdx = availableDefenders.findIndex(d => destroys(d) && survives(d));
       }
-      if (pickIdx === -1 && (atkU.atk >= 4 || mustBlockLethal || attackerIsFirewall || NB.Cards.hasKeyword(atkU, 'DRENO'))) {
+      if (pickIdx === -1 && (attackingPower(atkU, state.player.field) >= 4 || mustBlockLethal || attackerIsFirewall || NB.Cards.hasKeyword(atkU, 'DRENO'))) {
         pickIdx = availableDefenders.findIndex(d => survives(d) || destroys(d));
       }
       if (pickIdx === -1 && (mustBlockLethal || attackerIsFirewall)) {
@@ -125,7 +127,7 @@
       if (unitsInHand.length > 0) {
         unitsInHand.sort((a, b) => {
           const score = (x) => {
-            let s = x.def.atk * 1.4 + x.def.def;
+            let s = attackingPower(x.def, state.enemy.field) * 1.4 + x.def.def + NB.CardEffects.score(state, x.def, 'enemy', freeSlot);
             if (NB.Cards.hasKeyword(x.def, 'ZERO_DAY')) s += (boss && boss.id === 'kira' ? 5.5 : 3.5);
             if (NB.Cards.hasKeyword(x.def, 'FIREWALL')) s += (boss && boss.id === 'cipher' ? 5.0 : (state.enemy.hp <= 12 ? 4.2 : 1.5));
             if (NB.Cards.hasKeyword(x.def, 'VIRUS')) s += (boss && boss.id === 'vex' ? 4.2 : 2.4);
@@ -159,14 +161,14 @@
     // 3) Verifica se ARCHON ativa OVERCLOCK (Unite Attack inimigo com Perfuração!)
     const readyEnemySlots = [];
     state.enemy.field.forEach((u, idx) => {
-      if (u && !u.booting && !u.attacked && u.atk > 0) readyEnemySlots.push(idx);
+      if (u && !u.booting && !u.attacked && attackingPower(u, state.enemy.field) > 0) readyEnemySlots.push(idx);
     });
 
     if (boss && boss.canOverclock && state.enemy.ram >= NB.Cards.OVERCLOCK_COST && readyEnemySlots.length >= 2) {
-      const sorted = [...readyEnemySlots].sort((a, b) => state.enemy.field[b].atk - state.enemy.field[a].atk);
+      const sorted = [...readyEnemySlots].sort((a, b) => attackingPower(state.enemy.field[b], state.enemy.field) - attackingPower(state.enemy.field[a], state.enemy.field));
       const slotA = sorted[0];
       const slotB = sorted[1];
-      const combinedAtk = state.enemy.field[slotA].atk + state.enemy.field[slotB].atk;
+      const combinedAtk = attackingPower(state.enemy.field[slotA], state.enemy.field) + attackingPower(state.enemy.field[slotB], state.enemy.field);
 
       state.enemy.ram -= NB.Cards.OVERCLOCK_COST;
       state.enemyOverclock = { slots: [slotA, slotB], combinedAtk };
@@ -191,13 +193,13 @@
     // 4) Ataque normal
     const chosenAttackers = [];
     const playerStrongestAtk = Math.max(0, ...state.player.field.filter(Boolean).map(u => u.atk));
-    const totalAiAtk = readyEnemySlots.reduce((sum, idx) => sum + state.enemy.field[idx].atk, 0);
+    const totalAiAtk = readyEnemySlots.reduce((sum, idx) => sum + attackingPower(state.enemy.field[idx], state.enemy.field), 0);
 
     for (const idx of readyEnemySlots) {
       const u = state.enemy.field[idx];
       const noPlayerUnits = !state.player.field.some(Boolean);
       const aggressive = boss && boss.id === 'kira';
-      if (noPlayerUnits || totalAiAtk >= state.player.hp || aggressive || u.def > playerStrongestAtk || u.atk >= 3 || Math.random() < 0.65) {
+      if (noPlayerUnits || totalAiAtk >= state.player.hp || aggressive || u.def > playerStrongestAtk || attackingPower(u, state.enemy.field) >= 3 || Math.random() < 0.65) {
         chosenAttackers.push(idx);
       }
     }

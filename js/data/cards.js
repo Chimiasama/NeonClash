@@ -23,7 +23,7 @@
     return affinity ? ` Afinidade ${affinity.name}: +1 de dano em choques contra ${AFFINITIES[affinity.beats].name}.` : '';
   }
 
-  /* Metadados das 4 Palavras-Chave com ícones e cores */
+  /* Metadados das palavras-chave com ícones e cores. */
   const KEYWORDS = {
     ZERO_DAY: {
       id: 'ZERO_DAY',
@@ -56,7 +56,13 @@
       icon: '⟐',
       color: '#E879F9',
       desc: 'Ao causar dano direto ao HP do hacker inimigo, rouba 1 de RAM dele para você.'
-    }
+    },
+    RESONANCE: { tag: 'RESSONÂNCIA', short: 'RES', icon: '◈', color: '#88e8fc',
+      desc: 'Ativa com outra unidade aliada da mesma afinidade não neutra.' },
+    RECYCLE: { tag: 'RECICLAR', short: 'REC', icon: '♻', color: '#83eca0',
+      desc: 'Recupera cartas do descarte ou usa sua quantidade como recurso.' },
+    SCAN: { tag: 'VARREDURA', short: 'VAR', icon: '⌖', color: '#f8c280',
+      desc: 'Revela o topo do baralho e pode conceder compra adicional.' }
   };
 
   /* Banco de Cartas: 20 cartas distintas (14 Unidades + 6 Exploits).
@@ -440,6 +446,32 @@
       { type: 'affinity', target: 'selected' }, { type: 'atk', target: 'selected', value: 1 },
       { type: 'def', target: 'selected', value: 1 }
     ]);
+
+  addUnit('unit_28', 'Condensador Coral', 'Ressonância', 2, 4, 'malha', ['RESONANCE'],
+    'Ressonância de entrada: ganha +1 DEF se já houver outra unidade aliada da mesma afinidade em campo.',
+    [{ type: 'def', target: 'self', value: 1, resonance: true }]);
+  addUnit('unit_29', 'Catadora de Ecos', 'Reciclar', 2, 3, 'sombra', ['RECYCLE'],
+    'Ao entrar, recupera um Exploit aleatório do descarte se houver espaço na mão.',
+    [{ type: 'recycle', kind: 'exploit' }]);
+  addUnit('unit_30', 'Ferro de Pulso', 'Ressonância', 3, 3, 'pulso', ['RESONANCE'],
+    'Ressonância de ataque: +1 ATK naquele ataque se houver outra unidade aliada da mesma afinidade em campo.');
+  CARD_DB.unit_30.onAttack = [{ type: 'atk', value: 1, resonance: true }];
+  addExploit('exploit_12', 'Ímã de Núcleo', 'Reciclar', 2, 'none',
+    'Recupere a unidade mais recente do descarte se houver espaço na mão.',
+    [{ type: 'recycle', kind: 'unit', order: 'latest' }]);
+  addExploit('exploit_13', 'Janela Espectral', 'Varredura', 2, 'none',
+    'Revele o topo e compre 1 carta. Se o topo era uma unidade de Pulso, compre outra.',
+    [{ type: 'scan', affinity: 'pulso' }]);
+  addExploit('exploit_14', 'Pressão de Sucata', 'Reciclar', 2, 'none',
+    'Cause 1 dano direto a cada duas cartas no seu descarte, até 3 de dano.',
+    [{ type: 'discardDamage', divisor: 2, cap: 3 }]);
+  CARD_DB.exploit_12.keywords = ['RECYCLE'];
+  CARD_DB.exploit_13.keywords = ['SCAN'];
+  CARD_DB.exploit_14.keywords = ['RECYCLE'];
+
+  for (const id of ['unit_28', 'unit_29', 'unit_30', 'exploit_12', 'exploit_13', 'exploit_14']) {
+    CARD_DB[id].proceduralOnly = true;
+  }
 
   function hasKeyword(cardOrId, kw) {
     const def = typeof cardOrId === 'string' ? CARD_DB[cardOrId] : (cardOrId && cardOrId.cardId ? CARD_DB[cardOrId.cardId] : cardOrId);

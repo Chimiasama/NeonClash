@@ -33,6 +33,11 @@
       }
     }
     if (NB.CityData.stock.some(item => item.id === cardId)) return 'Disponível na Feira do Viaduto.';
+    const resident = NB.CityAtlas.residents.find(person => NB.CityAtlas.residentDuels[person.id]?.card === cardId);
+    if (resident) {
+      const place = NB.CityData.districts.find(district => district.id === resident.location);
+      return `Vença ${resident.name} em ${place.name}.`;
+    }
     const challenge = NB.Challenges.find(entry => entry.cards.includes(cardId));
     if (challenge) return `Vença ${challenge.name} no Ringue Baixa Tensão.`;
     return 'Avance na campanha para desbloquear esta carta.';

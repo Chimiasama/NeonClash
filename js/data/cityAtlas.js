@@ -132,5 +132,20 @@
     [100, "Paulo", "morador", "square", "Paulo ajeita as cadeiras do auditório."]
   ].map(([id, name, role, location, line]) => ({ id, name, role, location, line }));
 
-  NB.CityAtlas = { neighborhoods, places, residents };
+  const jobs = {
+    delivery: { name: 'Correio Expresso', locations: ['kira', 'terminal', 'depots', 'registry', 'docks'] },
+    escort: { name: 'Escolta de Beco', locations: ['morroKitchen', 'kira'], minutes: 50, energy: 14, pay: 24, hours: [19, 3] },
+    drones: { name: 'Manutenção de Drones', locations: ['garage'], minutes: 40, energy: 7, pay: 12 },
+    logs: { name: 'Limpeza de Logs', locations: ['registry', 'terminal'], minutes: 35, energy: 6, pay: 14 },
+    scrap: { name: 'Triagem de Sucata', locations: ['depots'], minutes: 40, energy: 7, pay: 13 },
+    cargo: { name: 'Ronda de Carga', locations: ['docks'], minutes: 50, energy: 9, pay: 18, hours: [7, 17] }
+  };
+
+  const residentDuels = {
+    43: { hp: 15, credits: 8, card: 'unit_29', deck: ['unit_02', 'unit_08', 'unit_29', 'exploit_12', 'exploit_14'] },
+    44: { hp: 17, credits: 9, card: 'unit_30', deck: ['unit_05', 'unit_06', 'unit_28', 'unit_30', 'exploit_13'] },
+    84: { hp: 19, credits: 10, card: 'exploit_14', deck: ['unit_03', 'unit_28', 'unit_29', 'exploit_12', 'exploit_14'] }
+  };
+
+  NB.CityAtlas = { neighborhoods, places, residents, jobs, residentDuels };
 })(window.NB = window.NB || {});

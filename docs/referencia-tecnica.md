@@ -1,6 +1,6 @@
 # NeonClash — referência técnica
 
-Retrato da implementação em `0440f72`. Para acompanhar a história passo a passo, consulte o [guia da aventura](aventura-baixa-luz.md). O [plano de expansão](plano-expansao.md) documenta metas futuras.
+Retrato da implementação após o lote de sinergias e trabalhos urbanos. Para acompanhar a história passo a passo, consulte o [guia da aventura](aventura-baixa-luz.md). O [plano de expansão](plano-expansao.md) documenta metas futuras.
 
 ## Produto e superfícies
 
@@ -19,7 +19,7 @@ NeonClash é um jogo solo em português que combina exploração urbana, investi
 
 ## Estrutura e fluxo de execução
 
-`index.html` declara as telas, os controles, os arquivos CSS e a ordem dos scripts `defer`. Os scripts expõem módulos em `window.NB`. A entrada efetiva é `js/main.js`, que carrega o save, inicia a resolução das artes, conecta eventos, prepara o estado inicial e restaura o áudio. A entrada Android acrescenta `?android=1` para solicitar reprodução na abertura. O uso de plugins React e Tailwind na configuração do Vite convive com a interface do jogo, escrita em HTML, CSS e JavaScript imperativo.
+`index.html` declara as telas, os controles, os arquivos CSS e a ordem dos scripts `defer`. Os scripts expõem módulos em `window.NB`. A entrada efetiva é `js/main.js`, que carrega o save, inicia a resolução das artes, conecta eventos, prepara o estado inicial e restaura o áudio. A entrada Android acrescenta `?android=1` para solicitar reprodução na abertura. O Vite serve e empacota diretamente a interface HTML, CSS e JavaScript imperativa. O build usa apenas o plugin local de cópia dos arquivos estáticos.
 
 | Camada | Módulos e responsabilidades |
 | --- | --- |
@@ -27,7 +27,7 @@ NeonClash é um jogo solo em português que combina exploração urbana, investi
 | Domínio | `js/core/saveManager.js` normaliza e salva progresso. `cityLife.js` calcula deslocamentos, relógio, descanso e inventário. `story.js` valida pré-requisitos e avança capítulos. `gameState.js` mantém partida, baralhos, mesa, recursos e resultado. `cardEffects.js` resolve efeitos declarativos e estima seu valor para a IA. `combatEngine.js` resolve choques, bloqueios e Overclock. `aiController.js` decide invocações, Exploits, ataques e bloqueios. |
 | Interface | `js/ui/inputController.js` orquestra navegação, entrada e confirmação. `renderer.js` atualiza HUD, tabuleiro, mão, visor, dossiê e resultado. `city.js` apresenta o mapa e as ações urbanas. `story.js` implementa prólogo, leitor e diário. `deckBuilder.js` implementa coleção e editor. `gallery.js` detecta e exibe artes vistas. |
 | Apresentação | `js/audio/soundEngine.js` agenda música e sintetiza efeitos. `js/physics/fxEngine.js` faz animações, partículas em canvas, feixes, retornos visuais e vibração quando suportada. `js/sprites/proceduralArt.js` resolve artes locais e pode gerar substitutas. `css/` divide base, HUD, cartas, modais, campanha, coleção e cidade. |
-| Empacotamento | `vite.config.ts` usa base relativa e copia `src/assets`, `css`, `js`, `cards`, `avatars` e `audio` para `dist`. O projeto `android/` usa `dist` como assets do aplicativo. |
+| Empacotamento | `vite.config.ts` usa base relativa, agrupa os estilos e copia `src/assets`, `js`, `cards`, `avatars` e `audio` para `dist`. O projeto `android/` usa `dist` como assets do aplicativo. |
 
 Os controles consultam o estado corrente antes de realizar ações. Um duelo tem um identificador de geração em memória. As esperas animadas verificam essa geração para cancelar operações pendentes quando o jogador sai ou começa outra partida. Turnos, seleção, mão, campo e descarte pertencem à partida em memória. Recompensas, gastos, avanço urbano e resultados registrados pertencem ao save.
 
@@ -38,7 +38,7 @@ Os controles consultam o estado corrente antes de realizar ações. Um duelo tem
 | `localStorage.neon_breach_save_v1` | Documento JSON do progresso. O carregamento completa campos ausentes, valida IDs de cartas, ajusta limites e reconstrói decks inválidos. |
 | Coleção e decks | `unlockedCards`, `customDeck`, `deckSlot` ativo e `deckSlots` para guardar as demais configurações. Os 12 IDs iniciais são preservados. |
 | Histórico | `defeatedBosses`, `clues`, `challengeWins`, `wins`, `matches` e `city.residentWins`. As primeiras vitórias liberam os prêmios próprios. |
-| Cidade | `city.credits`, `city.district`, `city.traced` e `city.life`. Vida urbana guarda minutos absolutos, vigília, energia, implante, veículos, estoque, favores, turno do quiosque e aviso de colapso. |
+| Cidade | `city.credits`, `city.district`, `city.traced` e `city.life`. Vida urbana guarda minutos absolutos, vigília, energia, implante, veículos, estoque, favores, turno do quiosque, contagem diária de trabalhos, entrega ativa e aviso da última ação. |
 | Investigação | `prologueSeen` controla a apresentação. `story` guarda ativação, capítulo, flags de passos, escolhas, páginas lidas e cenas de evidência. |
 | Personalização | `affinities` guarda recalibrações por ID. `seenArt` guarda caminhos dos recursos já visualizados, com deduplicação. |
 | Áudio | `neon_breach_sound` guarda `on` ou `off`. `neon_breach_volume` guarda os dois valores de 0 a 100. Ambos têm padrão 70%. |
@@ -63,14 +63,32 @@ A distância é `max(2, ceil(hypot(Δx, Δy) / 10))` com as coordenadas do mapa.
 - Chegar com energia zero ou atingir o limite de vigília dispara o descanso. Em casa são 8 h grátis e energia cheia. Em outro local são 5 h na rua, energia volta a 60 e há 30% de chance de perder 60% do saldo restante, arredondado para cima. A tarifa vem antes do cálculo da perda.
 - Dormir voluntariamente restaura toda a energia e zera a vigília. Casa custa 0/8 h, Pensão custa 12/7 h e Hotel Espelho custa 26/5 h. A cama precisa estar acessível no local onde Kairo está e o saldo precisa cobrir o preço.
 - A mochila comporta 12 consumíveis no total. Café custa 4 e dá +15, energético custa 9 e dá +28, estímulo sintético custa 16 e dá +45. O consumo respeita o teto de energia e não reinicia a vigília.
-- Na Antena, o trabalho usa seis símbolos, 3,5 s de memorização e 12 s de entrada. Um erro reinicia a sequência e tira 2 s do prazo. A conclusão rende 20 créditos. Trabalho concluído ou expirado custa 45 min e 8 de energia. No fluxo original, rastrear pista usa quatro símbolos visíveis, sem cronômetro, e avança os mesmos 45 min e 8 de energia quando concluído.
-- O turno noturno do Quiosque funciona das 19:00 à 01:00, com um pagamento por janela. Rende 14 créditos e custa 60 min e 12 de energia. Ajudar Maíra rende 16 créditos e custa 30 min e 5 de energia.
+- No fluxo original, rastrear pista usa quatro símbolos visíveis, dispensa cronômetro e avança 45 min e 8 de energia quando concluído. O rastreamento é uma etapa de progressão à parte dos trabalhos pagos.
+- Ajudar Maíra rende 16 créditos e custa 30 min e 5 de energia.
 - Cada morador listado permite conversar. Repetir a conversa na mesma sessão muda a resposta quando aplicável. Damião tem 10 HP e paga 5 por vitória. Tuca tem 14 HP e paga 7, com carta na primeira vitória. Dora tem 22 HP, usa Overclock e paga 12, com carta na primeira vitória. O estoque da Feira e essas vitórias oferecem rotas que podem coincidir.
-- A Feira vende `unit_21` por 45, `unit_22` por 65, `unit_23` por 85 e `exploit_07` por 30. A oficina muda a afinidade por 15 créditos e restaura a original gratuitamente. Suas mudanças são de afinidade e convivem com ATK e DEF base.
+- A Feira vende `unit_21` por 45, `unit_22` por 65, `unit_23` por 85, `exploit_07` por 30, `unit_28` por 48, `exploit_12` por 36 e `exploit_13` por 40. A oficina muda a afinidade por 15 créditos e restaura a original gratuitamente. Suas mudanças são de afinidade e convivem com ATK e DEF base.
+
+### Trabalhos urbanos
+
+`city.life.dailyJobCounts` guarda repetições por trabalho, acompanhado por `dailyJobDay`. Cada tipo paga 100% nas duas primeiras execuções e 50% na terceira, com arredondamento para baixo. A partir da quarta tentativa a UI mostra **Demanda esgotada por hoje**. A demanda reinicia na virada do dia ou ao dormir. Os dois níveis da Antena têm contagens separadas e cada erro custa 2 s e volta ao primeiro símbolo. Concluir ou deixar o prazo expirar conta como execução e consome tempo e energia. Expirar paga zero. Cancelar uma entrega ou interromper o minigame antes da resolução não conta.
+
+| Trabalho | Local / horário de início | Custo urbano | Recompensa integral |
+| --- | --- | --- | --- |
+| Sinal Padrão | Antena Comunitária | 30 min e 5 energia | 12 créditos. 4 símbolos, 4 s de memorização e 12 s de entrada. |
+| Sinal Criptografado | Antena Comunitária | 45 min e 8 energia | 22 créditos. 6 símbolos, 3,5 s de memorização e 12 s de entrada. |
+| Correio Expresso | Estação Fantasma, Terminal da Estação, Depósito de Peças, Balcão Cívico ou Subestação do Cais | Deslocamentos escolhidos pelo jogador | Base de `6 + 2d`, bônus por velocidade ou multa por atraso. |
+| Escolta de Beco | Cozinha Comunitária e Estação Fantasma, das 19h até antes das 03h | 50 min e 14 energia | 24 créditos. |
+| Manutenção de Drones | Garagem da Íris | 40 min e 7 energia | 12 créditos e café ou energético aleatório. Com mochila cheia, 16 créditos. A saturação reduz a parte em créditos. |
+| Limpeza de Logs | Balcão Cívico e Terminal da Estação | 35 min e 6 energia | 14 créditos, ou 18 com pelo menos 15 cartas desbloqueadas. |
+| Triagem de Sucata | Depósito de Peças | 40 min e 7 energia | 13 créditos, ou 17 após aprender o atalho com Aline ou vencer Giba. |
+| Ronda de Carga | Subestação do Cais, das 07h até antes das 17h | 50 min e 9 energia | 18 créditos. |
+| Turno do Quiosque | Quiosque 24h, das 19h à 01h inclusive | 60 min e 12 energia | 14 créditos. O turno mantém seu limite de um pagamento por janela. |
+
+A entrega sorteia um destino com distância original `d ≥ 4`. `activeDelivery` guarda destino, minuto de início e distância, permitindo uma entrega por vez. Chegar pela viagem normal conclui o contrato. O tempo real inclui desvios e espera entre a aceitação e a chegada. Quando ele fica dentro de `7d` minutos, o bônus é `min(12, max(0, floor(10 × (1 − tempoReal / (7d)))))`. Após `8d` minutos, a base cai para 75%, arredondada para baixo, e o bônus é zero. A saturação incide depois do cálculo. A entrega é creditada na chegada, antes de eventual descanso forçado.
 
 ## Combate, cartas e progressão
 
-O catálogo atual tem **32 cartas**, sendo 21 unidades e 11 Exploits. Cada deck do jogador tem 20 cartas e aceita até duas cópias de cada ID. Há 12 cartas inicialmente disponíveis. A coleção usa ID estável, metadados de arte, descrição e atributos. Cartas novas entram pelo catálogo em `cards.js` e pela respectiva rota de aquisição. IDs têm lacunas históricas e o sufixo maior não representa a contagem.
+O catálogo atual tem **38 cartas**, sendo 24 unidades e 14 Exploits. Cada deck do jogador tem 20 cartas e aceita até duas cópias de cada ID. Há 12 cartas inicialmente disponíveis. A coleção usa ID estável, metadados de arte, descrição e atributos. Cartas novas entram pelo catálogo em `cards.js` e pela respectiva rota de aquisição. IDs têm lacunas históricas e o sufixo maior não representa a contagem.
 
 1. Cada lado começa com 0 RAM. Kairo tem 20 HP. A partida distribui quatro cartas iniciais por lado. A mão comporta seis cartas, com descarte quando uma compra excede esse limite. Quando o deck fica vazio, o descarte é embaralhado para continuar comprando.
 2. Em seu turno, Kairo pode invocar uma unidade se houver posição livre, obter a RAM da carta e usar Exploits enquanto puder pagar. Uma unidade normalmente passa por boot antes de poder atacar. O turno seguinte libera as unidades e compra uma carta. A IA segue fluxo de compra, invocação, Exploits e ataque, com perfil do oponente.
@@ -85,6 +103,9 @@ O catálogo atual tem **32 cartas**, sendo 21 unidades e 11 Exploits. Cada deck 
 | Firewall | Dá prioridade de bloqueio/ataque e pode interceptar automaticamente atacantes ainda sem bloqueio. |
 | Vírus | Após causar dano de combate a uma unidade que sobreviveu, reduz seu ATK em 2, até o mínimo de zero. |
 | Dreno | Rouba até 1 RAM ao causar dano direto a HP. Outros efeitos podem drenar valores próprios. |
+| Ressonância | Requer outra aliada da mesma afinidade não neutra. Condensador Coral recebe DEF permanente na entrada. Ferro de Pulso recebe ATK no ataque, inclusive no Overclock. |
+| Reciclar / Lixeira | O efeito pode filtrar cartas descartadas por ID ou tipo, escolher aleatoriamente ou recuperar a mais recente. Recuperação exige espaço na mão. Pressão de Sucata causa dano proporcional ao descarte, limitado a 3. |
+| Varredura | Janela Espectral revela o topo e compra uma carta. Se o topo era Pulso, compra mais uma. O lote piloto usa a variante de compra condicional. |
 | Exploits | Validam RAM e alvos antes de consumir a carta. Efeitos incluem dano direto, dano ou bônus de atributos, cura de HP, reparo limitado ao máximo de DEF, destruição, compra, dreno e afinidade. Há também efeitos de entrada de unidade. |
 
 | Modo | Acesso e resultado |
@@ -122,14 +143,16 @@ Unidades são instâncias de campo com UID, ATK e DEF atuais, DEF máxima, afini
 | Item | Configuração |
 | --- | --- |
 | Web | Node.js 24 e npm. `npm ci`, `npm run dev` (porta 3000), `npm run lint` (TypeScript), `npm run build` e `npm run preview`. |
-| Testes | `tests/game.spec.js` tem 36 cenários Playwright na revisão de referência. Usa perfil Pixel 7 e o build servido na porta 4317. Cobre combate, campanha, cidade, economia, galeria, áudio, deck e navegação. Para rodar localmente, gere `dist`, instale Chromium com `npx playwright install chromium` ou defina `CHROMIUM_PATH`, e execute `npm test`. |
+| Testes | `tests/game.spec.js` tem 41 cenários Playwright, incluindo os 36 fluxos anteriores. Usa perfil Pixel 7 e o build servido na porta 4317. Cobre combate, campanha, cidade, economia, galeria, áudio, deck e navegação. Para rodar localmente, gere `dist`, instale Chromium com `npx playwright install chromium` ou defina `CHROMIUM_PATH`, e execute `npm test`. |
 | Android | Application ID `io.github.chimiasama.neonclash`, versão `0.1.0` e código 1. JDK 17, AGP 9.5.1, Gradle 9.9.2, SDK alvo/compile 35, mínimo 23 e Build Tools 36.0.0. A Activity usa orientação retrato. |
 | APK | Depois do build web, execute `./gradlew :app:assembleDebug` em `android/`. Saída `android/app/build/outputs/apk/debug/app-debug.apk`, com assinatura de depuração. |
 | CI | `.github/workflows/android.yml` usa Linux, Chrome preinstalado quando disponível e Chromium Playwright como alternativa. Executa lint, build e testes, gera o APK, verifica assinatura e arquivos internos e publica `NeonClash-debug` como artefato. Gatilhos configurados para push/PR na `main` e execução manual. |
 
 ## Conteúdo atual e metas
 
-O jogo disponível tem 32 cartas, 10 bairros, 23 locais, 100 moradores cadastrados, quatro chefes, quatro desafios de arquétipo e 29 cenas da investigação. O [plano de expansão](plano-expansao.md) descreve a meta de 500 cartas, sendo 495 encontráveis e cinco secretas de missão. Os roteiros de construção e descrições de moradores nos demais arquivos de `docs/` registram escopo planejado além dos recursos já descritos aqui.
+O jogo disponível tem 38 cartas, 10 bairros, 23 locais, 100 moradores cadastrados, quatro chefes, quatro desafios de arquétipo e 29 cenas da investigação. O [plano de expansão](plano-expansao.md) descreve a meta de 500 cartas, sendo 495 encontráveis e cinco secretas de missão. Os roteiros de construção e descrições de moradores nos demais arquivos de `docs/` registram escopo planejado além dos recursos já descritos aqui.
+
+O lote piloto usa arte procedural. Condensador Coral, Ímã de Núcleo e Janela Espectral são vendidos na Feira. Catadora de Ecos, Ferro de Pulso e Pressão de Sucata são prêmios das primeiras vitórias sobre Giba, Aline e Nanda, respectivamente. Os três adversários também usam cartas do lote.
 
 ## Catálogo atual por ID
 
@@ -169,3 +192,9 @@ Os nomes e os atributos base abaixo também identificam a arte, a rota de aquisi
 | `exploit_09` | Cerâmica de Reparo | Exploit | 1 RAM | — |
 | `exploit_10` | Ferrugem Óptica | Exploit | 2 RAM | — |
 | `exploit_11` | Ponte Dupla | Exploit | 2 RAM | — |
+| `unit_28` | Condensador Coral | Unidade | 2 / 4 · +2 RAM | Malha |
+| `unit_29` | Catadora de Ecos | Unidade | 2 / 3 · +2 RAM | Sombra |
+| `unit_30` | Ferro de Pulso | Unidade | 3 / 3 · +2 RAM | Pulso |
+| `exploit_12` | Ímã de Núcleo | Exploit | 2 RAM | — |
+| `exploit_13` | Janela Espectral | Exploit | 2 RAM | — |
+| `exploit_14` | Pressão de Sucata | Exploit | 2 RAM | — |
