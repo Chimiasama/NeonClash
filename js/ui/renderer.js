@@ -402,7 +402,7 @@
       const nums = document.createElement('div');
       nums.className = 'hand-card-nums tabular';
       if (card.kind === 'unit') {
-        nums.innerHTML = `<span class="a">${card.atk}</span>/<span class="d">${card.def}</span> <span>${NB.Cards.AFFINITIES[NB.Save.getAffinity(card.id)]?.icon || ''}</span>`;
+        nums.innerHTML = `<span class="a">${card.atk}</span>/<span class="d">${card.def}</span> <span>${NB.Cards.AFFINITIES[NB.State.getMatchAffinity(card.id, 'player')]?.icon || ''}</span>`;
       } else {
         nums.innerHTML = `<span class="e">EXPLOIT</span>`;
       }
@@ -668,7 +668,7 @@
     if (card.kind === 'exploit') vCard.classList.add('exploit-theme');
 
     document.getElementById('visor-type').textContent =
-      card.kind === 'unit' ? `UNIDADE · ${NB.Cards.affinityLabel(NB.Save.getAffinity(card.id))}` : 'EXPLOIT · AÇÃO';
+      card.kind === 'unit' ? `UNIDADE · ${NB.Cards.affinityLabel(NB.State.getMatchAffinity(card.id, 'player'))}` : 'EXPLOIT · AÇÃO';
     document.getElementById('visor-title').textContent = card.name.toUpperCase();
 
     const artBox = document.getElementById('visor-art');
@@ -690,7 +690,7 @@
     }
 
     renderVisorKeywords(card);
-    document.getElementById('visor-desc').textContent = card.desc + NB.Cards.describeAffinity(NB.Save.getAffinity(card.id));
+    document.getElementById('visor-desc').textContent = card.desc + NB.Cards.describeAffinity(NB.State.getMatchAffinity(card.id, 'player'));
 
     const warnEl = document.getElementById('visor-warning');
     if (!check.ok) {

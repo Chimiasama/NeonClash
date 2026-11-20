@@ -758,3 +758,18 @@ test('limits repair, protects RAM on invalid targets and previews affinity damag
   expect(repair).toEqual({ invalid: false, unspent: 4, valid: true, def: 5, ram: 3 });
   await expect(page.locator('#defense-preview')).toHaveText('Sua posição 1 DEF 5→1 · Inimigo 2 DEF 5→3');
 });
+
+test('finishes a draw exploit before putting it into the discard pile', async ({ page }) => {
+  await page.goto('/');
+  const piles = await page.evaluate(() => {
+    NB.Input.startMatch({ mode: 'quick' });
+    const { player } = NB.State.get();
+    player.ram = 2;
+    player.hand = [{ cardId: 'exploit_08', uid: 90 }];
+    player.deck = [];
+    player.discard = [{ cardId: 'unit_01', uid: 91 }];
+    NB.State.executeExploit('player', 90);
+    return { hand: player.hand.map(item => item.uid), discard: player.discard.map(item => item.uid) };
+  });
+  expect(piles).toEqual({ hand: [91], discard: [90] });
+});

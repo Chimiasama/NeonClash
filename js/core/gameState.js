@@ -123,13 +123,18 @@
     return card;
   }
 
+  function getMatchAffinity(cardId, side) {
+    return side === 'player' && !state?.challenge
+      ? NB.Save.getAffinity(cardId) : NB.Cards.CARD_DB[cardId].affinity || null;
+  }
+
   function createFieldUnit(cardId, uid, side = 'enemy') {
     const def = NB.Cards.CARD_DB[cardId];
     const isZeroDay = NB.Cards.hasKeyword(def, 'ZERO_DAY');
     return {
       uid,
       cardId,
-      affinity: side === 'player' && !state?.challenge ? NB.Save.getAffinity(cardId) : def.affinity || null,
+      affinity: getMatchAffinity(cardId, side),
       atk: def.atk,
       baseAtk: def.atk,
       def: def.def,
@@ -259,7 +264,6 @@
         !NB.CardEffects.legalSlots(state, card, side).includes(targetSlot)) return false;
     actor.ram -= card.cost;
     actor.hand.splice(index, 1);
-    actor.discard.push(item);
 
     if (side === 'player') {
       state.stats.exploitsUsed++;
@@ -269,6 +273,7 @@
 
     NB.Audio.playLaser();
     NB.CardEffects.resolve(card, card.effects, side, targetSlot);
+    actor.discard.push(item);
     NB.UI.renderAll();
     checkWinCondition();
     return true;
@@ -377,6 +382,7 @@
     getSlotEl,
     drawCard,
     createFieldUnit,
+    getMatchAffinity,
     canPlayHandCard,
     applyVirusDebuff,
     applyRamDrain,
