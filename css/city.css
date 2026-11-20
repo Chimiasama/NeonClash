@@ -199,7 +199,7 @@
 #story-title { margin-top: 4px; font-size: 19px; }
 .story-reading { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 #story-line { font-size: 16px; line-height: 1.55; }
-#story-art { display: block; width: 100%; max-height: 146px; object-fit: cover; object-position: center 35%; margin-bottom: 10px; }
+#story-art { display: block; width: 100%; max-height: clamp(72px, 22dvh, 146px); object-fit: cover; object-position: center 35%; margin-bottom: 10px; }
 #story-art[hidden] { display: none; }
 #story-page { color: #bec9dc; font-size: 12px; margin-bottom: 6px; }
 #story-options { display: grid; gap: 6px; }
