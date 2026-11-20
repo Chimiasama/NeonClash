@@ -302,23 +302,23 @@ test('adjusts music and effects independently and restores their levels', async 
   const effects = page.getByRole('slider', { name: 'Efeitos sonoros' });
   const gain = (channel) => page.evaluate(key => NB.Audio[key].gain.value, channel);
 
-  await expect(music).toHaveValue('100');
-  await expect(effects).toHaveValue('100');
+  await expect(music).toHaveValue('70');
+  await expect(effects).toHaveValue('70');
   await music.fill('0');
   await expect(music).toHaveAttribute('aria-valuetext', '0%');
   await expect.poll(() => gain('musicGain')).toBeLessThan(0.001);
-  await expect.poll(() => gain('sfxGain')).toBeCloseTo(0.55, 2);
+  await expect.poll(() => gain('sfxGain')).toBeCloseTo(1.155, 2);
   await effects.fill('63');
   await expect(effects).toHaveAttribute('aria-valuetext', '63%');
-  await expect.poll(() => gain('sfxGain')).toBeCloseTo(0.3465, 2);
+  await expect.poll(() => gain('sfxGain')).toBeCloseTo(1.0395, 2);
   await expect.poll(() => gain('musicGain')).toBeLessThan(0.001);
 
   await page.reload();
   await page.locator('#btn-title-settings').click();
   await expect(music).toHaveValue('0');
   await expect(effects).toHaveValue('63');
-  await page.locator('#btn-settings-sound').click();
-  await expect.poll(() => gain('sfxGain')).toBeCloseTo(0.3465, 2);
+  await expect(page.locator('#btn-settings-sound')).toHaveText('SOM: ON');
+  await expect.poll(() => gain('sfxGain')).toBeCloseTo(1.0395, 2);
   await expect.poll(() => gain('musicGain')).toBeLessThan(0.001);
 });
 
@@ -362,18 +362,21 @@ test('recalibrates a unit at the workshop, preserves the choice, and restores it
   await page.goto('/');
   await page.getByRole('button', { name: 'Entrar na cidade' }).click();
   await walkTo(page, page.getByRole('button', { name: 'Feira do Viaduto' }));
-  const units = page.getByRole('combobox', { name: 'Unidade para recalibrar' });
+  const units = page.locator('.workshop-grid [data-card-id="unit_03"]');
   const affinities = page.getByRole('combobox', { name: 'Nova afinidade' });
   const recalibrate = page.getByRole('button', { name: 'Recalibrar · 15 créditos' });
-  await units.selectOption('unit_03');
+  await page.getByText('Melhorar cartas', { exact: true }).click();
+  await units.click();
   await expect(recalibrate).toBeDisabled();
   await affinities.selectOption('sombra');
+  await expect(page.locator('.workshop-editor')).toContainText('dará +1 de dano contra Pulso');
   await recalibrate.click();
   await expect(page.locator('#city-credits')).toHaveText('20 créditos');
   await expect(page.locator('.city-workshop')).toContainText('Afinidade atual · ◆ Sombra');
   await page.reload();
   await page.getByRole('button', { name: 'Entrar na cidade' }).click();
-  await units.selectOption('unit_03');
+  await page.getByText('Melhorar cartas', { exact: true }).click();
+  await units.click();
   await expect(page.locator('.city-workshop')).toContainText('Afinidade atual · ◆ Sombra');
   expect(await page.evaluate(() => NB.State.createFieldUnit('unit_03', 1, 'player').affinity)).toBe('sombra');
   expect(await page.evaluate(() => NB.State.createFieldUnit('unit_03', 1, 'enemy').affinity)).toBe('malha');
@@ -772,4 +775,57 @@ test('finishes a draw exploit before putting it into the discard pile', async ({
     return { hand: player.hand.map(item => item.uid), discard: player.discard.map(item => item.uid) };
   });
   expect(piles).toEqual({ hand: [91], discard: [90] });
+});
+
+test('shows the illustrated prologue before entering and highlights investigation', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 600 });
+  await page.goto('/');
+  const art = page.locator('#prologue-art');
+  await expect.poll(() => art.evaluate(img => img.naturalWidth)).toBeGreaterThan(0);
+  await expect(page.locator('#prologue-text')).toContainText('Durante as enchentes');
+  await page.getByRole('button', { name: 'Próximo quadro' }).click();
+  await expect(page.locator('#prologue-text')).toContainText('Nina chamou pelo rádio');
+  await page.getByRole('button', { name: 'Próximo quadro' }).click();
+  await expect(page.locator('#prologue-text')).toContainText('sua assinatura ajudou a fazer');
+  expect(await page.locator('.title-prologue').evaluate(panel => panel.scrollHeight <= panel.clientHeight + 1)).toBe(true);
+  await page.getByRole('button', { name: 'Entrar na cidade' }).click();
+  await expect(page.locator('#city-story')).toHaveClass('city-investigate');
+  await page.locator('#city-story').click();
+  await expect(page.getByRole('button', { name: 'Começar investigação' })).toHaveClass('city-investigate');
+});
+
+test('resumes suspended audio on a regular gesture and respects an explicit mute', async ({ page }) => {
+  await page.goto('/?android=1');
+  await page.getByRole('button', { name: 'Próximo quadro' }).click();
+  await expect.poll(() => page.evaluate(() => NB.Audio.ctx.state)).toBe('running');
+  await page.evaluate(() => NB.Audio.ctx.suspend());
+  await page.getByRole('button', { name: 'Quadro anterior' }).click();
+  await expect.poll(() => page.evaluate(() => NB.Audio.ctx.state)).toBe('running');
+  await page.locator('#btn-title-sound').click();
+  await page.reload();
+  await page.getByRole('button', { name: 'Próximo quadro' }).click();
+  await expect(page.locator('#btn-title-sound')).toHaveText('SOM: OFF');
+  expect(await page.evaluate(() => NB.Audio.ctx)).toBeNull();
+});
+
+test('talks to residents and earns a card from a neighborhood duel', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Entrar na cidade' }).click();
+  await walkTo(page, page.getByRole('button', { name: 'Ringue Baixa Tensão', exact: true }));
+  await page.getByText('Pessoas neste local', { exact: true }).click();
+  const talk = page.getByRole('button', { name: 'Falar com Tuca' });
+  await talk.click();
+  await expect(page.getByText('Pode testar seu baralho comigo.', { exact: false })).toBeVisible();
+  await talk.click();
+  await expect(page.getByText('olha quanta RAM sobra', { exact: false })).toBeVisible();
+  await page.getByRole('button', { name: 'Desafiar Tuca' }).click();
+  await page.evaluate(() => {
+    NB.State.get().enemy.hp = 0;
+    NB.State.checkWinCondition();
+  });
+  await expect(page.locator('#gameover-modal')).toContainText('VITÓRIA · +7 CRÉDITOS');
+  await expect(page.locator('#go-clue-title')).toHaveText('CARTA CONQUISTADA');
+  await page.reload();
+  expect(await page.evaluate(() => NB.Save.get().city.residentWins)).toEqual([33]);
+  expect(await page.evaluate(() => NB.Save.get().unlockedCards)).toContain('unit_21');
 });

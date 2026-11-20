@@ -410,9 +410,13 @@
       if (e.target.id === 'visor-layer') dismissVisor();
     });
 
-    // A WebView inicia a abertura automaticamente. No navegador, use uma interação.
-    document.getElementById('title-modal').addEventListener('click', (event) => {
-      if (!event.target.closest('button')) NB.Audio.activateOnEntry();
+    document.addEventListener('click', event => {
+      if (event.isTrusted && !event.target.closest('#btn-title-sound, #btn-sound, #btn-settings-sound')) {
+        NB.Audio.activateOnEntry(true);
+      }
+    }, { capture: true });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && NB.Audio.enabled) NB.Audio.resume();
     });
     // Navegação Tela Inicial
     document.getElementById('btn-start-campaign').addEventListener('click', () => {

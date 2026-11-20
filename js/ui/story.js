@@ -94,7 +94,7 @@
     section.className = 'city-story-section';
     text(section, NB.Story.chapters[NB.Story.get().chapter], 'h4');
     if (aftermath) text(section, aftermath);
-    scenes.forEach(scene => button(section, scene.title, () => open(scene.id)));
+    scenes.forEach(scene => button(section, scene.title, () => open(scene.id)).classList.add('city-investigate'));
     if (duel?.[1].route && NB.Story.choice(duel[1].deal) !== duel[1].route) {
       button(section, duel[1].label, () => {
         NB.Story.alternate(duel[0]);
@@ -111,7 +111,7 @@
       button(content, 'Começar investigação', () => {
         NB.Story.start();
         NB.City.refreshStory('Primeiro passo · Casa de Kairo.');
-      });
+      }).classList.add('city-investigate');
       return;
     }
 
@@ -148,7 +148,30 @@
     }
   }
 
+  const prologue = [
+    ['prologo-oficina', 'As casas que ficaram acesas',
+      'Kairo cresceu no Viaduto. Durante as enchentes, ela instalou baterias para manter geladeiras de remédios e rádios ligados. A Vértice contratou sua equipe depois que a água baixou. Com salário e peças novas, dava para atender mais casas.'],
+    ['prologo-estacao', 'A noite em que o rádio calou',
+      'Meses depois, Kairo descobriu que medidores que ela tinha assinado pararam de pedir manutenção. Ela marcou um encontro na Estação Fantasma para comparar os registros. Homens com lanternas chegaram antes do contato. Nina chamou pelo rádio até Kairo perder o sinal.'],
+    ['prologo-casa', 'A chave ainda serve',
+      'Dois dias depois, seu cartão já não abre a própria casa. A chave antiga abre. Dona Nair guardou as faturas que a Vértice diz nunca ter emitido. Kairo quer descobrir quem tirou aquelas casas do cadastro e reparar o estrago que sua assinatura ajudou a fazer.']
+  ];
+  let prologuePage = 0;
+
+  function renderPrologue() {
+    const [art, title, line] = prologue[prologuePage];
+    $('prologue-art').src = `./src/assets/${art}.webp`;
+    $('prologue-title').textContent = title;
+    $('prologue-text').textContent = line;
+    $('prologue-page').textContent = `${prologuePage + 1} / ${prologue.length}`;
+    $('prologue-prev').disabled = prologuePage === 0;
+    $('prologue-next').disabled = prologuePage === prologue.length - 1;
+  }
+
   function bindEvents() {
+    $('prologue-prev').addEventListener('click', () => { prologuePage--; renderPrologue(); });
+    $('prologue-next').addEventListener('click', () => { prologuePage++; renderPrologue(); });
+    renderPrologue();
     $('btn-story-close').addEventListener('click', close);
     $('story-modal').addEventListener('keydown', event => {
       if (event.key === 'Escape') close();

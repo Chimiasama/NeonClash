@@ -368,3 +368,32 @@
   color: var(--text-muted);
   margin-top: 2px;
 }
+
+.title-prologue {
+  flex-shrink: 0;
+  background: #111927;
+  border: 1px solid #385264;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.title-prologue figure { margin: 0; }
+.title-prologue img {
+  display: block;
+  width: 100%;
+  height: clamp(85px, 17vh, 155px);
+  object-fit: cover;
+}
+.title-prologue figcaption { padding: 8px 12px 1px; }
+.title-prologue h2 { margin: 0 0 4px; color: #a8f5f3; font-size: 15px; }
+.title-prologue p { margin: 0; line-height: 1.4; font-size: 13px; }
+.title-prologue nav { display: flex; align-items: center; justify-content: center; gap: 12px; }
+.title-prologue button {
+  padding: 0 12px;
+  min-height: 36px;
+  background: transparent;
+  color: #a8f5f3;
+  border: 0;
+  font-size: 24px;
+  cursor: pointer;
+}
+.title-prologue button:disabled { opacity: .35; }

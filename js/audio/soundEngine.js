@@ -4,7 +4,7 @@
   const tracks = NB.MusicTracks;
   const preferenceKey = 'neon_breach_sound';
   const volumeKey = 'neon_breach_volume';
-  const channelGain = { music: 0.28, sfx: 0.55 };
+  const channelGain = { music: 0.95, sfx: 1.65 };
   const frequency = midi => 440 * 2 ** ((midi - 69) / 12);
 
   /* Mixer e síntese em Web Audio. */
@@ -14,7 +14,7 @@
     scene: 'title',
     battle: false,
     preference: null,
-    volumes: { music: 100, sfx: 100 },
+    volumes: { music: 70, sfx: 70 },
     nextBeat: 0,
     musicTimer: null,
     step: 0,
@@ -25,6 +25,7 @@
     sfxCompressor: null,
     noiseBuffer: null,
     audioCache: {},
+    resumePending: false,
 
     isEnabled() {
       return this.enabled;
@@ -37,8 +38,18 @@
       this.ctx = new AudioCtx();
 
       this.masterGain = this.ctx.createGain();
-      this.masterGain.gain.value = 0.7;
-      this.masterGain.connect(this.ctx.destination);
+      this.masterGain.gain.value = 1;
+      const limiter = this.ctx.createDynamicsCompressor();
+      limiter.threshold.value = -4;
+      limiter.knee.value = 0;
+      limiter.ratio.value = 20;
+      limiter.attack.value = 0.001;
+      this.masterGain.connect(limiter);
+      limiter.connect(this.ctx.destination);
+      this.ctx.addEventListener('statechange', () => {
+        if (this.enabled && this.ctx.state === 'running') this.startMusic();
+        NB.UI.updateSoundButtons();
+      });
 
       this.musicGain = this.ctx.createGain();
       this.musicGain.gain.value = this.volumes.music / 100 * channelGain.music;
@@ -66,11 +77,8 @@
       if (on) {
         this.step = 0;
         this.init();
-        if (this.ctx && this.ctx.state === 'suspended') {
-          this.ctx.resume();
-        }
-        if (this.masterGain) this.masterGain.gain.value = 0.7;
-        this.startMusic();
+        if (this.masterGain) this.masterGain.gain.value = 1;
+        this.resume();
       } else {
         if (this.masterGain) this.masterGain.gain.value = 0;
         this.stopMusic();
@@ -107,17 +115,35 @@
       } catch (_) {}
     },
 
-    activateOnEntry() {
-      if (this.preference !== false && !this.enabled) this.setEnabled(true);
+    resume(onGesture = false) {
+      if (!this.ctx || !this.enabled) return;
+      if (this.ctx.state === 'running') {
+        this.startMusic();
+      } else if ((!this.resumePending || onGesture) && this.ctx.state !== 'closed') {
+        this.resumePending = true;
+        this.ctx.resume().catch(() => {}).finally(() => {
+          this.resumePending = false;
+          if (this.enabled && this.ctx.state === 'running') this.startMusic();
+        });
+      }
+    },
+
+    activateOnEntry(onGesture = false) {
+      if (this.preference === false) return;
+      if (!this.enabled) this.setEnabled(true);
+      else this.resume(onGesture);
     },
 
     toggle() {
-      this.preference = !this.enabled;
+      this.preference = !this.enabled || Boolean(this.ctx && this.ctx.state !== 'running');
       try {
         window.localStorage.setItem(preferenceKey, this.preference ? 'on' : 'off');
       } catch (_) {}
       this.setEnabled(this.preference);
-      if (this.enabled) this.playSelect();
+      if (this.enabled) {
+        this.resume(true);
+        this.playSelect();
+      }
     },
 
     /* Opcional: reproduz arquivo salvo em ./audio/<nome>.ogg|.mp3 se existir */
@@ -148,7 +174,7 @@
     },
 
     startMusic() {
-      if (!this.ctx || this.musicTimer) return;
+      if (!this.ctx || this.ctx.state !== 'running' || this.musicTimer) return;
       const now = this.ctx.currentTime;
       this.trackGain = this.ctx.createGain();
       this.trackGain.gain.setValueAtTime(0.001, now);

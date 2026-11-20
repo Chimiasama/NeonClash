@@ -593,10 +593,15 @@
     } else if (state.mode === 'arena') {
       const won = winner === 'player';
       panel.classList.add(won ? 'victory' : 'defeat');
-      kicker.textContent = 'RINGUE BAIXA TENSÃO';
+      kicker.textContent = boss.residentId ? `DUELO DE BAIRRO · ${boss.name}` : 'RINGUE BAIXA TENSÃO';
       kicker.style.color = won ? 'var(--ram)' : 'var(--magenta)';
       title.textContent = won ? `VITÓRIA · +${state.payout} CRÉDITOS` : (state.stake ? 'DERROTA · APOSTA PERDIDA' : 'DERROTA NO TREINO');
       title.style.color = kicker.style.color;
+      if (state.residentReward) {
+        clueBox.style.display = 'flex';
+        document.getElementById('go-clue-title').textContent = 'CARTA CONQUISTADA';
+        document.getElementById('go-clue-text').textContent = NB.Cards.CARD_DB[state.residentReward].name;
+      }
       primaryBtn.textContent = 'VOLTAR À CIDADE';
       primaryBtn.dataset.action = 'netmap';
       secondaryBtn.textContent = 'TELA INICIAL';
@@ -778,7 +783,8 @@
 
   function updateSoundButtons() {
     const on = NB.Audio.isEnabled();
-    const label = on ? 'SOM: ON' : 'SOM: OFF';
+    const waiting = on && NB.Audio.ctx && NB.Audio.ctx.state !== 'running';
+    const label = waiting ? 'ATIVAR SOM' : on ? 'SOM: ON' : 'SOM: OFF';
     ['btn-sound', 'btn-settings-sound', 'btn-title-sound'].forEach(id => {
       const btn = document.getElementById(id);
       if (!btn) return;

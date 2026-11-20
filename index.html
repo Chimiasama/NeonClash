@@ -159,9 +159,20 @@
           <span>CARTAS: 12/32</span>
           <span>PISTAS: 0/4</span>
         </div>
-        <div class="story-box">
-          A chave de Kairo ainda abre a porta. O cadastro diz que ali já não mora ninguém. Em Baixa Luz, abra Investigação para seguir os recibos que Dona Nair guardou.
-        </div>
+        <section class="title-prologue" aria-label="Prólogo de Kairo">
+          <figure>
+            <img id="prologue-art" src="./src/assets/prologo-oficina.webp" alt="">
+            <figcaption aria-live="polite">
+              <h2 id="prologue-title"></h2>
+              <p id="prologue-text"></p>
+            </figcaption>
+          </figure>
+          <nav aria-label="Páginas do prólogo">
+            <button id="prologue-prev" type="button" aria-label="Quadro anterior">‹</button>
+            <span id="prologue-page"></span>
+            <button id="prologue-next" type="button" aria-label="Próximo quadro">›</button>
+          </nav>
+        </section>
         <div class="title-cta-row">
           <button id="btn-start-campaign" class="btn-launch chamfer-sm" type="button">ENTRAR NA CIDADE</button>
           <button id="btn-quick-duel" class="btn-quick-duel chamfer-sm" type="button">DUELO RÁPIDO</button>
@@ -178,7 +189,7 @@
       <section class="city-panel" aria-labelledby="city-heading">
         <header class="city-header">
           <div><h2 id="city-heading">Baixa Luz</h2><p id="city-credits"></p><p id="city-clock"></p>
-            <label class="city-energy" for="city-energy"><span id="city-energy-label">Energia</span><progress id="city-energy" max="100" value="100"></progress></label><p id="city-awake"></p></div>
+            <label class="city-energy" for="city-energy"><span id="city-energy-label">Energia</span><progress id="city-energy" max="100" value="70"></progress></label><p id="city-awake"></p></div>
           <div class="city-nav">
             <button id="btn-netmap-deck" type="button">Meu Deck</button>
             <button id="city-atlas" type="button" aria-pressed="false">Bairros</button>
@@ -267,13 +278,13 @@
         <div class="settings-mixer">
           <div class="settings-volume">
             <label for="volume-music">Música</label>
-            <span id="volume-music-value" aria-hidden="true">100%</span>
-            <input id="volume-music" data-audio-channel="music" type="range" min="0" max="100" value="100" />
+            <span id="volume-music-value" aria-hidden="true">70%</span>
+            <input id="volume-music" data-audio-channel="music" type="range" min="0" max="100" value="70" />
           </div>
           <div class="settings-volume">
             <label for="volume-sfx">Efeitos sonoros</label>
-            <span id="volume-sfx-value" aria-hidden="true">100%</span>
-            <input id="volume-sfx" data-audio-channel="sfx" type="range" min="0" max="100" value="100" />
+            <span id="volume-sfx-value" aria-hidden="true">70%</span>
+            <input id="volume-sfx" data-audio-channel="sfx" type="range" min="0" max="100" value="70" />
           </div>
         </div>
         <div class="settings-row tabular">

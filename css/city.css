@@ -9,7 +9,7 @@
   max-width: none;
   max-height: 100%;
   overflow: auto;
-  padding: 70px 22px 24px;
+  padding: clamp(16px, 5vh, 56px) 22px 16px;
   border: 0;
   clip-path: none;
   box-shadow: none;
@@ -205,3 +205,39 @@
 #story-options { display: grid; gap: 6px; }
 #story-options button { min-height: 42px; padding: 7px 10px; color: #e8f1ff; background: #141f30; border: 1px solid #3c546a; border-radius: 4px; cursor: pointer; }
 #story-options .story-primary { color: #0a1821; background: #9cf3ef; }
+
+#city-story.city-investigate, #city-content .city-investigate {
+  color: #e2fffb;
+  border-color: #6af9ed;
+  background: #164344;
+  box-shadow: 0 0 10px #36e1cb88, inset 0 0 10px #36e1cb55;
+}
+
+.workshop-collection summary {
+  padding: 12px;
+  border: 1px solid #68c7cf;
+  border-radius: 4px;
+  color: #bafcf9;
+  cursor: pointer;
+}
+.workshop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+  gap: 6px;
+  max-height: 270px;
+  overflow-y: auto;
+  margin: 8px 0;
+}
+#city-content .workshop-grid button { padding: 4px; text-align: center; }
+.workshop-grid button[aria-pressed="true"] { border-color: #6af9ed; box-shadow: inset 0 0 10px #36e1cb55; }
+.workshop-grid img, .workshop-grid canvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  height: auto;
+  object-fit: cover;
+  margin-bottom: 4px;
+}
+.workshop-editor:not([hidden]) { display: grid; gap: 8px; }
+.city-residents > .city-life-row { margin-top: 6px; }
+.city-residents [aria-live]:empty { display: none; }

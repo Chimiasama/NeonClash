@@ -83,7 +83,7 @@
       deckSlot: 0,
       deckSlots: {},
       challengeWins: [],
-      city: { credits: 35, district: 'kira', traced: [], life: NB.CityLife.normalize() },
+      city: { credits: 35, district: 'kira', traced: [], residentWins: [], life: NB.CityLife.normalize() },
       affinities: {},
       story: NB.Story.normalize(),
       wins: 0,
@@ -125,6 +125,8 @@
             credits: Number.isSafeInteger(parsed.city?.credits) && parsed.city.credits >= 0 ? parsed.city.credits : def.city.credits,
             district: typeof parsed.city?.district === 'string' ? parsed.city.district : def.city.district,
             traced: Array.isArray(parsed.city?.traced) ? parsed.city.traced.filter(id => typeof id === 'string') : [],
+            residentWins: [...new Set((Array.isArray(parsed.city?.residentWins) ? parsed.city.residentWins : [])
+              .filter(Number.isSafeInteger))],
             life: NB.CityLife.normalize(parsed.city?.life)
           },
           story: NB.Story.normalize(parsed.story),

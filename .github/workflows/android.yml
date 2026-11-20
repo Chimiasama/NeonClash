@@ -53,7 +53,7 @@ jobs:
           grep -Fx 'assets/js/data/story.js' <<< "$entries"
           grep -Fx 'assets/js/data/cityAtlas.js' <<< "$entries"
           grep -Fx 'assets/src/assets/bairros/clinic.webp' <<< "$entries"
-          for scene in quarto-kairo pensao-canal quiosque-24h garagem-iris; do
+          for scene in quarto-kairo pensao-canal quiosque-24h garagem-iris prologo-oficina prologo-estacao prologo-casa; do
             grep -Fx "assets/src/assets/$scene.webp" <<< "$entries"
           done
           grep -Fx 'assets/js/data/music.js' <<< "$entries"

@@ -10,7 +10,19 @@
   let job = null;
   let jobTimer = null;
   let view = 'district';
-  let workshopCardId = null;
+  const residentVisits = new Map();
+  const residentNotes = {
+    1: ['Deixei as faturas na mesa. Se o leitor não aceitar o cartão, tenta a chave de sempre.', 'Pode levar as cópias. Os originais ficam na minha gaveta.'],
+    5: ['Paguei essa conta na terça. Na quinta juraram que esse apartamento nem existia.', 'Hoje eu não quero ligar pra central de novo. Se descobrir alguma coisa, me avisa.'],
+    10: ['O ferro está esquentando. Dá tempo de uma partida antes de eu voltar à solda.', 'Deixa eu virar essa peça e a gente joga de novo.'],
+    33: ['Pode testar seu baralho comigo. Eu aviso quando você deixar uma vaga fácil de explorar.', 'Se estiver perdendo sem entender por quê, olha quanta RAM sobra no fim do turno.'],
+    39: ['Eu assisto ao Ringue da arquibancada porque lá de cima dá para ver quem gasta RAM por ansiedade.', 'Se quiser outra partida, traz duas unidades que consigam ficar prontas juntas.']
+  };
+  const residentDuels = {
+    10: { hp: 10, credits: 5, deck: ['unit_01', 'unit_02', 'unit_08', 'unit_09', 'exploit_01'] },
+    33: { hp: 14, credits: 7, card: 'unit_21', deck: sparringBoss.deckList },
+    39: { hp: 22, credits: 12, card: 'unit_23', deck: wagerBoss.deckList, canOverclock: true }
+  };
   let destination = null;
 
   function access(district) {
@@ -65,6 +77,7 @@
     $('city-awake').textContent = `Limite de vigília em ${duration(Math.max(0, NB.CityLife.maxAwake(life) - life.awake))}`;
     $('city-bag').setAttribute('aria-pressed', view === 'bag');
     $('city-story').setAttribute('aria-pressed', view === 'story');
+    $('city-story').classList.toggle('city-investigate', view !== 'story' && !NB.Story.has('epilogue'));
     $('city-atlas').setAttribute('aria-pressed', view === 'atlas');
     $('city-name').textContent = district.name;
     const portrait = $('city-portrait');
@@ -181,8 +194,40 @@
     heading.textContent = 'Pessoas neste local';
     group.append(heading);
     for (const person of people) {
-      addText(group, person.name, 'city-clue-title');
-      addText(group, person.line);
+      const row = document.createElement('div');
+      row.className = 'city-life-row';
+      addButton(row, `Falar com ${person.name}`, () => {
+        const count = residentVisits.get(person.id) || 0;
+        residentVisits.set(person.id, count + 1);
+        const replies = residentNotes[person.id];
+        reply.textContent = replies ? replies[Math.min(count, replies.length - 1)] : [
+          person.line,
+          'Agora estou no meio de uma coisa. Se precisar de mim, passa aqui mais tarde.',
+          'Eu ainda estou ocupado. A gente conversa outra hora.'
+        ][Math.min(count, 2)];
+      });
+      const reply = document.createElement('p');
+      reply.setAttribute('aria-live', 'polite');
+      row.append(reply);
+      const duel = residentDuels[person.id];
+      if (duel) {
+        const card = NB.Cards.CARD_DB[duel.card];
+        const firstWin = !NB.Save.get().city.residentWins.includes(person.id);
+        addText(row, `${duel.canOverclock ? 'Avançado' : duel.hp < 14 ? 'Iniciante' : 'Treino'} · +${duel.credits} créditos por vitória${card && firstWin ? ` · primeira vitória: ${card.name}` : ''}`);
+        addButton(row, `Desafiar ${person.name}`, () => {
+          NB.Input.startMatch({
+            mode: 'arena',
+            boss: {
+              ...sparringBoss, name: person.name, fullTitle: `${person.name} // Duelo de bairro`,
+              hp: duel.hp, deckList: duel.deck.length === 20 ? duel.deck : Array.from({ length: 20 }, (_, index) => duel.deck[index % duel.deck.length]),
+              canOverclock: Boolean(duel.canOverclock),
+              lines: { start: [residentNotes[person.id][0]] },
+              residentId: person.id
+            }
+          });
+        });
+      }
+      group.append(row);
     }
     content.append(group);
   }
@@ -337,7 +382,7 @@
         : `Exploit · ${card.cost} RAM`);
       if (card.keywords.length) addText(details, card.keywords.map(keyword => NB.Cards.KEYWORDS[keyword].tag).join(' · '));
       row.append(details);
-      addButton(row, owned ? 'Adquirida' : `Comprar · ${price}`, () => {
+      const buy = addButton(row, owned ? 'Adquirida' : `Comprar · ${price}`, () => {
         if (save.city.credits < price || save.unlockedCards.includes(id)) return;
         save.city.credits -= price;
         save.unlockedCards.push(id);
@@ -345,6 +390,7 @@
         render();
         announce(`${card.name} disponível em Meu Deck.`);
       }, owned || save.city.credits < price);
+      if (!owned) buy.dataset.stockPrice = price;
       content.append(row);
     }
     renderWorkshop(content, save);
@@ -357,52 +403,86 @@
     addText(workshop, NB.Cards.AFFINITY_CYCLE + '. Vantagem dá +1 de dano contra unidades em choques. Duas afinidades diferentes dão +1 ao Overclock contra um bloqueador.');
     const units = save.unlockedCards.map(id => NB.Cards.CARD_DB[id]).filter(card => card?.kind === 'unit');
     if (!units.length) return;
-    const cards = document.createElement('select');
-    const affinities = document.createElement('select');
-    cards.setAttribute('aria-label', 'Unidade para recalibrar');
-    affinities.setAttribute('aria-label', 'Nova afinidade');
-    units.forEach(card => cards.add(new Option(card.name, card.id)));
-    if (units.some(card => card.id === workshopCardId)) cards.value = workshopCardId;
-    const current = document.createElement('p');
-    const confirm = addButton(workshop, 'Recalibrar · 15 créditos', () => {
-      const id = cards.value;
-      const type = affinities.value === 'neutral' ? null : affinities.value;
-      if (NB.Save.recalibrate(id, type)) {
-        announce(`${NB.Cards.CARD_DB[id].name} agora usa afinidade ${NB.Cards.affinityLabel(type)}.`);
-        render();
-        document.querySelector('.city-workshop select')?.focus();
-      }
-    });
-    function updateOptions() {
-      const id = cards.value;
-      const base = NB.Cards.CARD_DB[id].affinity || null;
-      const now = NB.Save.getAffinity(id);
-      current.textContent = `Afinidade atual · ${NB.Cards.affinityLabel(now)}`;
-      affinities.replaceChildren();
-      affinities.add(new Option('Escolha a afinidade', ''));
-      affinities.options[0].disabled = true;
-      for (const type of [null, ...Object.keys(NB.Cards.AFFINITIES)]) {
-        if (type === now || (type === null && base !== null)) continue;
-        const cost = type === base ? ' · restaurar grátis' : '';
-        affinities.add(new Option(NB.Cards.affinityLabel(type) + cost, type || 'neutral'));
-      }
-      affinities.value = '';
-      updatePrice();
-    }
-    function updatePrice() {
-      const base = NB.Cards.CARD_DB[cards.value].affinity || null;
-      const selected = affinities.value === 'neutral' ? null : affinities.value;
-      const restoring = selected === base;
-      confirm.disabled = !affinities.value || (!restoring && save.city.credits < NB.Save.recalibrationPrice);
-      confirm.textContent = restoring ? 'Restaurar afinidade' : `Recalibrar · ${NB.Save.recalibrationPrice} créditos`;
-    }
-    cards.addEventListener('change', () => { workshopCardId = cards.value; updateOptions(); });
-    affinities.addEventListener('change', updatePrice);
-    workshop.insertBefore(cards, confirm);
-    workshop.insertBefore(current, confirm);
-    workshop.insertBefore(affinities, confirm);
-    updateOptions();
+
+    const collection = document.createElement('details');
+    collection.className = 'workshop-collection';
+    const summary = document.createElement('summary');
+    summary.textContent = 'Melhorar cartas';
+    collection.append(summary);
+    const grid = document.createElement('div');
+    grid.className = 'workshop-grid';
+    const editor = document.createElement('div');
+    editor.className = 'workshop-editor';
+    editor.hidden = true;
+    collection.append(grid, editor);
+    workshop.append(collection);
     content.append(workshop);
+
+    for (const card of units) {
+      const tile = addButton(grid, card.name, () => selectCard(card, tile));
+      tile.dataset.cardId = card.id;
+      tile.setAttribute('aria-pressed', 'false');
+      tile.prepend(NB.Sprites.createArtMarkup(card.id, card.img, ''));
+    }
+
+    function selectCard(card, tile) {
+      for (const button of grid.children) button.setAttribute('aria-pressed', button === tile);
+      editor.hidden = false;
+      editor.replaceChildren();
+      addText(editor, `${card.name} · ${card.atk} ATK / ${card.def} DEF`, 'city-clue-title');
+      const current = document.createElement('p');
+      const affinities = document.createElement('select');
+      affinities.setAttribute('aria-label', 'Nova afinidade');
+      const advice = document.createElement('p');
+      advice.setAttribute('aria-live', 'polite');
+      editor.append(current, affinities, advice);
+      const confirm = addButton(editor, '', () => {
+        const type = selectedType();
+        if (!affinities.value || !NB.Save.recalibrate(card.id, type)) return;
+        announce(`${card.name} agora usa afinidade ${NB.Cards.affinityLabel(type)}.`);
+        $('city-credits').textContent = `${save.city.credits} créditos`;
+        for (const buy of content.querySelectorAll('[data-stock-price]')) {
+          buy.disabled = save.city.credits < Number(buy.dataset.stockPrice);
+        }
+        updateOptions();
+        affinities.focus();
+      });
+      const base = card.affinity || null;
+      const selectedType = () => affinities.value === 'neutral' ? null : affinities.value;
+
+      function updateOptions() {
+        const now = NB.Save.getAffinity(card.id);
+        current.textContent = `Afinidade atual · ${NB.Cards.affinityLabel(now)}`;
+        affinities.replaceChildren(new Option('Escolha a afinidade', '', true, true));
+        affinities.options[0].disabled = true;
+        for (const type of [null, ...Object.keys(NB.Cards.AFFINITIES)]) {
+          if (type === now || (type === null && base !== null)) continue;
+          affinities.add(new Option(NB.Cards.affinityLabel(type) + (type === base ? ' · restaurar grátis' : ''), type || 'neutral'));
+        }
+        updatePrice();
+      }
+
+      function updatePrice() {
+        const type = selectedType();
+        const now = NB.Save.getAffinity(card.id);
+        const restoring = type === base;
+        confirm.disabled = !affinities.value || (!restoring && save.city.credits < NB.Save.recalibrationPrice);
+        confirm.textContent = restoring ? 'Restaurar afinidade' : `Recalibrar · ${NB.Save.recalibrationPrice} créditos`;
+        if (!affinities.value) {
+          advice.textContent = 'Lume — Escolhe uma afinidade que complemente a outra unidade que você quer levar pro Overclock.';
+          return;
+        }
+        const advantage = id => NB.Cards.AFFINITIES[NB.Cards.AFFINITIES[id]?.beats]?.name;
+        const gains = type ? `Agora ela dará +1 de dano contra ${advantage(type)} nos choques.` : 'Neutra, ela deixa de explorar vantagens de afinidade.';
+        const tradeoff = now ? ` Ela abre mão do bônus contra ${advantage(now)}.` : '';
+        const synergy = type ? ' Para ganhar o bônus de Overclock contra um bloqueador, junte com outra afinidade.' : ' Com afinidade neutra, ela não ativa o bônus de dupla no Overclock.';
+        advice.textContent = `Lume — ${gains}${tradeoff}${synergy} O ATK e a DEF de base ficam iguais.`;
+      }
+
+      affinities.addEventListener('change', updatePrice);
+      updateOptions();
+      affinities.focus();
+    }
   }
 
   function renderRelay(content, save) {
@@ -577,9 +657,19 @@
   }
 
   function finishArena(state, winner) {
-    const payout = winner === 'player' ? (state.stake ? 60 : 15) : 0;
+    const save = NB.Save.get();
+    const residentId = state.boss.residentId;
+    const duel = residentDuels[residentId];
+    const payout = winner === 'player' ? (duel ? duel.credits : state.stake ? 60 : 15) : 0;
     state.payout = payout;
-    NB.Save.get().city.credits += payout;
+    if (winner === 'player' && duel && !save.city.residentWins.includes(residentId)) {
+      save.city.residentWins.push(residentId);
+      if (duel.card && !save.unlockedCards.includes(duel.card)) {
+        save.unlockedCards.push(duel.card);
+        state.residentReward = duel.card;
+      }
+    }
+    save.city.credits += payout;
     NB.Save.save();
   }
 
@@ -639,6 +729,12 @@
     if (view === 'journal') {
       toggleJournal();
       $('city-journal').focus();
+      return true;
+    }
+    const collection = document.querySelector('.workshop-collection[open]');
+    if (view === 'district' && collection) {
+      collection.open = false;
+      collection.querySelector('summary').focus();
       return true;
     }
     if (!job && view === 'district') return false;
