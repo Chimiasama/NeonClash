@@ -166,7 +166,9 @@
     const artwork = entry.card
       ? NB.Sprites.createArtMarkup(entry.card.id, entry.source, entry.title)
       : image(entry);
-    $('gallery-full-art').replaceChildren(artwork);
+    const stage = $('gallery-full-art');
+    stage.classList.toggle('gallery-card-art', Boolean(entry.card));
+    stage.replaceChildren(artwork);
     $('gallery-detail').scrollTop = 0;
     $('gallery-back').focus();
   }

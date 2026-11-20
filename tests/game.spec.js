@@ -195,6 +195,46 @@ test('opens and navigates the enlarged card inspector above the deck', async ({ 
   await expect(card).toBeFocused();
 });
 
+test('shows each deck copy in a square, separate tile and keeps the same art frame in combat', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 600 });
+  await page.goto('/');
+  await page.getByRole('button', { name: /Meu Deck/i }).click();
+  await page.getByRole('button', { name: 'NO DECK', exact: true }).click();
+  const tiles = page.locator('#collection-grid .col-card');
+  await expect(tiles).toHaveCount(20);
+  const frames = await tiles.evaluateAll(cards => cards.map(card => {
+    const { x, y, width, height } = card.getBoundingClientRect();
+    const art = card.querySelector('.col-card-art').getBoundingClientRect();
+    return { x, y, width, height, artWidth: art.width, artHeight: art.height };
+  }));
+  for (const [index, frame] of frames.entries()) {
+    expect(frame.artHeight).toBeCloseTo(frame.artWidth, 0);
+    expect(frame.height).toBeCloseTo(frames[0].height, 0);
+    for (const other of frames.slice(index + 1)) {
+      expect(frame.x < other.x + other.width && frame.x + frame.width > other.x &&
+        frame.y < other.y + other.height && frame.y + frame.height > other.y).toBe(false);
+    }
+  }
+  const aegis = page.getByRole('button', { name: /^Aegis-Wall · cópia/ }).first();
+  await aegis.click();
+  const inspector = page.locator('#insp-art-stage');
+  await expect(inspector.locator('img[src="./cards/unit_03.webp"]')).toBeVisible();
+  const frame = await inspector.boundingBox();
+  expect(frame.width).toBeCloseTo(frame.height, 0);
+  await page.keyboard.press('Escape');
+  await expect(aegis).toBeFocused();
+
+  await page.evaluate(() => {
+    NB.Input.startMatch({ mode: 'quick' });
+    NB.UI.openVisorForHand({ cardId: 'unit_03' });
+  });
+  const visor = page.locator('#visor-art');
+  await expect(visor.locator('img[src="./cards/unit_03.webp"]')).toBeVisible();
+  await expect.poll(async () => (await visor.boundingBox()).width).toBeCloseTo(frame.width, 0);
+  const combatFrame = await visor.boundingBox();
+  expect(combatFrame.height).toBeCloseTo(frame.height, 0);
+});
+
 test('previews locked cards without making them available to edit', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: /Meu Deck/i }).click();

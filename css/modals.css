@@ -25,6 +25,8 @@
 .visor-card {
   width: 100%;
   max-width: 320px;
+  max-height: 100%;
+  overflow-y: auto;
   background: linear-gradient(165deg, #171E38 0%, #0C1020 100%);
   border: 1.5px solid var(--cyan);
   box-shadow: 0 0 34px rgba(0, 240, 255, 0.3), 0 18px 40px rgba(0, 0, 0, 0.85);
@@ -70,11 +72,15 @@
 .visor-card.exploit-theme .visor-type { color: var(--ram); }
 .visor-card.enemy-theme .visor-type { color: var(--magenta); }
 
+.visor-art-box, .inspector-art-stage, #gallery-full-art.gallery-card-art {
+  align-self: center;
+  width: min(100%, 34dvh, 270px);
+  aspect-ratio: 1;
+  flex: none;
+}
 .visor-art-box {
   position: relative;
-  width: 100%;
-  height: 146px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 2px solid rgba(255, 255, 255, 0.18);
   background: #070912;
   overflow: hidden;
 }
@@ -83,7 +89,7 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   z-index: 2;
 }
 .visor-art-box .art-fallback {
@@ -91,7 +97,7 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   z-index: 1;
 }
 
@@ -428,6 +434,8 @@
   max-height: 54dvh;
   object-fit: contain;
 }
+#gallery-full-art.gallery-card-art { margin-inline: auto; border: 2px solid transparent; }
+#gallery-full-art.gallery-card-art img { width: 100%; height: 100%; }
 #gallery-description { margin-top: 10px; line-height: 1.5; }
 
 .prologue-panel { max-width: 550px; max-height: 100%; overflow-y: auto; border-radius: 8px; }

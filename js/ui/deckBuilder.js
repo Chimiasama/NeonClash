@@ -6,7 +6,7 @@
   let currentFilter = 'all';
   let searchWords = [];
   let inspectedCardId = null;
-  let inspectorOriginId = null;
+  let inspectorOrigin = null;
   let returnTarget = 'title';
 
   function getAllCardDefs() {
@@ -141,16 +141,21 @@
       return;
     }
 
-    filtered.forEach(card => {
+    const entries = currentFilter === 'indeck'
+      ? filtered.flatMap(card => Array.from({ length: countCopies(card.id) }, (_, index) => ({ card, copy: index + 1 })))
+      : filtered.map(card => ({ card, copy: 0 }));
+
+    for (const { card, copy } of entries) {
       const isUnlocked = unlockedSet.has(card.id);
       const copies = countCopies(card.id);
 
       const tile = document.createElement('button');
       tile.type = 'button';
       tile.dataset.cardId = card.id;
+      tile.dataset.copy = copy;
       tile.setAttribute('aria-haspopup', 'dialog');
-      tile.setAttribute('aria-label', card.name + (isUnlocked ? '' : ' · bloqueada'));
-      tile.className = 'col-card chamfer-sm' +
+      tile.setAttribute('aria-label', card.name + (copy ? ` · cópia ${copy} de ${copies}` : isUnlocked ? '' : ' · bloqueada'));
+      tile.className = 'col-card' +
         (card.kind === 'exploit' ? ' type-exploit' : '') +
         (!isUnlocked ? ' locked' : '') +
         (isUnlocked && copies === 1 ? ' in-deck' : '') +
@@ -160,32 +165,19 @@
       artBox.className = 'col-card-art';
       artBox.appendChild(NB.Sprites.createArtMarkup(card.id, card.img, card.name));
 
+      const tags = document.createElement('div');
+      tags.className = 'col-card-tags';
       if (isUnlocked) {
         const ramTag = document.createElement('span');
         ramTag.className = 'col-ram-tag tabular ' + (card.kind === 'unit' ? 'gain' : 'cost');
         ramTag.textContent = card.kind === 'unit' ? `+${card.ramGain}R` : `-${card.cost}R`;
-        artBox.appendChild(ramTag);
+        tags.appendChild(ramTag);
 
         const copyBadge = document.createElement('span');
         copyBadge.className = 'col-copy-badge tabular' +
           (copies === 1 ? ' has-one' : (copies >= 2 ? ' has-two' : ''));
-        copyBadge.textContent = `${copies}/${NB.Cards.MAX_COPIES}`;
-        artBox.appendChild(copyBadge);
-
-        if (card.keywords && card.keywords.length > 0) {
-          const kwStrip = document.createElement('div');
-          kwStrip.className = 'kw-strip';
-          card.keywords.forEach(kwId => {
-            const kw = NB.Cards.KEYWORDS[kwId];
-            if (!kw) return;
-            const chip = document.createElement('span');
-            chip.className = 'kw-chip';
-            chip.style.color = kw.color;
-            chip.textContent = `${kw.icon}${kw.short}`;
-            kwStrip.appendChild(chip);
-          });
-          artBox.appendChild(kwStrip);
-        }
+        copyBadge.textContent = `${copy || copies}/${copy ? copies : NB.Cards.MAX_COPIES}`;
+        tags.appendChild(copyBadge);
       } else {
         const cipher = document.createElement('div');
         cipher.className = 'locked-cipher-overlay';
@@ -214,17 +206,32 @@
         `;
       }
 
-      tile.appendChild(artBox);
+      const keywords = document.createElement('div');
+      keywords.className = 'kw-strip col-card-keywords';
+      if (isUnlocked) {
+        for (const id of card.keywords) {
+          const keyword = NB.Cards.KEYWORDS[id];
+          if (!keyword) continue;
+          const chip = document.createElement('span');
+          chip.className = 'kw-chip';
+          chip.style.color = keyword.color;
+          chip.textContent = `${keyword.icon}${keyword.short}`;
+          keywords.appendChild(chip);
+        }
+      }
+      foot.appendChild(keywords);
+
+      tile.append(tags, artBox);
       tile.appendChild(foot);
 
       tile.addEventListener('click', () => {
         NB.Audio.playSelect();
         NB.Physics.vibrateCard();
-        openInspector(card.id);
+        openInspector(card.id, copy);
       });
 
       grid.appendChild(tile);
-    });
+    }
   }
 
   function renderAll() {
@@ -235,9 +242,9 @@
   }
 
   /* Inspetor em Tela Cheia */
-  function openInspector(cardId) {
+  function openInspector(cardId, copy = 0) {
     if (!NB.Cards.CARD_DB[cardId]) return;
-    inspectorOriginId = cardId;
+    inspectorOrigin = `[data-card-id="${cardId}"][data-copy="${copy}"]`;
     inspectedCardId = cardId;
     renderInspector();
     document.getElementById('deck-modal').inert = true;
@@ -251,9 +258,9 @@
     inspectedCardId = null;
     document.getElementById('card-inspector-modal').classList.remove('open');
     document.getElementById('deck-modal').inert = false;
-    const origin = document.querySelector(`[data-card-id="${inspectorOriginId}"]`);
+    const origin = document.querySelector(inspectorOrigin);
     (origin || document.querySelector('.deck-filter-btn.active'))?.focus();
-    inspectorOriginId = null;
+    inspectorOrigin = null;
   }
 
   function stepInspector(delta) {
