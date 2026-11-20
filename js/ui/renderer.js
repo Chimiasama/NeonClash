@@ -637,6 +637,7 @@
     document.getElementById('stat-exploits').textContent = state.stats.exploitsUsed;
 
     modal.classList.add('open');
+    NB.Input.closeAbandon();
   }
 
   function renderVolumeControls() {

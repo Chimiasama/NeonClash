@@ -28,7 +28,7 @@
       <!-- 1. Topo do Console -->
       <header class="top-bar">
         <div class="brand-group">
-          <button id="btn-top-menu" class="hud-btn chamfer-sm" type="button" style="padding:4px 7px">MAPA</button>
+          <button id="btn-top-menu" aria-label="Sair do duelo" class="hud-btn chamfer-sm" type="button" style="padding:4px 7px">SAIR</button>
           <span class="brand-title">NEON BREACH</span>
           <span id="turn-badge" class="turn-counter tabular">T1</span>
         </div>
@@ -159,20 +159,6 @@
           <span>CARTAS: 12/32</span>
           <span>PISTAS: 0/4</span>
         </div>
-        <section class="title-prologue" aria-label="Prólogo de Kairo">
-          <figure>
-            <img id="prologue-art" src="./src/assets/prologo-oficina.webp" alt="">
-            <figcaption aria-live="polite">
-              <h2 id="prologue-title"></h2>
-              <p id="prologue-text"></p>
-            </figcaption>
-          </figure>
-          <nav aria-label="Páginas do prólogo">
-            <button id="prologue-prev" type="button" aria-label="Quadro anterior">‹</button>
-            <span id="prologue-page"></span>
-            <button id="prologue-next" type="button" aria-label="Próximo quadro">›</button>
-          </nav>
-        </section>
         <div class="title-cta-row">
           <button id="btn-start-campaign" class="btn-launch chamfer-sm" type="button">ENTRAR NA CIDADE</button>
           <button id="btn-quick-duel" class="btn-quick-duel chamfer-sm" type="button">DUELO RÁPIDO</button>
@@ -186,38 +172,72 @@
       </div>
     </div>
 
+    <div id="prologue-modal" class="full-modal" role="dialog" aria-modal="true" aria-labelledby="prologue-heading">
+      <section class="modal-panel prologue-panel">
+        <header class="gallery-header">
+          <h2 id="prologue-heading">Prólogo de Kairo</h2>
+          <button id="prologue-close" class="hud-btn" type="button">Voltar</button>
+        </header>
+        <section class="adventure-prologue" aria-label="Prólogo de Kairo">
+          <figure>
+            <img id="prologue-art" alt="">
+            <figcaption aria-live="polite">
+              <h2 id="prologue-title"></h2>
+              <p id="prologue-text"></p>
+            </figcaption>
+          </figure>
+          <nav aria-label="Páginas do prólogo">
+            <button id="prologue-prev" type="button" aria-label="Quadro anterior">‹</button>
+            <span id="prologue-page"></span>
+            <button id="prologue-next" type="button" aria-label="Próximo quadro">›</button>
+          </nav>
+          <div class="prologue-actions">
+            <button id="prologue-skip" type="button">Pular prólogo</button>
+            <button id="prologue-enter" class="btn-launch chamfer-sm" type="button" hidden>Entrar em Baixa Luz</button>
+          </div>
+        </section>
+      </section>
+    </div>
+
     <div id="netmap-modal" class="full-modal city-screen">
       <section class="city-panel" aria-labelledby="city-heading">
-        <header class="city-header">
-          <div><h2 id="city-heading">Baixa Luz</h2><p id="city-credits"></p><p id="city-clock"></p>
-            <label class="city-energy" for="city-energy"><span id="city-energy-label">Energia</span><progress id="city-energy" max="100" value="70"></progress></label><p id="city-awake"></p></div>
-          <div class="city-nav">
-            <button id="btn-netmap-deck" type="button">Meu Deck</button>
+        <div class="city-scroll">
+          <header class="city-header">
+            <div><h2 id="city-heading">Baixa Luz</h2><p id="city-credits"></p><p id="city-clock"></p>
+              <label class="city-energy" for="city-energy"><span id="city-energy-label">Energia</span><progress id="city-energy" max="100" value="70"></progress></label><p id="city-awake"></p></div>
+          </header>
+          <div id="city-map" data-gallery-art="./src/assets/baixa-luz-map.webp" aria-label="Mapa interativo de Baixa Luz">
+            <span id="city-marker" data-gallery-art="./src/assets/kairo-token.webp" aria-hidden="true"></span>
+          </div>
+          <div class="city-detail">
+            <h3 id="city-name"></h3>
+            <p id="city-feedback" role="status"></p>
+            <div class="city-dialogue">
+              <img id="city-portrait" alt="" width="72" height="72" />
+              <div>
+                <p id="city-npc"></p>
+                <p id="city-line"></p>
+              </div>
+            </div>
+            <img id="city-scene" alt="" hidden />
+            <div id="city-content"></div>
+          </div>
+        </div>
+        <nav class="city-nav" aria-label="Navegação da cidade">
+          <div class="city-nav-main">
+            <button id="city-map-tab" type="button">Mapa</button>
             <button id="city-atlas" type="button" aria-pressed="false">Bairros</button>
             <button id="city-story" type="button" aria-pressed="false">Investigação</button>
             <button id="city-bag" type="button" aria-pressed="false">Mochila</button>
             <button id="city-journal" type="button" aria-pressed="false">Pistas</button>
+          </div>
+          <div class="city-nav-more">
+            <button id="btn-netmap-deck" type="button">Meu Deck</button>
             <button id="btn-city-gallery" type="button">Galeria</button>
             <button id="btn-netmap-settings" type="button">Config.</button>
             <button id="btn-netmap-back" type="button">Início</button>
           </div>
-        </header>
-        <div id="city-map" data-gallery-art="./src/assets/baixa-luz-map.webp" aria-label="Mapa interativo de Baixa Luz">
-          <span id="city-marker" data-gallery-art="./src/assets/kairo-token.webp" aria-hidden="true"></span>
-        </div>
-        <div class="city-detail">
-          <h3 id="city-name"></h3>
-          <p id="city-feedback" role="status"></p>
-          <div class="city-dialogue">
-            <img id="city-portrait" alt="" width="72" height="72" />
-            <div>
-              <p id="city-npc"></p>
-              <p id="city-line"></p>
-            </div>
-          </div>
-          <img id="city-scene" alt="" hidden />
-          <div id="city-content"></div>
-        </div>
+        </nav>
       </section>
     </div>
 
@@ -398,6 +418,17 @@
     </div>
 
     <!-- Modal 7: Banco de Dados (Coleção + Editor de Baralho 20/20) -->
+    <div id="abandon-modal" class="full-modal" role="alertdialog" aria-modal="true" aria-labelledby="abandon-title" aria-describedby="abandon-cost">
+      <section class="modal-panel abandon-panel">
+        <h2 id="abandon-title">Abandonar duelo?</h2>
+        <p id="abandon-cost"></p>
+        <div class="prologue-actions">
+          <button id="abandon-cancel" class="hud-btn" type="button">Continuar duelo</button>
+          <button id="abandon-confirm" class="hud-btn abandon-confirm" type="button">Abandonar duelo</button>
+        </div>
+      </section>
+    </div>
+
     <div id="deck-modal" class="full-modal">
       <div class="modal-panel deck-modal-panel chamfer-md">
         <div class="deck-header">

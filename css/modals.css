@@ -369,25 +369,24 @@
   margin-top: 2px;
 }
 
-.title-prologue {
-  flex-shrink: 0;
+.adventure-prologue {
   background: #111927;
   border: 1px solid #385264;
   border-radius: 6px;
   overflow: hidden;
 }
-.title-prologue figure { margin: 0; }
-.title-prologue img {
+.adventure-prologue figure { margin: 0; }
+.adventure-prologue img {
   display: block;
   width: 100%;
-  height: clamp(85px, 17vh, 155px);
-  object-fit: cover;
+  height: clamp(110px, 32dvh, 280px);
+  object-fit: contain;
 }
-.title-prologue figcaption { padding: 8px 12px 1px; }
-.title-prologue h2 { margin: 0 0 4px; color: #a8f5f3; font-size: 15px; }
-.title-prologue p { margin: 0; line-height: 1.4; font-size: 13px; }
-.title-prologue nav { display: flex; align-items: center; justify-content: center; gap: 12px; }
-.title-prologue button {
+.adventure-prologue figcaption { padding: 8px 12px 1px; }
+.adventure-prologue h2 { margin: 0 0 4px; color: #a8f5f3; font-size: 15px; }
+.adventure-prologue p { margin: 0; line-height: 1.4; font-size: 13px; }
+.adventure-prologue nav { display: flex; align-items: center; justify-content: center; gap: 12px; }
+.adventure-prologue button {
   padding: 0 12px;
   min-height: 36px;
   background: transparent;
@@ -396,7 +395,7 @@
   font-size: 24px;
   cursor: pointer;
 }
-.title-prologue button:disabled { opacity: .35; }
+.adventure-prologue button:disabled { opacity: .35; }
 
 .gallery-panel {
   max-width: 560px;
@@ -429,3 +428,22 @@
   object-fit: contain;
 }
 #gallery-description { margin-top: 10px; line-height: 1.5; }
+
+.prologue-panel { max-width: 550px; max-height: 100%; overflow-y: auto; border-radius: 8px; }
+.prologue-panel header { flex: none; }
+.prologue-actions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; padding: 8px; }
+.adventure-prologue .prologue-actions button {
+  min-height: 42px;
+  padding: 6px 12px;
+  font-size: 13px;
+  border: 1px solid #456477;
+  border-radius: 4px;
+}
+.adventure-prologue .prologue-actions .btn-launch { background: var(--cyan); color: #07131c; }
+.adventure-prologue button[hidden] { display: none; }
+#abandon-modal { z-index: 52; }
+.abandon-panel { border-color: #ff8caf; border-radius: 8px; }
+.abandon-panel h2 { font-size: 20px; }
+.abandon-panel p { line-height: 1.5; }
+.abandon-panel .hud-btn { min-height: 44px; }
+.abandon-confirm { border-color: #ff8caf; color: #ffe0eb; }

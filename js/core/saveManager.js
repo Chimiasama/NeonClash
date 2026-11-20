@@ -84,6 +84,7 @@
       deckSlots: {},
       challengeWins: [],
       seenArt: [],
+      prologueSeen: false,
       city: { credits: 35, district: 'kira', traced: [], residentWins: [], life: NB.CityLife.normalize() },
       affinities: {},
       story: NB.Story.normalize(),
@@ -122,6 +123,7 @@
           })),
           challengeWins: [...new Set((Array.isArray(parsed.challengeWins) ? parsed.challengeWins : [])
             .filter(id => NB.Challenges.some(challenge => challenge.id === id)))],
+          prologueSeen: parsed.prologueSeen === true,
           seenArt: [...new Set(Array.isArray(parsed.seenArt) ? parsed.seenArt.filter(path => typeof path === 'string') : [])],
           city: {
             credits: Number.isSafeInteger(parsed.city?.credits) && parsed.city.credits >= 0 ? parsed.city.credits : def.city.credits,

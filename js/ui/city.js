@@ -59,8 +59,9 @@
     const district = districtAtPosition();
     NB.Audio.setScene(district.music || district.id);
     render();
-    announce(NB.CityLife.takeNotice() || `Você chegou ao destino. ${district.name}.`);
-    $('city-name').scrollIntoView({ block: 'nearest' });
+    const notice = NB.CityLife.takeNotice();
+    announce([`Destino alcançado: ${district.name}.`, notice].filter(Boolean).join(' '));
+    $('city-feedback').scrollIntoView({ block: 'center' });
   }
 
   function render() {
@@ -75,6 +76,7 @@
     $('city-energy').value = life.energy;
     $('city-energy-label').textContent = `Energia ${life.energy}/${maxEnergy}`;
     $('city-awake').textContent = `Limite de vigília em ${duration(Math.max(0, NB.CityLife.maxAwake(life) - life.awake))}`;
+    $('city-map-tab').setAttribute('aria-pressed', view === 'district');
     $('city-bag').setAttribute('aria-pressed', view === 'bag');
     $('city-story').setAttribute('aria-pressed', view === 'story');
     $('city-story').classList.toggle('city-investigate', view !== 'story' && !NB.Story.has('epilogue'));
@@ -265,7 +267,9 @@
   function renderTravel(content, save) {
     const place = districts.find(item => item.id === destination);
     const life = save.city.life;
+    const { streetRest, beds } = NB.CityLife;
     $('city-name').textContent = `Ir para ${place.name}`;
+    addText(content, `Energia atual: ${life.energy}. Os custos abaixo só são cobrados ao escolher um transporte.`);
     for (const route of NB.CityLife.routes(destination)) {
       const row = document.createElement('div');
       row.className = 'city-life-row';
@@ -274,11 +278,11 @@
         addText(row, 'Disponível na Garagem da Íris.');
       } else {
         addText(row, `${duration(route.minutes)} · ${route.fare ? `${route.fare} créditos` : 'Grátis'} · −${route.energy} energia`);
-        addText(row, `Chegada: ${NB.CityLife.clock(life.minute + route.minutes)}`);
+        addText(row, `Chegada: ${NB.CityLife.clock(life.minute + route.minutes)} · Energia ao chegar: ${route.energyAfter}/${NB.CityLife.maxEnergy(life)}`);
         if (route.note) addText(row, route.note);
         if (route.willCollapse) addText(row, place.id === 'home'
-          ? 'Você vai dormir em casa ao chegar.'
-          : 'Você vai precisar dormir ao chegar. Risco de assalto na rua.', 'city-notice');
+          ? `Você vai dormir em casa ao chegar: ${duration(beds.home.minutes)} grátis e energia cheia.`
+          : `Você vai precisar dormir ao chegar. São ${duration(streetRest.minutes)} na rua. Ao acordar, terá ${streetRest.energy} de energia e há ${streetRest.robberyChance}% de risco de perder ${streetRest.creditsLost}% dos créditos restantes após a passagem.`, 'city-notice');
       }
       content.append(row);
     }
@@ -681,13 +685,15 @@
     render();
   }
 
-  function open() {
+  function open(message = '') {
     resetView();
     $('netmap-modal').classList.add('open');
-    announce(NB.CityLife.takeNotice());
+    announce([message, NB.CityLife.takeNotice()].filter(Boolean).join(' '));
     document.querySelector('.city-panel').inert = false;
     $('game-ui').inert = true;
-    $('city-map').querySelector('[aria-current]')?.focus();
+    document.querySelector('.city-scroll').scrollTop = 0;
+    if (message) $('city-feedback').scrollIntoView({ block: 'center' });
+    $('city-map').querySelector('[aria-current]')?.focus({ preventScroll: true });
   }
 
   function bindEvents() {
@@ -703,6 +709,10 @@
       label.textContent = district.short;
       pin.append(icon, label);
     }
+    $('city-map-tab').addEventListener('click', () => {
+      resetView();
+      $('city-map').scrollIntoView({ block: 'start' });
+    });
     $('city-journal').addEventListener('click', toggleJournal);
     for (const [id, target] of [['city-bag', 'bag'], ['city-atlas', 'atlas'], ['city-story', 'story']]) {
       $(id).addEventListener('click', () => {
@@ -719,10 +729,12 @@
   function toggleJournal() {
     const district = districtAtPosition();
     view = view === 'journal' ? 'district' : 'journal';
+    destination = null;
     NB.Audio.setScene(view === 'journal' ? 'city' : district.music || district.id);
     cancelJob();
     announce('');
     render();
+    if (view === 'journal') $('city-name').scrollIntoView({ block: 'start' });
   }
 
   function handleBack() {

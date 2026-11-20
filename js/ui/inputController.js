@@ -4,7 +4,7 @@
   /* Controlador de Entrada Touch, Navegação entre Telas, Campanha, Overclock e Save */
   function hideAllScreens() {
     NB.City.cancelJob();
-    ['title-modal', 'netmap-modal', 'story-modal', 'dossier-modal', 'gameover-modal', 'settings-modal', 'deck-modal', 'card-inspector-modal'].forEach(id => {
+    ['title-modal', 'netmap-modal', 'prologue-modal', 'abandon-modal', 'story-modal', 'dossier-modal', 'gameover-modal', 'settings-modal', 'deck-modal', 'card-inspector-modal'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.classList.remove('open');
     });
@@ -22,14 +22,14 @@
     document.getElementById('title-modal').classList.add('open');
   }
 
-  function openNetMap() {
+  function openNetMap(message = '') {
     hideAllScreens();
     NB.UI.closeVisor();
     NB.Physics.clearLasers();
     NB.Physics.cancelUiTransitions();
     NB.State.cancelPending();
     NB.Audio.setScene('city');
-    NB.City.open();
+    NB.City.open(message);
   }
 
   function startMatch(options = {}) {
@@ -272,11 +272,59 @@
     }
   }
 
+  const abandonFee = 3;
+  function abandonmentCost(state) {
+    return state.mode === 'quick' || state.stake ? 0 : Math.min(abandonFee, NB.Save.get().city.credits);
+  }
+
+  function requestAbandon() {
+    const state = NB.State.get();
+    if (state.phase === 'GAME_OVER') return;
+    const fee = abandonmentCost(state);
+    const cost = state.stake ? `A aposta de ${state.stake} créditos fica com o Ringue.` :
+      fee ? `Você perde ${fee} ${fee === 1 ? 'crédito' : 'créditos'}.` : 'Nenhum crédito será cobrado.';
+    document.getElementById('abandon-cost').textContent = `O duelo termina como derrota. ${cost}`;
+    document.getElementById('game-ui').inert = true;
+    document.getElementById('abandon-modal').classList.add('open');
+    document.getElementById('abandon-cancel').focus();
+  }
+
+  function closeAbandon() {
+    const modal = document.getElementById('abandon-modal');
+    if (!modal.classList.contains('open')) return;
+    modal.classList.remove('open');
+    document.getElementById('game-ui').inert = false;
+    const finished = NB.State.get().phase === 'GAME_OVER';
+    document.getElementById(finished ? 'btn-go-primary' : 'btn-top-menu').focus();
+  }
+
+  function confirmAbandon() {
+    if (!document.getElementById('abandon-modal').classList.contains('open')) return;
+    const state = NB.State.get();
+    if (state.phase === 'GAME_OVER') {
+      closeAbandon();
+      return;
+    }
+    const fee = abandonmentCost(state);
+    state.phase = 'GAME_OVER';
+    state.winner = 'enemy';
+    NB.Save.get().city.credits -= fee;
+    NB.Save.recordMatchLoss();
+    if (state.mode === 'quick') openTitleScreen();
+    else {
+      const lost = state.stake || fee;
+      openNetMap(lost ? `Você abandonou o duelo e perdeu ${lost} ${lost === 1 ? 'crédito' : 'créditos'}.` :
+        'Você abandonou o duelo.');
+    }
+  }
+
   // True tells the Android activity that the game handled Back.
   function handleBack() {
     if (NB.Gallery.handleBack()) return true;
     const isOpen = id => document.getElementById(id).classList.contains('open');
     const closeButtons = [
+      ['abandon-modal', 'abandon-cancel'],
+      ['prologue-modal', 'prologue-close'],
       ['card-inspector-modal', 'btn-insp-close'],
       ['png-modal', 'btn-png-close'],
       ['settings-modal', 'btn-settings-close'],
@@ -424,7 +472,8 @@
       NB.Audio.activateOnEntry();
       NB.Audio.playSelect();
       NB.Physics.vibrateCard();
-      openNetMap();
+      if (NB.Save.get().prologueSeen) openNetMap();
+      else NB.StoryUI.openPrologue();
     });
     document.getElementById('btn-quick-duel').addEventListener('click', () => {
       NB.Physics.vibrateCard();
@@ -479,13 +528,11 @@
       handlePostDuelAction(e.currentTarget.dataset.action);
     });
 
-    // Botão Menu/Mapa no topo durante o duelo
-    document.getElementById('btn-top-menu').addEventListener('click', () => {
-      NB.Audio.playSelect();
-      const state = NB.State.get();
-      if (state.mode === 'arena' && state.stake && !state.winner && !window.confirm(`Sair encerra o duelo e perde ${state.stake} créditos. Sair mesmo assim?`)) return;
-      if (state && (state.mode === 'campaign' || state.mode === 'arena' || state.mode === 'challenge')) openNetMap();
-      else openTitleScreen();
+    document.getElementById('btn-top-menu').addEventListener('click', requestAbandon);
+    document.getElementById('abandon-cancel').addEventListener('click', closeAbandon);
+    document.getElementById('abandon-confirm').addEventListener('click', confirmAbandon);
+    document.getElementById('abandon-modal').addEventListener('keydown', event => {
+      if (event.key === 'Escape') closeAbandon();
     });
 
     // Áudio
@@ -573,6 +620,7 @@
   NB.Input = {
     bindEvents,
     handleBack,
+    closeAbandon,
     openTitleScreen,
     openNetMap,
     startMatch,

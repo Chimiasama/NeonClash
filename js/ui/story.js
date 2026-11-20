@@ -165,18 +165,52 @@
     $('prologue-text').textContent = line;
     $('prologue-page').textContent = `${prologuePage + 1} / ${prologue.length}`;
     $('prologue-prev').disabled = prologuePage === 0;
-    $('prologue-next').disabled = prologuePage === prologue.length - 1;
+    const last = prologuePage === prologue.length - 1;
+    $('prologue-next').disabled = last;
+    $('prologue-enter').hidden = !last;
+    $('prologue-skip').hidden = last;
+  }
+
+  function openPrologue() {
+    prologuePage = 0;
+    renderPrologue();
+    $('title-modal').inert = true;
+    $('prologue-modal').classList.add('open');
+    $('prologue-modal').querySelector('.prologue-panel').scrollTop = 0;
+    $('prologue-close').focus();
+  }
+
+  function closePrologue() {
+    $('prologue-modal').classList.remove('open');
+    $('title-modal').inert = false;
+    $('btn-start-campaign').focus();
+  }
+
+  function finishPrologue() {
+    NB.Save.get().prologueSeen = true;
+    NB.Save.save();
+    closePrologue();
+    NB.Input.openNetMap();
   }
 
   function bindEvents() {
     $('prologue-prev').addEventListener('click', () => { prologuePage--; renderPrologue(); });
-    $('prologue-next').addEventListener('click', () => { prologuePage++; renderPrologue(); });
-    renderPrologue();
+    $('prologue-next').addEventListener('click', () => {
+      prologuePage++;
+      renderPrologue();
+      if (!$('prologue-enter').hidden) $('prologue-enter').focus();
+    });
+    $('prologue-close').addEventListener('click', closePrologue);
+    $('prologue-skip').addEventListener('click', finishPrologue);
+    $('prologue-enter').addEventListener('click', finishPrologue);
+    $('prologue-modal').addEventListener('keydown', event => {
+      if (event.key === 'Escape') closePrologue();
+    });
     $('btn-story-close').addEventListener('click', close);
     $('story-modal').addEventListener('keydown', event => {
       if (event.key === 'Escape') close();
     });
   }
 
-  NB.StoryUI = { local, journal, bindEvents, prologue };
+  NB.StoryUI = { local, journal, bindEvents, prologue, openPrologue };
 })(window.NB = window.NB || {});

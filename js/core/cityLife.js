@@ -18,6 +18,7 @@
     pension: { minutes: 420, price: 12 },
     hotel: { minutes: 300, price: 26 }
   };
+  const streetRest = { minutes: 300, energy: 60, robberyChance: 30, creditsLost: 60 };
   const bagLimit = 12;
   const implantPrice = 130;
   const city = () => NB.Save.get().city;
@@ -86,6 +87,7 @@
         note: closed ? 'A balsa opera das 7h às 18h.' : usesShortcut ? 'Atalho da encosta ensinado por Aline.' : '',
         available: !closed && (!mode.price || state.life.vehicles.includes(id)) && state.credits >= mode.fare,
         needsVehicle: Boolean(mode.price && !state.life.vehicles.includes(id)),
+        energyAfter: Math.max(0, state.life.energy - energy),
         willCollapse: state.life.energy <= energy || state.life.awake + minutes >= maxAwake(state.life)
       };
     });
@@ -102,14 +104,15 @@
         sleep('home');
         life.notice = 'Você chegou no limite e dormiu em casa.';
       } else {
-        const lost = Math.random() < 0.3 ? Math.ceil(state.credits * 0.6) : 0;
+        const lost = Math.random() * 100 < streetRest.robberyChance ? Math.ceil(state.credits * streetRest.creditsLost / 100) : 0;
         state.credits -= lost;
-        life.minute += 300;
+        life.minute += streetRest.minutes;
         life.awake = 0;
-        life.energy = 60;
+        life.energy = streetRest.energy;
+        const hours = streetRest.minutes / 60;
         life.notice = lost
-          ? `Você apagou na rua e foi assaltado. Perdeu ${lost} créditos.`
-          : 'Você apagou na rua e acordou 5 horas depois.';
+          ? `Você apagou na rua, acordou ${hours} horas depois e percebeu que foi assaltado. Perdeu ${lost} créditos.`
+          : `Você apagou na rua e acordou ${hours} horas depois.`;
       }
     }
     NB.Save.save();
@@ -216,6 +219,6 @@
     return notice;
   }
 
-  NB.CityLife = { items, transport, beds, bagLimit, implantPrice, normalize, clock, maxEnergy, maxAwake,
+  NB.CityLife = { items, transport, beds, streetRest, bagLimit, implantPrice, normalize, clock, maxEnergy, maxAwake,
     bagCount, routes, advance, travel, sleep, buy, use, nightShift, workNightShift, helpContact, takeNotice };
 })(window.NB = window.NB || {});

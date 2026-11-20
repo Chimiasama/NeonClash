@@ -34,9 +34,16 @@
 .city-panel {
   width: 100%;
   height: 100%;
+  display: flex;
+  flex-direction: column;
+  color: #e8f1ff;
+}
+
+.city-scroll {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
-  color: #e8f1ff;
 }
 
 .city-header, .city-detail { padding: 15px 16px; }
@@ -53,7 +60,23 @@
 #city-heading { font: 900 26px/1 var(--font-mono); letter-spacing: -.05em; }
 #city-credits { margin-top: 5px; color: #ffcd76; font-size: 13px; font-weight: 700; }
 
-.city-nav { display: grid; grid-template-columns: repeat(2, auto); gap: 4px; }
+.city-nav {
+  display: grid;
+  flex: none;
+  gap: 4px;
+  width: 100%;
+  padding: 6px 8px max(6px, env(safe-area-inset-bottom));
+  background: #0e1826;
+  border-top: 1px solid #3c546a;
+}
+.city-nav-main, .city-nav-more { display: grid; gap: 4px; }
+.city-nav-main { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.city-nav-more { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.city-panel .city-nav button {
+  padding-inline: 2px;
+  font-size: clamp(10px, 3.25vw, 12px);
+}
+.city-panel .city-nav-main button { min-height: 42px; }
 
 .city-panel button {
   min-height: 35px;
