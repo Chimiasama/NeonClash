@@ -23,7 +23,7 @@ Reserve as onomatopeias para sons que pontuam a ação, como o leitor da porta e
 
 | Personagem | Referência aprovada |
 | --- | --- |
-| Kairo | [Retrato](../src/assets/kairo-token.webp) e [leitor da porta](../src/assets/comic/leitor-da-porta.webp). Mulher negra jovem. Preserve o tom de pele, a idade aparente e a manga escura do quadro ao mostrar sua mão. |
+| Kairo | [Prólogo na Estação](../src/assets/prologo-estacao.webp), [prólogo em casa](../src/assets/prologo-casa.webp) e [capa](../src/assets/baixa-luz-cover.webp). Mulher negra jovem, com cabelo preto crespo preso em coque alto e jaqueta de técnica em tom ocre. Use a mesma idade aparente, os mesmos traços e o mesmo tom de pele do prólogo, também nos closes como o [leitor da porta](../src/assets/comic/leitor-da-porta.webp). |
 | Íris | [Garagem](../src/assets/garagem-iris.webp) e [calibração](../src/assets/comic/filtro-optico.webp). Cabelo escuro encaracolado preso, pele morena e roupa de oficina verde-azulada sem mangas. |
 | Bia | [Conferência no Teatro](../src/assets/comic/conferencia-no-teatro.webp), à esquerda. Mulher jovem de pele morena, cabelo preto comprido e jaqueta ferrugem. Ela confere o papel. |
 | Helena | [Conferência no Teatro](../src/assets/comic/conferencia-no-teatro.webp), à direita. Mulher de meia-idade com pele oliva clara, cabelo escuro curto com grisalho nas têmporas e blazer azul-acinzentado. Ela segura a chave. |
