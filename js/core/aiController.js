@@ -26,13 +26,15 @@
       if (!atkU || availableDefenders.length === 0) continue;
 
       const attackerIsFirewall = NB.Cards.hasKeyword(atkU, 'FIREWALL');
+      const survives = d => d.u.def > atkU.atk + NB.Combat.affinityBonus(atkU, d.u);
+      const destroys = d => d.u.atk + NB.Combat.affinityBonus(d.u, atkU) >= atkU.def;
       let pickIdx = availableDefenders.findIndex(d => d.isFirewall);
 
       if (pickIdx === -1) {
-        pickIdx = availableDefenders.findIndex(d => d.u.atk >= atkU.def && d.u.def > atkU.atk);
+        pickIdx = availableDefenders.findIndex(d => destroys(d) && survives(d));
       }
       if (pickIdx === -1 && (atkU.atk >= 4 || mustBlockLethal || attackerIsFirewall || NB.Cards.hasKeyword(atkU, 'DRENO'))) {
-        pickIdx = availableDefenders.findIndex(d => d.u.def > atkU.atk || d.u.atk >= atkU.def);
+        pickIdx = availableDefenders.findIndex(d => survives(d) || destroys(d));
       }
       if (pickIdx === -1 && (mustBlockLethal || attackerIsFirewall)) {
         pickIdx = 0;

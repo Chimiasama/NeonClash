@@ -443,3 +443,5 @@
   padding: 2px 1px;
   letter-spacing: 0.04em;
 }
+
+.field-affinity { flex-shrink: 0; font-size: 10px; margin-left: 4px; }

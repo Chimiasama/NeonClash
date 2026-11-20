@@ -127,7 +127,11 @@
       const sel = state.overclockUnits;
       if (sel.length === 2) {
         const totalAtk = (state.player.field[sel[0]]?.atk || 0) + (state.player.field[sel[1]]?.atk || 0);
-        hint.textContent = `Conectadas! Golpe combinado ${totalAtk} ATK + Perfuração`;
+        const first = state.player.field[sel[0]];
+        const second = state.player.field[sel[1]];
+        hint.textContent = NB.Combat.overclockSynergy(first, second)
+          ? `${totalAtk} ATK · +1 de sinergia contra bloqueador`
+          : `Conectadas! Golpe combinado ${totalAtk} ATK + Perfuração`;
         btnP.textContent = `DISPARAR (${totalAtk})`;
         btnP.classList.add('ram-surge');
         btnP.disabled = false;
@@ -251,6 +255,15 @@
       nm.className = 'field-card-name';
       nm.textContent = def.name;
       hdr.appendChild(nm);
+      const affinity = NB.Cards.AFFINITIES[unit.affinity];
+      if (affinity) {
+        const mark = document.createElement('span');
+        mark.className = 'field-affinity';
+        mark.style.color = affinity.color;
+        mark.textContent = affinity.icon;
+        mark.title = affinity.name;
+        hdr.appendChild(mark);
+      }
       artWrap.appendChild(hdr);
 
       let ribText = '';
@@ -365,7 +378,7 @@
       const nums = document.createElement('div');
       nums.className = 'hand-card-nums tabular';
       if (card.kind === 'unit') {
-        nums.innerHTML = `<span class="a">${card.atk}</span>/<span class="d">${card.def}</span>`;
+        nums.innerHTML = `<span class="a">${card.atk}</span>/<span class="d">${card.def}</span> <span>${NB.Cards.AFFINITIES[NB.Save.getAffinity(card.id)]?.icon || ''}</span>`;
       } else {
         nums.innerHTML = `<span class="e">EXPLOIT</span>`;
       }
@@ -609,7 +622,7 @@
     if (card.kind === 'exploit') vCard.classList.add('exploit-theme');
 
     document.getElementById('visor-type').textContent =
-      card.kind === 'unit' ? 'UNIDADE CIBERNÉTICA' : 'EXPLOIT · AÇÃO';
+      card.kind === 'unit' ? `UNIDADE · ${NB.Cards.affinityLabel(NB.Save.getAffinity(card.id))}` : 'EXPLOIT · AÇÃO';
     document.getElementById('visor-title').textContent = card.name.toUpperCase();
 
     const artBox = document.getElementById('visor-art');
@@ -631,7 +644,7 @@
     }
 
     renderVisorKeywords(card);
-    document.getElementById('visor-desc').textContent = card.desc;
+    document.getElementById('visor-desc').textContent = card.desc + NB.Cards.describeAffinity(NB.Save.getAffinity(card.id));
 
     const warnEl = document.getElementById('visor-warning');
     if (!check.ok) {
@@ -665,7 +678,7 @@
 
     document.getElementById('visor-type').textContent =
       (side === 'enemy' ? 'UNIDADE INIMIGA' : 'SUA UNIDADE') +
-      (u.booting ? ' · BOOTING' : ' · ATIVA');
+      (u.booting ? ' · BOOTING' : ' · ATIVA') + ` · ${NB.Cards.affinityLabel(u.affinity)}`;
     document.getElementById('visor-title').textContent = card.name.toUpperCase();
 
     const artBox = document.getElementById('visor-art');
@@ -678,7 +691,7 @@
       <span style="color:${u.booting ? 'var(--amber)' : 'var(--ram)'}">${u.booting ? 'BOOTING' : 'PRONTO'}</span>
     `;
     renderVisorKeywords(card);
-    document.getElementById('visor-desc').textContent = card.desc;
+    document.getElementById('visor-desc').textContent = card.desc + NB.Cards.describeAffinity(u.affinity);
     document.getElementById('visor-warning').style.display = 'none';
 
     const actionsEl = document.getElementById('visor-actions');

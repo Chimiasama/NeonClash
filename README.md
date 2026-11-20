@@ -2,6 +2,12 @@
 
 Jogo de cartas cyberpunk em que Kairo explora Baixa Luz, investiga a Vértice e desafia os personagens da cidade.
 
+## Afinidades
+
+Pulso vence Malha, Malha vence Sombra e Sombra vence Pulso. A vantagem dá +1 de dano nos choques normais entre unidades. Uma dupla de Overclock com duas afinidades diferentes ganha +1 contra um bloqueador. Unidades neutras ficam fora desses bônus.
+
+Na Feira do Viaduto, a oficina recalibra as unidades da coleção por 15 créditos e restaura gratuitamente a afinidade original. O Exploit Recompilar custa 1 RAM e muda a afinidade de uma unidade aliada durante o duelo.
+
 ## Desenvolvimento web
 
 Com Node.js 24, execute `npm ci` e `npm run dev`. O jogo salva o progresso no armazenamento local.

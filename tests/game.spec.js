@@ -351,3 +351,72 @@ test('renders the redesigned effects through the effects bus only', async ({ pag
   }
   expect(results.musicPeak).toBe(0);
 });
+
+test('recalibrates a unit at the workshop, preserves the choice, and restores it for free', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Entrar na cidade' }).click();
+  await page.getByRole('button', { name: 'Feira do Viaduto' }).click();
+  const units = page.getByRole('combobox', { name: 'Unidade para recalibrar' });
+  const affinities = page.getByRole('combobox', { name: 'Nova afinidade' });
+  const recalibrate = page.getByRole('button', { name: 'Recalibrar · 15 créditos' });
+  await units.selectOption('unit_03');
+  await expect(recalibrate).toBeDisabled();
+  await affinities.selectOption('sombra');
+  await recalibrate.click();
+  await expect(page.locator('#city-credits')).toHaveText('20 créditos');
+  await expect(page.locator('.city-workshop')).toContainText('Afinidade atual · ◆ Sombra');
+  await page.reload();
+  await page.getByRole('button', { name: 'Entrar na cidade' }).click();
+  await units.selectOption('unit_03');
+  await expect(page.locator('.city-workshop')).toContainText('Afinidade atual · ◆ Sombra');
+  expect(await page.evaluate(() => NB.State.createFieldUnit('unit_03', 1, 'player').affinity)).toBe('sombra');
+  expect(await page.evaluate(() => NB.State.createFieldUnit('unit_03', 1, 'enemy').affinity)).toBe('malha');
+  await affinities.selectOption('malha');
+  await page.getByRole('button', { name: 'Restaurar afinidade' }).click();
+  await expect(page.locator('#city-credits')).toHaveText('20 créditos');
+  await expect(page.locator('.city-workshop')).toContainText('Afinidade atual · ■ Malha');
+});
+
+test('applies affinity in a clash and a mixed Overclock, and recompiles a unit in battle', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Entrar na cidade' }).click();
+  await page.getByRole('button', { name: 'Feira do Viaduto' }).click();
+  await page.getByRole('button', { name: 'Comprar · 30' }).click();
+  await expect(page.locator('#city-credits')).toHaveText('5 créditos');
+
+  const outcome = await page.evaluate(async () => {
+    NB.Input.startMatch({ mode: 'quick' });
+    NB.State.wait = async () => true;
+    const state = NB.State.get();
+    const make = (id, uid) => ({ ...NB.State.createFieldUnit(id, uid), atk: 4, def: 14 });
+    state.player.field[0] = make('unit_05', 97); // Pulso
+    state.enemy.field[0] = make('unit_03', 98); // Malha
+    await NB.Combat.resolveCombatSequence('player', [0], { 0: 0 });
+    const clash = [state.player.field[0].def, state.enemy.field[0].def];
+
+    state.player.hand.push({ cardId: 'exploit_07', uid: 99 });
+    state.player.ram = 4;
+    const invalidCast = NB.State.executeExploit('player', 99, 2);
+    const ramAfterInvalidCast = state.player.ram;
+    NB.State.executeExploit('player', 99, 0);
+    const afterCast = state.player.field[0].affinity;
+    const ramAfterCast = state.player.ram;
+    state.player.field[1] = make('unit_04', 100); // Sombra
+    state.enemy.field[0].def = 8;
+    state.enemy.hand = [];
+    state.enemy.deck = [];
+    state.phase = 'PLAYER_OVERCLOCK';
+    state.overclockUnits = [0, 1];
+    await NB.Combat.executeOverclockAttack();
+    return {
+      clash, invalidCast, ramAfterInvalidCast, ramAfterCast, afterCast,
+      overflow: state.stats.damageDealt,
+      oneAffinity: NB.Combat.overclockSynergy({ affinity: 'malha' }, { affinity: 'malha' }),
+      neutral: NB.Combat.affinityBonus({ atk: 4, affinity: 'pulso' }, { affinity: null })
+    };
+  });
+  expect(outcome).toEqual({
+    clash: [10, 9], invalidCast: false, ramAfterInvalidCast: 4, ramAfterCast: 3,
+    afterCast: 'malha', overflow: 1, oneAffinity: 0, neutral: 0
+  });
+});

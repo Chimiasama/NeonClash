@@ -10,6 +10,7 @@
   let job = null;
   let jobTimer = null;
   let view = 'district';
+  let workshopCardId = null;
 
   function access(district) {
     const boss = NB.Campaign.NODES.find(node => node.id === district?.id);
@@ -136,7 +137,9 @@
       row.append(art);
       const details = document.createElement('div');
       addText(details, card.name, 'city-clue-title');
-      addText(details, `${card.atk} ATK · ${card.def} DEF · +${card.ramGain} RAM`);
+      addText(details, card.kind === 'unit'
+        ? `${card.atk} ATK · ${card.def} DEF · +${card.ramGain} RAM · ${NB.Cards.affinityLabel(NB.Save.getAffinity(id))}`
+        : `Exploit · ${card.cost} RAM`);
       if (card.keywords.length) addText(details, card.keywords.map(keyword => NB.Cards.KEYWORDS[keyword].tag).join(' · '));
       row.append(details);
       addButton(row, owned ? 'Adquirida' : `Comprar · ${price}`, () => {
@@ -149,6 +152,62 @@
       }, owned || save.city.credits < price);
       content.append(row);
     }
+    renderWorkshop(content, save);
+  }
+
+  function renderWorkshop(content, save) {
+    const workshop = document.createElement('section');
+    workshop.className = 'city-workshop';
+    addText(workshop, 'Oficina da Lume', 'city-clue-title');
+    addText(workshop, NB.Cards.AFFINITY_CYCLE + '. Vantagem dá +1 de dano contra unidades em choques. Duas afinidades diferentes dão +1 ao Overclock contra um bloqueador.');
+    const units = save.unlockedCards.map(id => NB.Cards.CARD_DB[id]).filter(card => card?.kind === 'unit');
+    if (!units.length) return;
+    const cards = document.createElement('select');
+    const affinities = document.createElement('select');
+    cards.setAttribute('aria-label', 'Unidade para recalibrar');
+    affinities.setAttribute('aria-label', 'Nova afinidade');
+    units.forEach(card => cards.add(new Option(card.name, card.id)));
+    if (units.some(card => card.id === workshopCardId)) cards.value = workshopCardId;
+    const current = document.createElement('p');
+    const confirm = addButton(workshop, 'Recalibrar · 15 créditos', () => {
+      const id = cards.value;
+      const type = affinities.value === 'neutral' ? null : affinities.value;
+      if (NB.Save.recalibrate(id, type)) {
+        announce(`${NB.Cards.CARD_DB[id].name} agora usa afinidade ${NB.Cards.affinityLabel(type)}.`);
+        render();
+        document.querySelector('.city-workshop select')?.focus();
+      }
+    });
+    function updateOptions() {
+      const id = cards.value;
+      const base = NB.Cards.CARD_DB[id].affinity || null;
+      const now = NB.Save.getAffinity(id);
+      current.textContent = `Afinidade atual · ${NB.Cards.affinityLabel(now)}`;
+      affinities.replaceChildren();
+      affinities.add(new Option('Escolha a afinidade', ''));
+      affinities.options[0].disabled = true;
+      for (const type of [null, ...Object.keys(NB.Cards.AFFINITIES)]) {
+        if (type === now || (type === null && base !== null)) continue;
+        const cost = type === base ? ' · restaurar grátis' : '';
+        affinities.add(new Option(NB.Cards.affinityLabel(type) + cost, type || 'neutral'));
+      }
+      affinities.value = '';
+      updatePrice();
+    }
+    function updatePrice() {
+      const base = NB.Cards.CARD_DB[cards.value].affinity || null;
+      const selected = affinities.value === 'neutral' ? null : affinities.value;
+      const restoring = selected === base;
+      confirm.disabled = !affinities.value || (!restoring && save.city.credits < NB.Save.recalibrationPrice);
+      confirm.textContent = restoring ? 'Restaurar afinidade' : `Recalibrar · ${NB.Save.recalibrationPrice} créditos`;
+    }
+    cards.addEventListener('change', () => { workshopCardId = cards.value; updateOptions(); });
+    affinities.addEventListener('change', updatePrice);
+    workshop.insertBefore(cards, confirm);
+    workshop.insertBefore(current, confirm);
+    workshop.insertBefore(affinities, confirm);
+    updateOptions();
+    content.append(workshop);
   }
 
   function renderRelay(content, save) {

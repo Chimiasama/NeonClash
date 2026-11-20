@@ -122,12 +122,13 @@
     return card;
   }
 
-  function createFieldUnit(cardId, uid) {
+  function createFieldUnit(cardId, uid, side = 'enemy') {
     const def = NB.Cards.CARD_DB[cardId];
     const isZeroDay = NB.Cards.hasKeyword(def, 'ZERO_DAY');
     return {
       uid,
       cardId,
+      affinity: side === 'player' ? NB.Save.getAffinity(cardId) : def.affinity || null,
       atk: def.atk,
       baseAtk: def.atk,
       def: def.def,
@@ -206,7 +207,7 @@
     if (slot === -1) return false;
 
     actor.hand.splice(idx, 1);
-    const unit = createFieldUnit(card.id, item.uid);
+    const unit = createFieldUnit(card.id, item.uid, side);
     actor.field[slot] = unit;
     actor.summonedThisTurn = true;
     actor.ram += card.ramGain;
@@ -252,7 +253,7 @@
     const item = actor.hand[idx];
     const card = NB.Cards.CARD_DB[item.cardId];
 
-    if (actor.ram < card.cost) return false;
+    if (actor.ram < card.cost || (card.id === 'exploit_07' && !actor.field[targetSlot])) return false;
     actor.ram -= card.cost;
     actor.hand.splice(idx, 1);
     actor.discard.push(item);
@@ -319,6 +320,11 @@
         if (slotEl) NB.Physics.spawnFloatText(slotEl, '-2 DEF / -2 ATK', '#FFB800');
         if (u.def <= 0) destroyUnit(oppSide, sIdx, side === 'player');
       });
+    } else if (card.id === 'exploit_07') {
+      const unit = actor.field[targetSlot];
+      unit.affinity = NB.Cards.AFFINITIES[unit.affinity]?.beats || 'pulso';
+      const slotEl = getSlotEl(side, targetSlot);
+      if (slotEl) NB.Physics.spawnFloatText(slotEl, NB.Cards.affinityLabel(unit.affinity), NB.Cards.AFFINITIES[unit.affinity].color);
     } else if (card.id === 'exploit_06') {
       NB.Physics.fireLaserBeam(casterEl, oppPanelEl, '#E879F9', 7);
       applyDirectDamage(oppSide, 2, side === 'player');

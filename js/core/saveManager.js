@@ -81,6 +81,7 @@
       unlockedCards: starter,
       customDeck: buildBalancedDeck(starter, []),
       city: { credits: 35, district: 'kira', traced: [] },
+      affinities: {},
       wins: 0,
       matches: 0
     };
@@ -114,6 +115,8 @@
             district: typeof parsed.city?.district === 'string' ? parsed.city.district : def.city.district,
             traced: Array.isArray(parsed.city?.traced) ? parsed.city.traced.filter(id => typeof id === 'string') : []
           },
+          affinities: Object.fromEntries(Object.entries(parsed.affinities || {}).filter(([id, type]) =>
+            NB.Cards.CARD_DB[id]?.kind === 'unit' && Object.hasOwn(NB.Cards.AFFINITIES, type))),
           wins: Number(parsed.wins) || 0,
           matches: Number(parsed.matches) || 0
         };
@@ -134,6 +137,29 @@
   function get() {
     if (!data) load();
     return data;
+  }
+
+  const recalibrationPrice = 15;
+
+  function getAffinity(cardId) {
+    return get().affinities[cardId] || NB.Cards.CARD_DB[cardId]?.affinity || null;
+  }
+
+  function recalibrate(cardId, affinity) {
+    const progress = get();
+    const card = NB.Cards.CARD_DB[cardId];
+    if (card?.kind !== 'unit' || !progress.unlockedCards.includes(cardId)) return false;
+    if ((affinity !== null && !Object.hasOwn(NB.Cards.AFFINITIES, affinity)) || affinity === getAffinity(cardId)) return false;
+    const restoring = affinity === (card.affinity || null);
+    if (!restoring && (affinity === null || progress.city.credits < recalibrationPrice)) return false;
+    if (restoring) {
+      delete progress.affinities[cardId];
+    } else {
+      progress.affinities[cardId] = affinity;
+      progress.city.credits -= recalibrationPrice;
+    }
+    save();
+    return true;
   }
 
   function getActiveDeck() {
@@ -229,6 +255,9 @@
     save,
     get,
     getActiveDeck,
+    getAffinity,
+    recalibrate,
+    recalibrationPrice,
     saveCustomDeck,
     buildBalancedDeck,
     resetSave,

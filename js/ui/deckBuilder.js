@@ -177,7 +177,7 @@
       foot.className = 'col-card-foot';
       if (isUnlocked) {
         const statHtml = card.kind === 'unit'
-          ? `<span style="color:var(--amber)">A:${card.atk}</span><span style="color:var(--cyan)">D:${card.def}</span>`
+          ? `<span style="color:var(--amber)">A:${card.atk}</span><span style="color:var(--cyan)">D:${card.def} ${NB.Cards.AFFINITIES[NB.Save.getAffinity(card.id)]?.icon || ''}</span>`
           : `<span style="color:var(--amber)">EXPLOIT</span><span style="color:var(--text-muted)">${card.cost} RAM</span>`;
         foot.innerHTML = `
           <div class="col-card-name">${card.name}</div>
@@ -253,7 +253,7 @@
     panel.classList.toggle('exploit-theme', card.kind === 'exploit');
 
     document.getElementById('insp-subtitle').textContent =
-      (card.kind === 'unit' ? 'UNIDADE · ' : 'EXPLOIT · ') + card.subtitle.toUpperCase();
+      (card.kind === 'unit' ? `UNIDADE · ${NB.Cards.affinityLabel(NB.Save.getAffinity(card.id))} · ` : 'EXPLOIT · ') + card.subtitle.toUpperCase();
     document.getElementById('insp-name').textContent = card.name.toUpperCase();
 
     const artStage = document.getElementById('insp-art-stage');
@@ -301,7 +301,7 @@
       kwBox.style.display = 'none';
     }
 
-    document.getElementById('insp-desc').textContent = card.desc;
+    document.getElementById('insp-desc').textContent = card.desc + NB.Cards.describeAffinity(NB.Save.getAffinity(card.id));
 
     const copies = countCopies(card.id);
     const total = draftDeck.length;

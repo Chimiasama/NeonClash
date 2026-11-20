@@ -17,13 +17,14 @@ Unidades (14):
 - unit_13.webp (Flash-Ronin · ZERO-DAY + DRENO)
 - unit_14.webp (Malware-Rex · VÍRUS)
 
-Exploits (6):
+Exploits (7):
 - exploit_01.webp (Chip Overclock)
 - exploit_02.webp (Spike Neural)
 - exploit_03.webp (Kill-Switch)
 - exploit_04.webp (Patch v9)
 - exploit_05.webp (Bomba EMP)
 - exploit_06.webp (Sifão de Memória)
+- recompilar.webp (Recompilar)
 
 Feira do Viaduto:
 - drone-viaduto.webp

@@ -1,6 +1,15 @@
 (function (NB) {
   'use strict';
 
+  function affinityBonus(attacker, defender) {
+    return Number(attacker.atk > 0 && Boolean(defender.affinity)
+      && NB.Cards.AFFINITIES[attacker.affinity]?.beats === defender.affinity);
+  }
+
+  function overclockSynergy(first, second) {
+    return Number(Boolean(first.affinity && second.affinity && first.affinity !== second.affinity));
+  }
+
   /* Motor de Combate:
      - Choques simultâneos (ATK vs DEF), destruição com partículas
      - Palavras-chave [FIREWALL], [VÍRUS] (-2 ATK) e [DRENO] (rouba 1 RAM)
@@ -32,8 +41,10 @@
         if (defEl) defEl.classList.add('anim-hit');
         if (atkEl) atkEl.classList.add('anim-hit');
 
-        const atkDmg = attacker.atk;
-        const defDmg = defender.atk;
+        const atkBonus = affinityBonus(attacker, defender);
+        const defBonus = affinityBonus(defender, attacker);
+        const atkDmg = attacker.atk + atkBonus;
+        const defDmg = defender.atk + defBonus;
         defender.def -= atkDmg;
         attacker.def -= defDmg;
 
@@ -47,10 +58,10 @@
         if (defSlotEl) {
           const p = NB.Physics.getElCenterInShell(defSlotEl);
           NB.Physics.spawnBurst(p.x, p.y, '#FFB800', heavyHit ? 26 : 18);
-          NB.Physics.spawnFloatText(defSlotEl, `-${atkDmg}`, '#FFB800');
+          NB.Physics.spawnFloatText(defSlotEl, `-${atkDmg}${atkBonus ? " · AFINIDADE" : ""}`, '#FFB800');
         }
         if (atkSlotEl) {
-          NB.Physics.spawnFloatText(atkSlotEl, `-${defDmg}`, '#FF0055');
+          NB.Physics.spawnFloatText(atkSlotEl, `-${defDmg}${defBonus ? " · AFINIDADE" : ""}`, '#FF0055');
         }
 
         // [VÍRUS]: Ao causar dano a unidade inimiga, reduz permanentemente o ATK dela em -2
@@ -159,9 +170,11 @@
       if (!(await NB.State.wait(220))) return;
 
       const blockerDefBefore = blocker.def;
-      const overflowDmg = Math.max(0, combinedAtk - blockerDefBefore);
+      const synergy = overclockSynergy(unitA, unitB);
+      const damage = combinedAtk + synergy;
+      const overflowDmg = Math.max(0, damage - blockerDefBefore);
 
-      blocker.def -= combinedAtk;
+      blocker.def -= damage;
       // Contra-ataque do bloqueador atinge a unidade líder (unitA)
       const counterDmg = blocker.atk;
       unitA.def -= counterDmg;
@@ -173,7 +186,7 @@
       if (blockerSlotEl) {
         const bCard = blockerSlotEl.querySelector('.field-card');
         if (bCard) bCard.classList.add('anim-hit');
-        NB.Physics.spawnFloatText(blockerSlotEl, `-${combinedAtk}`, '#39FF14');
+        NB.Physics.spawnFloatText(blockerSlotEl, `-${damage}${synergy ? " · SINERGIA" : ""}`, '#39FF14');
       }
       if (slotElA && counterDmg > 0) {
         NB.Physics.spawnFloatText(slotElA, `-${counterDmg}`, '#FF0055');
@@ -298,8 +311,10 @@
       if (!(await NB.State.wait(220))) return;
 
       const blockerDefBefore = blocker.def;
-      const overflowDmg = Math.max(0, combinedAtk - blockerDefBefore);
-      blocker.def -= combinedAtk;
+      const synergy = overclockSynergy(unitA, unitB);
+      const damage = combinedAtk + synergy;
+      const overflowDmg = Math.max(0, damage - blockerDefBefore);
+      blocker.def -= damage;
       const counterDmg = blocker.atk;
       unitA.def -= counterDmg;
 
@@ -307,7 +322,7 @@
       NB.Physics.shakeScreen(true);
       NB.Physics.vibrateDamage();
 
-      if (defSlotEl) NB.Physics.spawnFloatText(defSlotEl, `-${combinedAtk}`, '#FF0055');
+      if (defSlotEl) NB.Physics.spawnFloatText(defSlotEl, `-${damage}${synergy ? " · SINERGIA" : ""}`, '#FF0055');
       if (slotElA && counterDmg > 0) NB.Physics.spawnFloatText(slotElA, `-${counterDmg}`, '#FFB800');
 
       if (hasVirus && blocker.def > 0) NB.State.applyVirusDebuff('player', defSlot);
@@ -412,6 +427,8 @@
   }
 
   NB.Combat = {
+    affinityBonus,
+    overclockSynergy,
     resolveCombatSequence,
     executeOverclockAttack,
     confirmPlayerAttack,

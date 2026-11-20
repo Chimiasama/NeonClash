@@ -14,7 +14,8 @@
   const stock = [
     { id: 'unit_21', price: 45 },
     { id: 'unit_22', price: 65 },
-    { id: 'unit_23', price: 85 }
+    { id: 'unit_23', price: 85 },
+    { id: 'exploit_07', price: 30 }
   ];
 
   const traces = {

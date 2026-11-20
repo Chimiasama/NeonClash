@@ -7,6 +7,22 @@
   const DECK_SIZE = 20;
   const MAX_COPIES = 2;
 
+  const AFFINITIES = {
+    pulso: { name: 'Pulso', icon: '▲', color: '#ffad62', beats: 'malha' },
+    malha: { name: 'Malha', icon: '■', color: '#62e8fd', beats: 'sombra' },
+    sombra: { name: 'Sombra', icon: '◆', color: '#d99afc', beats: 'pulso' }
+  };
+  const AFFINITY_CYCLE = 'Pulso vence Malha · Malha vence Sombra · Sombra vence Pulso';
+  function affinityLabel(id) {
+    const affinity = AFFINITIES[id];
+    return affinity ? `${affinity.icon} ${affinity.name}` : 'Neutra';
+  }
+
+  function describeAffinity(id) {
+    const affinity = AFFINITIES[id];
+    return affinity ? ` Afinidade ${affinity.name}: +1 de dano em choques contra ${AFFINITIES[affinity.beats].name}.` : '';
+  }
+
   /* Metadados das 4 Palavras-Chave com ícones e cores */
   const KEYWORDS = {
     ZERO_DAY: {
@@ -362,6 +378,23 @@
     }
   });
 
+  const unitAffinities = {
+    unit_03: 'malha', unit_04: 'sombra', unit_05: 'pulso', unit_06: 'pulso',
+    unit_07: 'pulso', unit_08: 'sombra', unit_09: 'sombra', unit_10: 'malha',
+    unit_11: 'sombra', unit_12: 'malha', unit_13: 'pulso', unit_14: 'pulso',
+    unit_21: 'malha', unit_22: 'sombra', unit_23: 'malha'
+  };
+  for (const [id, affinity] of Object.entries(unitAffinities)) CARD_DB[id].affinity = affinity;
+
+  CARD_DB.exploit_07 = {
+    id: 'exploit_07', kind: 'exploit', name: 'Recompilar',
+    subtitle: 'Exploit de Reconfiguração', cost: 1, keywords: [],
+    img: './cards/recompilar.webp', fallbackArt: 'exploit_01', accent: '#62e8fd',
+    targetType: 'ally_unit',
+    lore: 'Um compilador de rua que troca o protocolo ativo sem desligar o programa.',
+    desc: 'Muda a afinidade de uma unidade aliada até o fim do duelo. Neutra vira Pulso; as demais avançam no ciclo Pulso → Malha → Sombra → Pulso.'
+  };
+
   function hasKeyword(cardOrId, kw) {
     const def = typeof cardOrId === 'string' ? CARD_DB[cardOrId] : (cardOrId && cardOrId.cardId ? CARD_DB[cardOrId.cardId] : cardOrId);
     return Boolean(def && Array.isArray(def.keywords) && def.keywords.includes(kw));
@@ -402,6 +435,10 @@
     DECK_SIZE,
     MAX_COPIES,
     KEYWORDS,
+    AFFINITIES,
+    AFFINITY_CYCLE,
+    affinityLabel,
+    describeAffinity,
     CARD_DB,
     STARTER_CARD_IDS,
     AVATAR_ASSETS,
