@@ -271,6 +271,7 @@
     severino: { name: 'Severino' },
     leila: { name: 'Leila' },
     kira: { name: 'Kira', art: './avatars/kira.png' },
+    cipher: { name: 'Cipher', art: './avatars/cipher.png' },
     archon: { name: 'Archon', art: './avatars/archon.png' }
   };
   const prologueBeats = [
@@ -279,7 +280,28 @@
     { camera: 'zoom-in', mood: 'revelation' }
   ];
 
+  const evidenceArt = (file, artTitle) => ({
+    art: `./src/assets/comic/${file}.webp`, artTitle,
+    camera: 'zoom-in', mood: 'revelation', bubbleType: 'evidence'
+  });
+  const kiraReceipt = evidenceArt('terminal-de-kira', 'O terminal e o recibo de Kira');
+  const opticalFilter = evidenceArt('filtro-optico', 'O filtro óptico de Íris');
+  const theatreProof = evidenceArt('conferencia-no-teatro', 'A conferência nos bastidores do Teatro');
+
   const beats = {
+    kiraPeace: [kiraReceipt, { speaker: 'kira', bubbleType: 'speech', expression: 'whisper' }],
+    kiraProof: [kiraReceipt, { speaker: 'kira', bubbleType: 'speech' }],
+    cipherToken: [opticalFilter],
+    cipherPeace: [{ ...opticalFilter, camera: 'focus-detail', focus: 'center', mood: 'tense' },
+      { speaker: 'cipher', bubbleType: 'speech' }],
+    vexAlt: [theatreProof],
+    archonDeal: [
+      ...Array(dialogue[5].length),
+      { art: './src/assets/comic/barramento-vertice.webp', artTitle: 'O barramento central da Torre Vértice',
+        camera: 'wide', mood: 'tense' },
+      { art: './src/assets/comic/barramento-vertice.webp', camera: 'focus-detail', focus: 'center', mood: 'revelation' },
+      { speaker: 'archon', expression: 'alert', bubbleType: 'speech', mood: 'tense' }
+    ],
     keys: [
       { camera: 'wide', mood: 'tense', bubbleType: 'thought',
         art: './src/assets/comic/leitor-da-porta.webp', artTitle: 'O leitor da porta de Kairo',
