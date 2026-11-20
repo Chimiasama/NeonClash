@@ -487,6 +487,14 @@
     document.getElementById('btn-sound').addEventListener('click', () => NB.Audio.toggle());
     document.getElementById('btn-settings-sound').addEventListener('click', () => NB.Audio.toggle());
 
+    document.querySelectorAll('[data-audio-channel]').forEach(input => {
+      input.addEventListener('input', () => {
+        NB.Audio.setVolume(input.dataset.audioChannel, input.valueAsNumber);
+        NB.UI.renderVolumeControls();
+      });
+    });
+    document.getElementById('volume-sfx').addEventListener('change', () => NB.Audio.playSelect());
+
     // Configurações & Resetar Save
     const openSettings = () => {
       NB.Audio.playSelect();

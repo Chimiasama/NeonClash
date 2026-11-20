@@ -287,3 +287,67 @@ test('Back clears combat selections before allowing an exit prompt', async ({ pa
   expect(await back()).toBe(false);
   expect(await page.evaluate(() => NB.State.get().turn)).toBe(1);
 });
+
+test('adjusts music and effects independently and restores their levels', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#btn-title-sound').click();
+  await page.locator('#btn-title-settings').click();
+  const music = page.getByRole('slider', { name: 'Música', exact: true });
+  const effects = page.getByRole('slider', { name: 'Efeitos sonoros' });
+  const gain = (channel) => page.evaluate(key => NB.Audio[key].gain.value, channel);
+
+  await expect(music).toHaveValue('100');
+  await expect(effects).toHaveValue('100');
+  await music.fill('0');
+  await expect(music).toHaveAttribute('aria-valuetext', '0%');
+  await expect.poll(() => gain('musicGain')).toBeLessThan(0.001);
+  await expect.poll(() => gain('sfxGain')).toBeCloseTo(0.55, 2);
+  await effects.fill('63');
+  await expect(effects).toHaveAttribute('aria-valuetext', '63%');
+  await expect.poll(() => gain('sfxGain')).toBeCloseTo(0.3465, 2);
+  await expect.poll(() => gain('musicGain')).toBeLessThan(0.001);
+
+  await page.reload();
+  await page.locator('#btn-title-settings').click();
+  await expect(music).toHaveValue('0');
+  await expect(effects).toHaveValue('63');
+  await page.locator('#btn-settings-sound').click();
+  await expect.poll(() => gain('sfxGain')).toBeCloseTo(0.3465, 2);
+  await expect.poll(() => gain('musicGain')).toBeLessThan(0.001);
+});
+
+test('renders the redesigned effects through the effects bus only', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#btn-title-sound').click();
+  const results = await page.evaluate(async () => {
+    const audio = NB.Audio;
+    audio.stopMusic();
+    const patches = Object.entries(NB.SoundEffects);
+    const ctx = new OfflineAudioContext(2, 48000 * patches.length, 48000);
+    audio.ctx = ctx;
+    audio.sfxCompressor = ctx.createDynamicsCompressor();
+    const split = ctx.createChannelMerger(2);
+    audio.sfxCompressor.connect(split, 0, 0);
+    audio.musicGain = ctx.createGain();
+    audio.musicGain.connect(split, 0, 1);
+    split.connect(ctx.destination);
+
+    patches.forEach(([, voices], second) => {
+      for (const voice of voices) audio.playEffectVoice(voice, second);
+    });
+    const buffer = await ctx.startRendering();
+    const effects = buffer.getChannelData(0);
+    const music = buffer.getChannelData(1);
+    const peak = samples => samples.reduce((max, sample) => Math.max(max, Math.abs(sample)), 0);
+    return {
+      patches: Object.fromEntries(patches.map(([effect], second) =>
+        [effect, peak(effects.subarray(second * 48000, (second + 1) * 48000))])),
+      musicPeak: peak(music)
+    };
+  });
+  expect(Object.keys(results.patches)).toHaveLength(14);
+  for (const [effect, peak] of Object.entries(results.patches)) {
+    expect(peak, `${effect} should be audible`).toBeGreaterThan(0.035);
+  }
+  expect(results.musicPeak).toBe(0);
+});

@@ -3,16 +3,18 @@
 
   const tracks = NB.MusicTracks;
   const preferenceKey = 'neon_breach_sound';
+  const volumeKey = 'neon_breach_volume';
+  const channelGain = { music: 0.28, sfx: 0.55 };
   const frequency = midi => 440 * 2 ** ((midi - 69) / 12);
 
-  /* Motor de Áudio: Sintetizador Synthwave/Chiptune 100% Web Audio API
-     + helper playCustomFile() para usar arquivos futuros na pasta ./audio/ */
+  /* Mixer e síntese em Web Audio. */
   const SoundEngine = {
     ctx: null,
     enabled: false,
     scene: 'title',
     battle: false,
     preference: null,
+    volumes: { music: 100, sfx: 100 },
     nextBeat: 0,
     musicTimer: null,
     step: 0,
@@ -20,6 +22,8 @@
     musicGain: null,
     trackGain: null,
     sfxGain: null,
+    sfxCompressor: null,
+    noiseBuffer: null,
     audioCache: {},
 
     isEnabled() {
@@ -37,12 +41,24 @@
       this.masterGain.connect(this.ctx.destination);
 
       this.musicGain = this.ctx.createGain();
-      this.musicGain.gain.value = 0.28;
+      this.musicGain.gain.value = this.volumes.music / 100 * channelGain.music;
       this.musicGain.connect(this.masterGain);
 
       this.sfxGain = this.ctx.createGain();
-      this.sfxGain.gain.value = 0.55;
+      this.sfxGain.gain.value = this.volumes.sfx / 100 * channelGain.sfx;
       this.sfxGain.connect(this.masterGain);
+
+      this.sfxCompressor = this.ctx.createDynamicsCompressor();
+      this.sfxCompressor.threshold.value = -15;
+      this.sfxCompressor.ratio.value = 3;
+      this.sfxCompressor.attack.value = 0.003;
+      this.sfxCompressor.release.value = 0.09;
+      this.sfxCompressor.connect(this.sfxGain);
+
+      const sampleRate = this.ctx.sampleRate;
+      this.noiseBuffer = this.ctx.createBuffer(1, sampleRate, sampleRate);
+      const noise = this.noiseBuffer.getChannelData(0);
+      for (let i = 0; i < noise.length; i++) noise[i] = Math.random() * 2 - 1;
     },
 
     setEnabled(on) {
@@ -66,6 +82,28 @@
       try {
         const stored = window.localStorage.getItem(preferenceKey);
         if (stored === 'on' || stored === 'off') this.preference = stored === 'on';
+        const volumes = JSON.parse(window.localStorage.getItem(volumeKey));
+        for (const channel of Object.keys(channelGain)) {
+          if (Number.isFinite(volumes?.[channel])) this.volumes[channel] = this.normalizeVolume(volumes[channel]);
+        }
+      } catch (_) {}
+    },
+
+    normalizeVolume(value) {
+      return Math.min(100, Math.max(0, Math.round(value)));
+    },
+
+    setVolume(channel, value) {
+      if (!Object.hasOwn(channelGain, channel) || !Number.isFinite(value)) return;
+      this.volumes[channel] = this.normalizeVolume(value);
+      const bus = channel === 'music' ? this.musicGain : this.sfxGain;
+      if (bus) {
+        const now = this.ctx.currentTime;
+        bus.gain.cancelScheduledValues(now);
+        bus.gain.setTargetAtTime(this.volumes[channel] / 100 * channelGain[channel], now, 0.015);
+      }
+      try {
+        window.localStorage.setItem(volumeKey, JSON.stringify(this.volumes));
       } catch (_) {}
     },
 
@@ -84,14 +122,18 @@
 
     /* Opcional: reproduz arquivo salvo em ./audio/<nome>.ogg|.mp3 se existir */
     playCustomFile(relativePath, volume = 0.6) {
-      if (!this.enabled) return;
+      if (!this.enabled || !this.ctx) return;
       try {
         if (!this.audioCache[relativePath]) {
           this.audioCache[relativePath] = new Audio(relativePath);
         }
         const snd = this.audioCache[relativePath].cloneNode();
         snd.volume = volume;
-        snd.play().catch(() => {});
+        const source = this.ctx.createMediaElementSource(snd);
+        source.connect(this.sfxCompressor);
+        const disconnect = () => source.disconnect();
+        snd.addEventListener('ended', disconnect, { once: true });
+        snd.play().catch(disconnect);
       } catch (_) {}
     },
 
@@ -205,12 +247,8 @@
 
     playNoise(startTime, duration, volume, highpassFreq, dest) {
       if (!this.ctx) return;
-      const len = Math.max(1, Math.floor(this.ctx.sampleRate * duration));
-      const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
-      const data = buf.getChannelData(0);
-      for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
       const src = this.ctx.createBufferSource();
-      src.buffer = buf;
+      src.buffer = this.noiseBuffer;
       const flt = this.ctx.createBiquadFilter();
       flt.type = 'highpass';
       flt.frequency.value = highpassFreq;
@@ -219,95 +257,77 @@
       g.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
       src.connect(flt);
       flt.connect(g);
-      g.connect(dest || this.sfxGain);
-      src.start(startTime);
+      g.connect(dest);
+      src.start(startTime, 0, duration);
     },
 
-    tone(freq1, freq2, dur, type, vol, delay = 0) {
-      if (!this.enabled || !this.ctx) return;
-      const now = this.ctx.currentTime + delay;
-      const osc = this.ctx.createOscillator();
-      const g = this.ctx.createGain();
-      osc.type = type || 'square';
-      osc.frequency.setValueAtTime(freq1, now);
-      if (freq2 !== freq1) {
-        osc.frequency.exponentialRampToValueAtTime(Math.max(20, freq2), now + dur);
+    playEffect(name) {
+      if (!this.enabled || !this.ctx || this.volumes.sfx === 0) return;
+      const now = this.ctx.currentTime;
+      for (const voice of NB.SoundEffects[name]) this.playEffectVoice(voice, now);
+    },
+
+    playEffectVoice(voice, now) {
+      const { wave, from, to, length, level, cutoff, modulation, attack = 0.004, delay = 0 } = voice;
+      const time = now + delay;
+      const envelope = this.ctx.createGain();
+      envelope.gain.setValueAtTime(0.0001, time);
+      envelope.gain.exponentialRampToValueAtTime(level, time + attack);
+      envelope.gain.exponentialRampToValueAtTime(0.0001, time + length);
+      envelope.connect(this.sfxCompressor);
+
+      if (wave === 'noise') {
+        const source = this.ctx.createBufferSource();
+        source.buffer = this.noiseBuffer;
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.Q.value = 0.8;
+        filter.frequency.setValueAtTime(from, time);
+        filter.frequency.exponentialRampToValueAtTime(to, time + length);
+        source.connect(filter).connect(envelope);
+        source.start(time, 0, length);
+        return;
       }
-      g.gain.setValueAtTime(vol || 0.2, now);
-      g.gain.exponentialRampToValueAtTime(0.001, now + dur);
-      osc.connect(g);
-      g.connect(this.sfxGain);
-      osc.start(now);
-      osc.stop(now + dur + 0.01);
+
+      const carrier = this.ctx.createOscillator();
+      carrier.type = wave;
+      carrier.frequency.setValueAtTime(from, time);
+      carrier.frequency.exponentialRampToValueAtTime(to, time + length * 0.75);
+      if (cutoff) {
+        const filter = this.ctx.createBiquadFilter();
+        filter.frequency.value = cutoff;
+        carrier.connect(filter).connect(envelope);
+      } else {
+        carrier.connect(envelope);
+      }
+      if (modulation) {
+        const modulator = this.ctx.createOscillator();
+        modulator.frequency.value = modulation;
+        const depth = this.ctx.createGain();
+        depth.gain.setValueAtTime(from * 0.7, time);
+        depth.gain.exponentialRampToValueAtTime(2, time + length);
+        modulator.connect(depth).connect(carrier.frequency);
+        modulator.start(time);
+        modulator.stop(time + length);
+      }
+      carrier.start(time);
+      carrier.stop(time + length);
     },
 
-    playSelect() {
-      this.tone(680, 960, 0.06, 'triangle', 0.18);
-    },
-    playDraw() {
-      this.tone(360, 820, 0.09, 'triangle', 0.16);
-    },
-    playSummon() {
-      this.tone(140, 280, 0.14, 'sawtooth', 0.22);
-      this.tone(440, 660, 0.12, 'square', 0.15, 0.06);
-      this.tone(880, 1180, 0.14, 'triangle', 0.14, 0.12);
-    },
-    playExploit() {
-      this.tone(1100, 260, 0.18, 'sawtooth', 0.22);
-      this.tone(520, 1480, 0.16, 'square', 0.14, 0.05);
-    },
-    playAttack() {
-      this.tone(240, 620, 0.12, 'sawtooth', 0.2);
-    },
-    playClash() {
-      if (!this.enabled || !this.ctx) return;
-      const now = this.ctx.currentTime;
-      this.playNoise(now, 0.16, 0.34, 900);
-      this.tone(190, 55, 0.18, 'sawtooth', 0.28);
-    },
-    playDamage() {
-      if (!this.enabled || !this.ctx) return;
-      const now = this.ctx.currentTime;
-      this.playNoise(now, 0.14, 0.25, 400);
-      this.tone(150, 42, 0.24, 'square', 0.3);
-    },
-    playDestroy() {
-      if (!this.enabled || !this.ctx) return;
-      const now = this.ctx.currentTime;
-      this.playNoise(now, 0.24, 0.3, 600);
-      this.tone(340, 48, 0.26, 'sawtooth', 0.22);
-      this.tone(220, 35, 0.24, 'square', 0.18, 0.06);
-    },
-    playVictory() {
-      [523.25, 659.25, 783.99, 1046.5].forEach((n, i) => {
-        this.tone(n, n * 1.01, 0.22, 'square', 0.16, i * 0.1);
-      });
-    },
-    playDefeat() {
-      [349.23, 311.13, 261.63, 174.61].forEach((n, i) => {
-        this.tone(n, n * 0.96, 0.26, 'sawtooth', 0.18, i * 0.13);
-      });
-    },
-    playOverclock() {
-      if (!this.enabled || !this.ctx) return;
-      const now = this.ctx.currentTime;
-      this.tone(180, 980, 0.26, 'sawtooth', 0.26, 0);
-      this.tone(360, 1440, 0.24, 'square', 0.2, 0.06);
-      this.tone(110, 48, 0.3, 'sawtooth', 0.3, 0.2);
-      this.playNoise(now + 0.2, 0.22, 0.36, 700);
-    },
-    playLaser() {
-      this.tone(1420, 260, 0.2, 'sawtooth', 0.24);
-      this.tone(860, 180, 0.18, 'triangle', 0.16, 0.03);
-    },
-    playVirus() {
-      this.tone(520, 180, 0.14, 'square', 0.16);
-      this.tone(310, 120, 0.15, 'sawtooth', 0.15, 0.07);
-    },
-    playDrain() {
-      this.tone(320, 920, 0.16, 'triangle', 0.18);
-      this.tone(640, 1280, 0.14, 'sine', 0.16, 0.08);
-    }
+    playSelect() { this.playEffect('select'); },
+    playDraw() { this.playEffect('draw'); },
+    playSummon() { this.playEffect('summon'); },
+    playExploit() { this.playEffect('exploit'); },
+    playAttack() { this.playEffect('attack'); },
+    playClash() { this.playEffect('clash'); },
+    playDamage() { this.playEffect('damage'); },
+    playDestroy() { this.playEffect('destroy'); },
+    playVictory() { this.playEffect('victory'); },
+    playDefeat() { this.playEffect('defeat'); },
+    playOverclock() { this.playEffect('overclock'); },
+    playLaser() { this.playEffect('laser'); },
+    playVirus() { this.playEffect('virus'); },
+    playDrain() { this.playEffect('drain'); }
   };
 
   NB.Audio = SoundEngine;

@@ -237,8 +237,20 @@
           <button id="btn-settings-close" class="hud-btn chamfer-sm" type="button">FECHAR</button>
         </div>
         <div class="settings-row">
-          <span>SINTETIZADOR DE ÁUDIO</span>
+          <span>ÁUDIO</span>
           <button id="btn-settings-sound" class="hud-btn chamfer-sm muted-sound" type="button">SOM: OFF</button>
+        </div>
+        <div class="settings-mixer">
+          <div class="settings-volume">
+            <label for="volume-music">Música</label>
+            <span id="volume-music-value" aria-hidden="true">100%</span>
+            <input id="volume-music" data-audio-channel="music" type="range" min="0" max="100" value="100" />
+          </div>
+          <div class="settings-volume">
+            <label for="volume-sfx">Efeitos sonoros</label>
+            <span id="volume-sfx-value" aria-hidden="true">100%</span>
+            <input id="volume-sfx" data-audio-channel="sfx" type="range" min="0" max="100" value="100" />
+          </div>
         </div>
         <div class="settings-row tabular">
           <span>CHEFES DERROTADOS</span>
@@ -420,6 +432,7 @@
   <script defer src="./js/core/saveManager.js"></script>
   <script defer src="./js/sprites/proceduralArt.js"></script>
   <script defer src="./js/data/music.js"></script>
+  <script defer src="./js/data/soundEffects.js"></script>
   <script defer src="./js/audio/soundEngine.js"></script>
   <script defer src="./js/physics/fxEngine.js"></script>
   <script defer src="./js/core/gameState.js"></script>

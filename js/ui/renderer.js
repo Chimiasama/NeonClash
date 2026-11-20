@@ -575,6 +575,15 @@
     modal.classList.add('open');
   }
 
+  function renderVolumeControls() {
+    document.querySelectorAll('[data-audio-channel]').forEach(input => {
+      const value = NB.Audio.volumes[input.dataset.audioChannel];
+      input.value = value;
+      input.setAttribute('aria-valuetext', `${value}%`);
+      document.getElementById(`${input.id}-value`).textContent = `${value}%`;
+    });
+  }
+
   /* Modal de Configurações & Resetar Save */
   function renderSettingsModal() {
     const save = NB.Save.get();
@@ -585,6 +594,7 @@
     resetBtn.dataset.confirm = '0';
     resetBtn.textContent = 'RESETAR SAVE';
     resetBtn.classList.remove('confirming');
+    renderVolumeControls();
     updateSoundButtons();
   }
 
@@ -726,6 +736,7 @@
     openDossier,
     showGameOverModal,
     renderSettingsModal,
+    renderVolumeControls,
     openVisorForHand,
     openVisorForField,
     closeVisor,

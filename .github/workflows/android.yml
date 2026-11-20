@@ -50,6 +50,7 @@ jobs:
           grep -Fx 'assets/index.html' <<< "$entries"
           grep -Fx 'assets/js/ui/city.js' <<< "$entries"
           grep -Fx 'assets/js/data/music.js' <<< "$entries"
+          grep -Fx 'assets/js/data/soundEffects.js' <<< "$entries"
           for portrait in lume.png nina.png risco.webp kira.png cipher.png vex.png archon.png; do
             grep -Fx "assets/avatars/$portrait" <<< "$entries"
           done
