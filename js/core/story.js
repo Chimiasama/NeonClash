@@ -4,14 +4,16 @@
   const { chapters, scenes } = NB.StoryData;
   const sceneById = Object.fromEntries(scenes.map(scene => [scene.id, scene]));
   const duels = {
-    kira: { chapter: 1, deal: 'kiraDeal', route: 'delivery', alternative: 'delivery', label: 'Conferir o recibo com Beto' },
-    cipher: { chapter: 3, deal: 'cipherDeal', route: 'supervised', alternative: 'cipherAlt', label: 'Pedir a cópia a Raquel' },
-    vex: { chapter: 4, deal: 'vexDeal', route: 'witness', alternative: 'vexAlt', label: 'Acompanhar Bia no Teatro' },
+    kira: { chapter: 1, deal: 'kiraDeal', route: 'delivery', label: 'Seguir a cadeia de Beto e Leila' },
+    cipher: { chapter: 3, deal: 'cipherDeal', route: 'supervised', label: 'Pedir a extração isolada a Raquel' },
+    vex: { chapter: 4, deal: 'vexDeal', route: 'witness', label: 'Preparar a entrega com Cris e Bia' },
     archon: { chapter: 5, deal: 'archonDeal' }
   };
 
-  function normalize(raw) {
+  function normalize(raw, prologueSeen = false) {
     const flags = [...new Set((Array.isArray(raw?.flags) ? raw.flags : []).filter(id => scenes.some(scene => scene.grants === id)))];
+    if ((flags.includes('vexAlt') || Number.isInteger(raw?.read?.vexAlt)) && !flags.includes('vexStub')) flags.push('vexStub');
+    if (flags.includes('archonDeal') && !flags.includes('archonReady')) flags.push('archonReady');
     const read = Object.fromEntries(Object.entries(raw?.read || {}).filter(([id, cursor]) =>
       Object.hasOwn(sceneById, id) && Number.isInteger(cursor) && cursor >= 0 && cursor < sceneById[id].lines.length + (id === 'epilogue' ? 2 : 0)));
     const choices = Object.fromEntries(Object.entries(raw?.choices || {}).filter(([id, value]) =>
@@ -19,7 +21,7 @@
     const evidence = [...new Set((Array.isArray(raw?.evidence) ? raw.evidence : []).filter(id =>
       Object.hasOwn(sceneById, id) && sceneById[id].evidence && flags.includes(sceneById[id].grants)))];
     const chapter = Number.isInteger(raw?.chapter) ? Math.min(chapters.length - 1, Math.max(0, raw.chapter)) : 0;
-    return { started: raw?.started === true, chapter, flags, choices, read, evidence };
+    return { started: raw?.started === true || prologueSeen, chapter, flags, choices, read, evidence };
   }
 
   const get = () => NB.Save.get().story;
@@ -40,12 +42,12 @@
       const hour = Math.floor(NB.Save.get().city.life.minute % 1440 / 60);
       return hour >= 6 && hour < 19;
     },
-    kiraDelivery: () => choice('kiraDeal') === duels.kira.route,
-    kiraResolution: () => won('kira') || has('delivery'),
-    cipherAlternative: () => choice('cipherDeal') === duels.cipher.route,
-    cipherResolution: () => won('cipher') || has('cipherAlt'),
-    vexAlternative: () => choice('vexDeal') === duels.vex.route,
-    vexResolution: () => won('vex') || has('vexAlt'),
+    kiraDelivery: () => choice('kiraDeal') === duels.kira.route && !won('kira'),
+    kiraResolution: () => won('kira'),
+    cipherAlternative: () => choice('cipherDeal') === duels.cipher.route && !won('cipher'),
+    cipherResolution: () => won('cipher'),
+    vexAlternative: () => choice('vexDeal') === duels.vex.route && !won('vex'),
+    vexResolution: () => won('vex'),
     archonWon: () => won('archon')
   };
 
@@ -80,6 +82,7 @@
     if (scene.choices) story.choices[id] = selected;
     story.flags.push(scene.grants);
     if (scene.evidence) story.evidence.push(id);
+    if (scene.reward) NB.Save.applyInvestigationReward(scene.reward);
     if (scene.next) story.chapter++;
     if (scene.minutes) NB.CityLife.advance(scene.minutes, 4);
     else NB.Save.save();
@@ -100,7 +103,7 @@
 
   function pendingDuel(location) {
     return Object.entries(duels).find(([id, gate]) => (!location || id === location) &&
-      gate.chapter === get().chapter && has(gate.deal) && !won(id) && !has(gate.alternative));
+      active() && gate.chapter === get().chapter && has(gate.deal) && !won(id) && (!gate.route || choice(gate.deal) !== gate.route));
   }
 
   function alternate(id) {
@@ -128,5 +131,5 @@
   }
 
   NB.Story = { normalize, get, start, active, matchAccess, pendingDuel, alternate, getScenes, available, finish,
-    remember, getLines, aftermath, has, choice, sceneById, chapters };
+    remember, getLines, aftermath, archonWarning: () => active() && get().chapter === 5 && has('protocol') && !won('archon') ? NB.StoryData.archonWarning : '', has, choice, sceneById, chapters };
 })(window.NB = window.NB || {});

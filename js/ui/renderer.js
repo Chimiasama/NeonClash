@@ -261,7 +261,7 @@
         if (state.activeDefenderSlot === i) cardEl.classList.add('selected-blocker');
         if (Object.values(state.defenseMap).includes(i)) cardEl.classList.add('is-blocking');
       }
-      if (state.phase === 'SELECT_TARGET' && state.pendingExploit && state.pendingExploit.targetSide === side) {
+      if (state.phase === 'SELECT_TARGET' && state.pendingExploit && state.pendingExploit.targetSide === side && state.pendingExploit.validSlots?.includes(i)) {
         cardEl.classList.add('targetable');
       }
 

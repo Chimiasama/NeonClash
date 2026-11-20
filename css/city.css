@@ -109,27 +109,27 @@
   z-index: 1;
   display: grid;
   place-items: center;
-  min-width: 50px;
-  min-height: 44px;
+  width: 18%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 3px 1px;
+  align-content: center;
   transform: translate(-50%, -50%);
   border-color: #62e7e4;
   background: #101827ec;
   box-shadow: 0 3px 12px #050710a6;
-  font-size: 11px;
+  font-size: clamp(9px, 2.8vw, 12px);
 }
-
-.city-pin span:first-child { color: #8cfbf8; font: 800 14px var(--font-mono); }
 .city-panel .city-pin.city-locked { border-color: #8a90a2; color: #c4cbd9; }
 .city-pin.city-cleared:not([aria-current]) { border-color: #a1d795; }
-.city-locked span:first-child { color: #c4cbd9; }
 .city-panel .city-pin[aria-current] { border-color: #ffcb75; background: #352838; }
 
 #city-marker {
   position: absolute;
   z-index: 2;
-  width: 25px;
-  height: 25px;
-  transform: translate(-50%, -41px);
+  width: 21px;
+  height: 21px;
+  transform: translate(-115%, -120%);
   border: 2px solid #ffcb75;
   border-radius: 50%;
   background: #ffcb75 url('../src/assets/kairo-token.webp') center / cover no-repeat;
@@ -269,3 +269,26 @@
 
 .city-sale-art { position: relative; width: 42px; height: 42px; }
 .city-sale-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+#city-map-legend { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; padding: 7px 8px; }
+#city-map-legend button { padding-inline: 2px; font-size: 11px; }
+#city-map-objectives { padding: 0 10px 6px; color: #a8f5f3; font-size: 12px; }
+#city-map-objectives:empty, #city-map[hidden], .city-panel .city-pin[hidden] { display: none; }
+.city-map-badges { display: inline-flex; gap: 4px; align-items: center; justify-content: center; font: 800 11px/1.15 var(--font-mono); }
+.city-map-badges:empty { display: none; }
+.city-residents button .city-map-badges { margin-inline-start: 8px; }
+.city-pin .city-map-badges, .city-pin .city-map-badges span { font: 800 11px/1.15 var(--font-mono); }
+.city-map-badges span.city-badge-clue, #city-map-legend [data-map-filter="clue"] span { color: #89fff7; }
+.city-map-badges span.city-badge-duel, #city-map-legend [data-map-filter="duel"] span { color: #ff77ca; }
+.city-map-badges span.city-badge-secret, #city-map-legend [data-map-filter="secret"] span { color: #b5ff69; }
+.city-panel .city-pin[data-markers~="clue"] {
+  border-color: #7cfff1;
+  background: #174449;
+  box-shadow: 0 0 10px #4fead6aa;
+}
+.city-pin[data-markers~="clue"] .city-badge-clue { animation: city-clue-pulse 1.5s ease-in-out infinite alternate; }
+@keyframes city-clue-pulse { to { color: #ffdb87; text-shadow: 0 0 8px #ffc661; opacity: .7; } }
+@media (prefers-reduced-motion: reduce) {
+  .city-pin[data-markers~="clue"] .city-badge-clue { animation: none; }
+}
+.city-active-destination { color: #89fff7; font-weight: 800; }

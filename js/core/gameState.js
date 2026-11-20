@@ -165,7 +165,7 @@
       return { ok: false, reason: 'Não há nenhuma Unidade inimiga no campo.' };
     }
     if (!NB.CardEffects.legalSlots(state, card, side).length) {
-      return { ok: false, reason: 'Não há Unidades inimigas para atingir.' };
+      return { ok: false, reason: card.targetAffinities ? 'Nenhuma unidade aliada tem a afinidade exigida.' : 'Não há Unidades inimigas para atingir.' };
     }
     return { ok: true };
   }

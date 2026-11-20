@@ -33,6 +33,8 @@
       }
     }
     if (NB.CityData.stock.some(item => item.id === cardId)) return 'Disponível na Feira do Viaduto.';
+    const scene = Object.values(NB.Story.sceneById).find(item => item.reward?.card === cardId);
+    if (scene) return `Conclua a rota pacifista: ${scene.title}.`;
     const resident = NB.CityAtlas.residents.find(person => NB.CityAtlas.residentDuels[person.id]?.card === cardId);
     if (resident) {
       const place = NB.CityData.districts.find(district => district.id === resident.location);

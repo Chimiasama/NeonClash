@@ -147,5 +147,32 @@
     84: { hp: 19, credits: 10, card: 'exploit_14', deck: ['unit_03', 'unit_28', 'unit_29', 'exploit_12', 'exploit_14'] }
   };
 
-  NB.CityAtlas = { neighborhoods, places, residents, jobs, residentDuels };
+  const mapRows = [
+    ['clinic', 'morroKitchen', 'kiosk', 'vex', 'square'],
+    ['relay', 'pump', 'theatre', 'archon', 'registry'],
+    ['home', 'kira', 'terminal', 'cipher', 'archive'],
+    ['market', 'garage', 'arena', null, 'pension'],
+    [null, 'depots', 'ringArchive', 'docks', 'ferry']
+  ];
+  const mapPositions = Object.fromEntries(mapRows.flatMap((row, y) =>
+    row.flatMap((id, x) => id ? [[id, { x: 10 + x * 20, y: 10 + y * 20 }]] : [])));
+  const shortNames = {
+    clinic: 'Clínica', morroKitchen: 'Cozinha', square: 'Praça', pump: 'Bombas',
+    theatre: 'Teatro', registry: 'Balcão', terminal: 'Terminal', archive: 'Corredor',
+    depots: 'Depósito', ringArchive: 'Arquivo', docks: 'Cais', ferry: 'Balsa'
+  };
+  const encounters = {
+    day: [
+      { location: 'terminal', name: 'Nexo', hp: 13, credits: 8 },
+      { location: 'square', name: 'Vagalume', hp: 14, credits: 9 },
+      { location: 'ferry', name: 'Maré', hp: 15, credits: 10 }
+    ],
+    night: [
+      { location: 'depots', name: 'Rebite', hp: 16, credits: 10 },
+      { location: 'morroKitchen', name: 'Sombra Curta', hp: 17, credits: 11 },
+      { location: 'theatre', name: 'Contraluz', hp: 18, credits: 12 }
+    ]
+  };
+
+  NB.CityAtlas = { neighborhoods, places, residents, jobs, residentDuels, mapPositions, shortNames, encounters };
 })(window.NB = window.NB || {});

@@ -1,6 +1,6 @@
 # NeonClash — referência técnica
 
-Retrato da implementação após o lote de sinergias e trabalhos urbanos. Para acompanhar a história passo a passo, consulte o [guia da aventura](aventura-baixa-luz.md). O [plano de expansão](plano-expansao.md) documenta metas futuras.
+Retrato da implementação após a expansão das rotas pacifistas e dos marcadores do mapa. Para acompanhar a história passo a passo, consulte o [guia da aventura](aventura-baixa-luz.md). O [plano de expansão](plano-expansao.md) documenta metas futuras.
 
 ## Produto e superfícies
 
@@ -8,8 +8,8 @@ NeonClash é um jogo solo em português que combina exploração urbana, investi
 
 | Superfície | Comportamento |
 | --- | --- |
-| Início | Exibe progresso, início da aventura, duelo rápido, coleção, galeria e volume/configurações. A primeira entrada na aventura apresenta três quadros do prólogo. Concluir ou pular marca a apresentação no save. |
-| Cidade | Área rolável com relógio, créditos, energia, mapa e detalhes. A barra inferior mantém Mapa, Investigação, Bairros, Mochila, Pistas, Meu Deck, Galeria, Config. e Início acessíveis. |
+| Início | Exibe progresso, início da aventura, duelo rápido, coleção, galeria e volume/configurações. A primeira entrada na aventura apresenta três quadros do prólogo. Concluir ou pular marca a apresentação no save e inicia a investigação com a Casa de Kairo em destaque. |
+| Cidade | Área rolável com relógio, créditos, energia, mapa, legenda com filtros e detalhes. A barra inferior mantém Mapa, Investigação, Bairros, Mochila, Pistas, Meu Deck, Galeria, Config. e Início acessíveis. |
 | Investigação | Mostra passos disponíveis, viagens até os locais, cenas paginadas com retomada, decisões e provas já reunidas. Há destaque neon para ações relevantes. |
 | Mercado e oficina | Compra de cartas na Feira. A oficina de Lume tem vitrine ilustrada das unidades possuídas, prévia de afinidade e confirmação. |
 | Duelo | Dossiê com voltar ou iniciar, tabuleiro com três posições por lado, mão, visor de cartas, indicação de fase, previsão de defesa e tela de estatísticas/recompensas. |
@@ -37,7 +37,7 @@ Os controles consultam o estado corrente antes de realizar ações. Um duelo tem
 | --- | --- |
 | `localStorage.neon_breach_save_v1` | Documento JSON do progresso. O carregamento completa campos ausentes, valida IDs de cartas, ajusta limites e reconstrói decks inválidos. |
 | Coleção e decks | `unlockedCards`, `customDeck`, `deckSlot` ativo e `deckSlots` para guardar as demais configurações. Os 12 IDs iniciais são preservados. |
-| Histórico | `defeatedBosses`, `clues`, `challengeWins`, `wins`, `matches` e `city.residentWins`. As primeiras vitórias liberam os prêmios próprios. |
+| Histórico | `defeatedBosses`, `clues`, `challengeWins`, `wins`, `matches` e `city.residentWins`. `city.discoveredResidents` registra os moradores ouvidos. `city.encounterWins` guarda as últimas vitórias dos encontros por período. As primeiras vitórias liberam os prêmios próprios. |
 | Cidade | `city.credits`, `city.district`, `city.traced` e `city.life`. Vida urbana guarda minutos absolutos, vigília, energia, implante, veículos, estoque, favores, turno do quiosque, contagem diária de trabalhos, entrega ativa e aviso da última ação. |
 | Investigação | `prologueSeen` controla a apresentação. `story` guarda ativação, capítulo, flags de passos, escolhas, páginas lidas e cenas de evidência. |
 | Personalização | `affinities` guarda recalibrações por ID. `seenArt` guarda caminhos dos recursos já visualizados, com deduplicação. |
@@ -68,6 +68,22 @@ A distância é `max(2, ceil(hypot(Δx, Δy) / 10))` com as coordenadas do mapa.
 - Cada morador listado permite conversar. Repetir a conversa na mesma sessão muda a resposta quando aplicável. Damião tem 10 HP e paga 5 por vitória. Tuca tem 14 HP e paga 7, com carta na primeira vitória. Dora tem 22 HP, usa Overclock e paga 12, com carta na primeira vitória. O estoque da Feira e essas vitórias oferecem rotas que podem coincidir.
 - A Feira vende `unit_21` por 45, `unit_22` por 65, `unit_23` por 85, `exploit_07` por 30, `unit_28` por 48, `exploit_12` por 36 e `exploit_13` por 40. A oficina muda a afinidade por 15 créditos e restaura a original gratuitamente. Suas mudanças são de afinidade e convivem com ATK e DEF base.
 
+### Mapa e navegação narrativa
+
+A legenda combina ◆ pistas ativas (ciano/âmbar), ⚔ duelos (magenta) e ✦ segredos ou moradores inéditos (verde). **Todos**, **Pistas**, **Duelos** e **Segredos** filtram o mapa e a lista de bairros. Os 23 pinos usam uma distribuição visual compacta. O cálculo de distâncias mantém as coordenadas próprias de viagem. Os destinos ativos vêm das cenas válidas e do duelo narrativo pendente. A cotação antecipa a ação em destaque. Depois da viagem, a ação aparece no topo das tarefas do local.
+
+Os encontros urbanos são escolhidos de forma pseudoaleatória e estável por dia e período. O mapa muda a posição entre o período diurno (06h até antes das 19h) e noturno (19h até antes das 06h). Ao vencer o encontro, o indicador correspondente some até outro período. Cada vitória paga de 8 a 12 créditos conforme o oponente.
+
+### Rotas pacifistas
+
+Kira exige Beto → Leila → Estação. Cipher exige Raquel → Íris → Muralha. Vex exige Cris → Bia → Hotel. Cada conclusão registra a prova, avança o capítulo e aplica a recompensa no mesmo save, usando a prova concluída como trava de repetição. Os custos das etapas somam 45 min/8 energia, 50 min/8 energia e 45 min/8 energia, respectivamente, além das viagens. O diário e a Torre mostram uma advertência tática depois do protocolo de Nalva. Concluir **Confirmar preparação para a Torre** destrava a conversa com Archon.
+
+| Rota | Recompensa e carta |
+| --- | --- |
+| Kira | 35 créditos e **Rastreador de Lote**, Exploit de 1 RAM. Compra 1 e dá +1 ATK a uma aliada Sombra ou Neutra. |
+| Cipher | 50 créditos e **Filtro de Isolamento**, Exploit de 2 RAM. Restaura até 3 DEF e acrescenta +1 DEF permanente. |
+| Vex | 65 créditos e **Auditora de Rede**, unidade Malha 2/4, +2 RAM. Na entrada reduz em 1 o maior ATK inimigo, com desempate pela posição de campo. |
+
 ### Trabalhos urbanos
 
 `city.life.dailyJobCounts` guarda repetições por trabalho, acompanhado por `dailyJobDay`. Cada tipo paga 100% nas duas primeiras execuções e 50% na terceira, com arredondamento para baixo. A partir da quarta tentativa a UI mostra **Demanda esgotada por hoje**. A demanda reinicia na virada do dia ou ao dormir. Os dois níveis da Antena têm contagens separadas e cada erro custa 2 s e volta ao primeiro símbolo. Concluir ou deixar o prazo expirar conta como execução e consome tempo e energia. Expirar paga zero. Cancelar uma entrega ou interromper o minigame antes da resolução não conta.
@@ -88,7 +104,7 @@ A entrega sorteia um destino com distância original `d ≥ 4`. `activeDelivery`
 
 ## Combate, cartas e progressão
 
-O catálogo atual tem **38 cartas**, sendo 24 unidades e 14 Exploits. Cada deck do jogador tem 20 cartas e aceita até duas cópias de cada ID. Há 12 cartas inicialmente disponíveis. A coleção usa ID estável, metadados de arte, descrição e atributos. Cartas novas entram pelo catálogo em `cards.js` e pela respectiva rota de aquisição. IDs têm lacunas históricas e o sufixo maior não representa a contagem.
+O catálogo atual tem **41 cartas**, sendo 25 unidades e 16 Exploits. Cada deck do jogador tem 20 cartas e aceita até duas cópias de cada ID. Há 12 cartas inicialmente disponíveis. A coleção usa ID estável, metadados de arte, descrição e atributos. Cartas novas entram pelo catálogo em `cards.js` e pela respectiva rota de aquisição. IDs têm lacunas históricas e o sufixo maior não representa a contagem.
 
 1. Cada lado começa com 0 RAM. Kairo tem 20 HP. A partida distribui quatro cartas iniciais por lado. A mão comporta seis cartas, com descarte quando uma compra excede esse limite. Quando o deck fica vazio, o descarte é embaralhado para continuar comprando.
 2. Em seu turno, Kairo pode invocar uma unidade se houver posição livre, obter a RAM da carta e usar Exploits enquanto puder pagar. Uma unidade normalmente passa por boot antes de poder atacar. O turno seguinte libera as unidades e compra uma carta. A IA segue fluxo de compra, invocação, Exploits e ataque, com perfil do oponente.
@@ -143,14 +159,14 @@ Unidades são instâncias de campo com UID, ATK e DEF atuais, DEF máxima, afini
 | Item | Configuração |
 | --- | --- |
 | Web | Node.js 24 e npm. `npm ci`, `npm run dev` (porta 3000), `npm run lint` (TypeScript), `npm run build` e `npm run preview`. |
-| Testes | `tests/game.spec.js` tem 41 cenários Playwright, incluindo os 36 fluxos anteriores. Usa perfil Pixel 7 e o build servido na porta 4317. Cobre combate, campanha, cidade, economia, galeria, áudio, deck e navegação. Para rodar localmente, gere `dist`, instale Chromium com `npx playwright install chromium` ou defina `CHROMIUM_PATH`, e execute `npm test`. |
+| Testes | `tests/game.spec.js` tem 44 cenários Playwright. Usa perfil Pixel 7 e o build servido na porta 4317. Cobre combate, campanha, cidade, economia, galeria, áudio, deck e navegação. Para rodar localmente, gere `dist`, instale Chromium com `npx playwright install chromium` ou defina `CHROMIUM_PATH`, e execute `npm test`. |
 | Android | Application ID `io.github.chimiasama.neonclash`, versão `0.1.0` e código 1. JDK 17, AGP 9.5.1, Gradle 9.9.2, SDK alvo/compile 35, mínimo 23 e Build Tools 36.0.0. A Activity usa orientação retrato. |
 | APK | Depois do build web, execute `./gradlew :app:assembleDebug` em `android/`. Saída `android/app/build/outputs/apk/debug/app-debug.apk`, com assinatura de depuração. |
 | CI | `.github/workflows/android.yml` usa Linux, Chrome preinstalado quando disponível e Chromium Playwright como alternativa. Executa lint, build e testes, gera o APK, verifica assinatura e arquivos internos e publica `NeonClash-debug` como artefato. Gatilhos configurados para push/PR na `main` e execução manual. |
 
 ## Conteúdo atual e metas
 
-O jogo disponível tem 38 cartas, 10 bairros, 23 locais, 100 moradores cadastrados, quatro chefes, quatro desafios de arquétipo e 29 cenas da investigação. O [plano de expansão](plano-expansao.md) descreve a meta de 500 cartas, sendo 495 encontráveis e cinco secretas de missão. Os roteiros de construção e descrições de moradores nos demais arquivos de `docs/` registram escopo planejado além dos recursos já descritos aqui.
+O jogo disponível tem 41 cartas, 10 bairros, 23 locais, 100 moradores cadastrados, quatro chefes, quatro desafios de arquétipo e 36 cenas da investigação. O [plano de expansão](plano-expansao.md) descreve a meta de 500 cartas, sendo 495 encontráveis e cinco secretas de missão. Os roteiros de construção e descrições de moradores nos demais arquivos de `docs/` registram escopo planejado além dos recursos já descritos aqui.
 
 O lote piloto usa arte procedural. Condensador Coral, Ímã de Núcleo e Janela Espectral são vendidos na Feira. Catadora de Ecos, Ferro de Pulso e Pressão de Sucata são prêmios das primeiras vitórias sobre Giba, Aline e Nanda, respectivamente. Os três adversários também usam cartas do lote.
 
@@ -198,3 +214,6 @@ Os nomes e os atributos base abaixo também identificam a arte, a rota de aquisi
 | `exploit_12` | Ímã de Núcleo | Exploit | 2 RAM | — |
 | `exploit_13` | Janela Espectral | Exploit | 2 RAM | — |
 | `exploit_14` | Pressão de Sucata | Exploit | 2 RAM | — |
+| `unit_31` | Auditora de Rede | Unidade | 2 / 4 · +2 RAM | Malha |
+| `exploit_15` | Rastreador de Lote | Exploit | 1 RAM | — |
+| `exploit_16` | Filtro de Isolamento | Exploit | 2 RAM | — |

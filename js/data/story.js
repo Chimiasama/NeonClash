@@ -58,15 +58,26 @@
   scene('kiraDeal', 1, 'kira', 'Ouvir Kira sobre a rota vendida', ['route'], 'kiraDeal', dialogue[1], {
     choices: [
       { id: 'duel', label: 'Disputar a cópia em duelo' },
-      { id: 'delivery', label: 'Aceitar o favor de conferir o recibo na Feira' }
+      { id: 'delivery', label: 'Aceitar o favor de conferir o recibo na Feira', finale: 'kiraPeace' }
     ]
   });
 
   scene('delivery', 1, 'market', 'Conferir o recibo anonimizado com Beto', ['kiraDeal'], 'delivery', [
     'Beto compara o valor e a data com a via da banca. O nome dos passageiros está coberto nas duas cópias.',
     'Beto — A dívida entrou quitada e reapareceu num recibo novo. Quem fez isso usou o código do equipamento da Estação.',
-    'Ele entrega a via conferida. Kairo pode levá-la de volta a Kira.'
-  ], { when: 'kiraDelivery', minutes: 35 });
+    'No verso, Beto encontra o carimbo de um terminal antigo do Ringue. Kairo guarda o código para conferir com Leila.'
+  ], { when: 'kiraDelivery', minutes: 25 });
+
+  scene('kiraAudit', 1, 'ringArchive', 'Cruzar o código do terminal com Leila', ['delivery'], 'kiraAudit', [
+    'Leila compara o carimbo com o livro de apostas. O código pertence a um terminal desativado.',
+    'Leila — Quem reabriu essa dívida usou o número antigo. O dinheiro entrou por fora do caixa. Aqui está a cópia sem os nomes dos apostadores.'
+  ], { when: 'kiraDelivery', minutes: 20 });
+
+  scene('kiraPeace', 1, 'kira', 'Entregar o dossiê auditado a Kira', ['kiraAudit'], 'kiraProof', [
+    'Kairo entrega a via de Beto com a conferência de Leila. Kira compara o carimbo com o recibo da rota.',
+    'Kira — O projeto de recuperação da Vértice pagou a rota por fora do Ringue. Pode guardar a prova. Vou te passar um rastreador que separa esses números sem abrir a lista de passageiros.'
+  ], { when: 'kiraDelivery', next: true, reward: { credits: 35, card: 'exploit_15' },
+    evidence: 'O dossiê auditado comprova que o pagamento da rota saiu da verba da Vértice e entrou por fora do caixa do Ringue.' });
 
   scene('kiraProof', 1, 'kira', 'Registrar a prova da Estação', ['kiraDeal'], 'kiraProof', [
     'Kira passa o recibo sem a lista de passageiros. A autorização de pagamento pertence ao projeto de recuperação da Estação.',
@@ -105,12 +116,23 @@
   ], { evidence: 'A equipe de Cipher já contestou o corte da Clínica. A auditoria interna interrompeu essa ação.' });
 
   scene('cipherDeal', 3, 'cipher', 'Ouvir Cipher antes de abrir o cofre', ['pass'], 'cipherDeal', dialogue[3],
-    { choices: [{ id: 'duel', label: 'Disputar o acesso no terminal' }, { id: 'supervised', label: 'Combinar retirada supervisionada com Raquel' }] });
+    { choices: [{ id: 'duel', label: 'Disputar o acesso no terminal' }, { id: 'supervised', label: 'Combinar retirada supervisionada com Raquel', finale: 'cipherPeace' }] });
 
-  scene('cipherAlt', 3, 'archive', 'Retirar a cópia supervisionada', ['cipherDeal'], 'cipherAlt', [
-    'Raquel passa a ordem pelo terminal isolado. A coluna de credenciais pessoais fica no original.',
-    'A cópia chega com o mesmo número da ordem e dois horários. Há um anexo ausente, associado a uma reserva no Hotel Espelho.'
-  ], { when: 'cipherAlternative', minutes: 40 });
+  scene('cipherAlt', 3, 'archive', 'Solicitar a janela de manutenção isolada', ['cipherDeal'], 'cipherAlt', [
+    'Raquel encontra um horário em que a ordem pode ser copiada sem passar pela auditoria.',
+    'Raquel — Falta o token de isolamento óptico. Leva essa peça para Íris. Se o filtro ficar certo, as credenciais continuam no cofre.'
+  ], { when: 'cipherAlternative', minutes: 25 });
+
+  scene('cipherToken', 3, 'garage', 'Calibrar o filtro de isolamento com Íris', ['cipherAlt'], 'cipherToken', [
+    'Íris testa o filtro em uma ficha antiga. O número da ordem atravessa o leitor. Os nomes ficam do outro lado.',
+    'Íris — Agora leva o token para a Muralha. Raquel já sabe quais colunas precisa preservar.'
+  ], { when: 'cipherAlternative', minutes: 25 });
+
+  scene('cipherPeace', 3, 'cipher', 'Executar a extração isolada', ['cipherToken'], 'cipherProof', [
+    'Raquel conecta o token. Cipher passa as duas versões pela janela isolada. As credenciais ficam no cofre.',
+    'Cipher — A primeira suspende seu acesso. A segunda inclui um recolhimento. O anexo que sumiu estava ligado a uma reserva no Hotel Espelho. Leva o número a Cris.'
+  ], { when: 'cipherAlternative', next: true, reward: { credits: 50, card: 'exploit_16' },
+    evidence: 'A cópia isolada preserva as duas versões da ordem sem divulgar as credenciais. O anexo ausente aponta para o Hotel Espelho.' });
 
   scene('cipherProof', 3, 'cipher', 'Registrar as duas versões da ordem', ['cipherDeal'], 'cipherProof', [
     'A ordem de Cipher manda suspender o acesso de Kairo. A segunda versão tem um anexo de recolhimento que desapareceu do cofre.',
@@ -127,12 +149,23 @@
     'Vex aponta para o corredor cheio e propõe mostrar o anexo fora dali.',
     'Vex — Guardei a cópia original porque a hora da ordem me chamou atenção. Posso colocar a cópia na mesa em duelo. Celina também tem uma sala, se você levar o arquivo junto com Bia.',
     'Kairo pode escolher quem testemunha a entrega. A lista de hóspedes fica no hotel.'
-  ], { choices: [{ id: 'duel', label: 'Disputar a entrega em duelo' }, { id: 'witness', label: 'Pedir uma entrega testemunhada no Teatro' }] });
+  ], { choices: [{ id: 'duel', label: 'Disputar a entrega em duelo' }, { id: 'witness', label: 'Pedir uma entrega testemunhada no Teatro', finale: 'vexPeace' }] });
 
-  scene('vexAlt', 4, 'theatre', 'Acompanhar Bia na entrega do arquivo', ['vexDeal'], 'vexAlt', [
-    'Celina abre a sala de ensaio vazia. Bia entrega a chave e fica ao lado de Kairo enquanto a data do arquivo é conferida.',
-    'O anexo fica pronto para leitura com Vex. A cópia de circulação ainda omite os nomes de quem estava sendo protegido.'
-  ], { when: 'vexAlternative', minutes: 30 });
+  scene('vexStub', 4, 'pension', 'Levantar o canhoto da reserva com Cris', ['vexDeal'], 'vexStub', [
+    'Cris separa o canhoto da reserva sem hospedagem dos recibos de quem realmente dormiu na pensão.',
+    'Cris — Esse número e esse horário bastam para Bia conferir a cópia. Os nomes dos hóspedes ficam aqui.'
+  ], { when: 'vexAlternative', minutes: 20 });
+
+  scene('vexAlt', 4, 'theatre', 'Conferir o horário do arquivo com Bia', ['vexStub'], 'vexAlt', [
+    'Celina abre a sala neutra do Teatro. Bia confronta o hash do horário com o canhoto de Cris.',
+    'Bia — O horário do anexo bate com a reserva. Eu assino como testemunha. Agora Vex pode abrir o original sem expor os hóspedes.'
+  ], { when: 'vexAlternative', minutes: 25 });
+
+  scene('vexPeace', 4, 'vex', 'Apresentar a conferência testemunhada a Vex', ['vexAlt'], 'vexProof', [
+    'Vex lê a conferência assinada por Bia e libera o original. O aviso de baixa já estava pronto antes de Kairo perder o sinal.',
+    'Vex — A assinatura de Archon está aqui, na ordem de recolher sua cópia. A Auditora pode te ajudar a revisar o que ainda falta antes de subir a Torre.'
+  ], { when: 'vexAlternative', next: true, reward: { credits: 65, card: 'unit_31' },
+    evidence: 'O canhoto, a confirmação testemunhada e a ordem original mostram que a baixa precedeu a emboscada. Archon assinou o recolhimento.' });
 
   scene('vexProof', 4, 'vex', 'Ler a ordem original com Vex', ['vexDeal'], 'vexProof', dialogue[4],
     { when: 'vexResolution', next: true, evidence: 'O aviso de baixa de Kairo precede o incidente. A ordem de recolher sua cópia traz a assinatura de Archon.' });
@@ -165,7 +198,12 @@
     'Kairo guarda o protocolo e segue para a Torre. A equipe já tem reserva e canal de confirmação.'
   ], { evidence: 'O protocolo de Nalva preserva o histórico original do endereço e permite contestar a baixa com os documentos reunidos.' });
 
-  scene('archonDeal', 5, 'archon', 'Confrontar Archon com os documentos', ['protocol'], 'archonDeal', dialogue[5]);
+  const archonWarning = 'Archon exige um duelo obrigatório. Antes de subir, revise seu baralho de 20 cartas e confira se tem energia para o confronto.';
+  scene('archonPrep', 5, 'archon', 'Confirmar preparação para a Torre', ['protocol'], 'archonReady', [
+    archonWarning
+  ]);
+
+  scene('archonDeal', 5, 'archon', 'Confrontar Archon com os documentos', ['archonReady'], 'archonDeal', dialogue[5]);
 
   scene('ending', 5, 'archon', 'Decidir como divulgar as provas', ['archonDeal'], 'ending', [
     'O duelo terminou. Renan pede a confirmação para assumir a operação. Nina e Isa esperam para saber quais provas vão circular e quando.',
@@ -182,5 +220,5 @@
     'Nair coloca outra solicitação sobre a mesa. Desta vez, há lugar para anotar o que a cidade respondeu.'
   ]);
 
-  NB.StoryData = { chapters, scenes };
+  NB.StoryData = { chapters, scenes, archonWarning };
 })(window.NB = window.NB || {});

@@ -49,8 +49,9 @@
     const { scene } = reading;
     if (!NB.Story.finish(scene.id, selected)) return;
     const reaction = scene.choices?.find(option => option.id === selected)?.reaction;
+    const reward = scene.reward && `+ ${scene.reward.credits} créditos e ${NB.Cards.CARD_DB[scene.reward.card].name}.`;
     close();
-    NB.City.refreshStory(reaction || (scene.evidence ? 'Prova registrada no diário.' : 'Investigação atualizada.'));
+    NB.City.refreshStory([reaction || (scene.evidence ? 'Prova registrada no diário.' : 'Investigação atualizada.'), reward].filter(Boolean).join(' '));
   }
 
   function renderPage() {
@@ -70,7 +71,11 @@
     if (cursor < lines.length - 1) {
       button(options, 'Continuar', () => step(1)).classList.add('story-primary');
     } else if (scene.choices && !reading.replay) {
-      scene.choices.forEach(option => button(options, option.label, () => finish(option.id)));
+      for (const option of scene.choices) {
+        const reward = NB.Story.sceneById[option.finale]?.reward;
+        if (reward) text(options, `Rota pacifista · 3 etapas · ${reward.credits} créditos + ${NB.Cards.CARD_DB[reward.card].name}`).className = 'city-notice';
+        button(options, option.label, () => finish(option.id));
+      }
     } else {
       button(options, reading.replay ? 'Concluir leitura' : 'Registrar e sair', () => finish()).classList.add('story-primary');
     }
@@ -89,10 +94,12 @@
     const scenes = NB.Story.getScenes(place.id);
     const duel = NB.Story.pendingDuel(place.id);
     const aftermath = NB.Story.aftermath(place.id);
-    if (!scenes.length && !duel && !aftermath) return;
+    const warning = place.id === 'archon' && NB.Story.archonWarning();
+    if (!scenes.length && !duel && !aftermath && !warning) return;
     const section = document.createElement('section');
     section.className = 'city-story-section';
     text(section, NB.Story.chapters[NB.Story.get().chapter], 'h4');
+    if (warning) text(section, warning).className = 'city-notice';
     if (aftermath) text(section, aftermath);
     scenes.forEach(scene => button(section, scene.title, () => open(scene.id)).classList.add('city-investigate'));
     if (duel?.[1].route && NB.Story.choice(duel[1].deal) !== duel[1].route) {
@@ -117,6 +124,8 @@
 
     const story = NB.Story.get();
     text(content, NB.Story.chapters[story.chapter], 'h4');
+    const warning = NB.Story.archonWarning();
+    if (warning) text(content, warning).className = 'city-notice';
     const current = NB.Story.getScenes();
     for (const scene of current) {
       const location = NB.CityData.districts.find(place => place.id === scene.location);
@@ -188,7 +197,8 @@
 
   function finishPrologue() {
     NB.Save.get().prologueSeen = true;
-    NB.Save.save();
+    if (NB.Story.active()) NB.Save.save();
+    else NB.Story.start();
     closePrologue();
     NB.Input.openNetMap();
   }

@@ -156,7 +156,7 @@
         </div>
         <div id="title-progress-strip" class="title-progress-strip tabular">
           <span>NÓS INVADIDOS: 0/4</span>
-          <span>CARTAS: 12/38</span>
+          <span>CARTAS: 12/41</span>
           <span>PISTAS: 0/4</span>
         </div>
         <div class="title-cta-row">
@@ -206,6 +206,13 @@
             <div><h2 id="city-heading">Baixa Luz</h2><p id="city-credits"></p><p id="city-clock"></p>
               <label class="city-energy" for="city-energy"><span id="city-energy-label">Energia</span><progress id="city-energy" max="100" value="70"></progress></label><p id="city-awake"></p></div>
           </header>
+          <div id="city-map-legend" role="group" aria-label="Filtros e legenda do mapa">
+            <button type="button" data-map-filter="all" aria-pressed="true">Todos</button>
+            <button type="button" data-map-filter="clue" aria-pressed="false"><span aria-hidden="true">◆</span> Pistas</button>
+            <button type="button" data-map-filter="duel" aria-pressed="false"><span aria-hidden="true">⚔</span> Duelos</button>
+            <button type="button" data-map-filter="secret" aria-pressed="false"><span aria-hidden="true">✦</span> Segredos</button>
+          </div>
+          <p id="city-map-objectives" aria-live="polite"></p>
           <div id="city-map" data-gallery-art="./src/assets/baixa-luz-map.webp" aria-label="Mapa interativo de Baixa Luz">
             <span id="city-marker" data-gallery-art="./src/assets/kairo-token.webp" aria-hidden="true"></span>
           </div>
@@ -341,7 +348,7 @@
         </div>
         <div class="settings-row tabular">
           <span>CARTAS DESBLOQUEADAS</span>
-          <strong id="settings-cards" style="color:var(--cyan)">12/38</strong>
+          <strong id="settings-cards" style="color:var(--cyan)">12/41</strong>
         </div>
         <div class="settings-row tabular">
           <span>PISTAS COLETADAS</span>
@@ -433,7 +440,7 @@
       <div class="modal-panel deck-modal-panel chamfer-md">
         <div class="deck-header">
           <div>
-            <div id="deck-unlocked-sub" class="title-sub" style="color:var(--cyan)">BANCO DE DADOS · 12/38 DESBLOQUEADAS</div>
+            <div id="deck-unlocked-sub" class="title-sub" style="color:var(--cyan)">BANCO DE DADOS · 12/41 DESBLOQUEADAS</div>
             <div style="font-family:var(--font-mono);font-size:15px;font-weight:900;">MEU DECK</div>
           </div>
           <button id="btn-deck-close" class="hud-btn chamfer-sm" type="button">VOLTAR</button>

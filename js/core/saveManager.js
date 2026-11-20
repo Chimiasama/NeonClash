@@ -85,7 +85,7 @@
       challengeWins: [],
       seenArt: [],
       prologueSeen: false,
-      city: { credits: 35, district: 'kira', traced: [], residentWins: [], life: NB.CityLife.normalize() },
+      city: { credits: 35, district: 'kira', traced: [], residentWins: [], discoveredResidents: [], encounterWins: [], life: NB.CityLife.normalize() },
       affinities: {},
       story: NB.Story.normalize(),
       wins: 0,
@@ -131,9 +131,13 @@
             traced: Array.isArray(parsed.city?.traced) ? parsed.city.traced.filter(id => typeof id === 'string') : [],
             residentWins: [...new Set((Array.isArray(parsed.city?.residentWins) ? parsed.city.residentWins : [])
               .filter(Number.isSafeInteger))],
+            discoveredResidents: [...new Set((Array.isArray(parsed.city?.discoveredResidents) ? parsed.city.discoveredResidents : [])
+              .filter(id => NB.CityAtlas.residents.some(person => person.id === id)))],
+            encounterWins: (Array.isArray(parsed.city?.encounterWins) ? parsed.city.encounterWins : [])
+              .filter(key => typeof key === 'string' && /^(day|night):-?\d+$/.test(key)).slice(-4),
             life: NB.CityLife.normalize(parsed.city?.life)
           },
-          story: NB.Story.normalize(parsed.story),
+          story: NB.Story.normalize(parsed.story, parsed.prologueSeen === true && !parsed.defeatedBosses?.length && !parsed.clues?.length),
           affinities: Object.fromEntries(Object.entries(parsed.affinities || {}).filter(([id, type]) =>
             NB.Cards.CARD_DB[id]?.kind === 'unit' && Object.hasOwn(NB.Cards.AFFINITIES, type))),
           wins: Number(parsed.wins) || 0,
@@ -286,6 +290,12 @@
     };
   }
 
+  function applyInvestigationReward(reward) {
+    const progress = get();
+    progress.city.credits += reward.credits;
+    if (!progress.unlockedCards.includes(reward.card)) progress.unlockedCards.push(reward.card);
+  }
+
   function recordMatchLoss() {
     const s = get();
     s.matches++;
@@ -315,6 +325,7 @@
     isNodeDefeated,
     isNodeUnlocked,
     recordBossVictory,
+    applyInvestigationReward,
     recordMatchLoss,
     recordQuickDuelWin
   };

@@ -6,10 +6,14 @@ async function walkTo(page, pin) {
   if (await walking.isVisible()) await walking.click();
 }
 
-async function enterCity(page) {
+async function enterCity(page, { legacy = false } = {}) {
   await page.getByRole('button', { name: 'Entrar na cidade' }).click();
   const skip = page.getByRole('button', { name: 'Pular prólogo' });
   if (await skip.isVisible()) await skip.click();
+  if (legacy) await page.evaluate(() => {
+    NB.Save.get().story.started = false;
+    NB.City.resetView();
+  });
 }
 
 test('earns credits, buys a card, and keeps the purchase after reloading', async ({ page }) => {
@@ -62,7 +66,7 @@ test('penalizes wrong symbols and ends a paid job when time runs out', async ({ 
 
 test('keeps campaign clues untimed and unlocks the next district', async ({ page }) => {
   await page.goto('/');
-  await enterCity(page);
+  await enterCity(page, { legacy: true });
   await page.evaluate(() => NB.Save.recordBossVictory(NB.Campaign.getNodeById('kira')));
   await walkTo(page, page.getByRole('button', { name: 'Antena Comunitária' }));
   await page.getByRole('button', { name: 'Rastrear pista' }).click();
@@ -96,7 +100,7 @@ test('starts a campaign duel, deploys a unit, and advances the turn', async ({ p
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.goto('/');
-  await enterCity(page);
+  await enterCity(page, { legacy: true });
   await walkTo(page, page.getByRole('button', { name: 'Muralha Setorial · bloqueado' }));
   await expect(page.getByText('Vença KIRA para abrir este local.')).toBeVisible();
   await walkTo(page, page.getByRole('button', { name: 'Estação Fantasma' }));
@@ -146,7 +150,7 @@ test('plays distinct music themes and keeps the player’s mute preference', asy
     };
   });
   await page.waitForFunction(() => window.musicIsAudible());
-  await enterCity(page);
+  await enterCity(page, { legacy: true });
   await expect.poll(readScene).toBe('city');
 
   const themes = {
@@ -166,7 +170,7 @@ test('plays distinct music themes and keeps the player’s mute preference', asy
 
   await page.locator('#btn-sound').click();
   await page.reload();
-  await enterCity(page);
+  await enterCity(page, { legacy: true });
   expect(await page.evaluate(() => NB.Audio.enabled)).toBe(false);
 });
 
@@ -227,7 +231,7 @@ test('Back unwinds the inspector, deck, city overlays and dossier one at a time'
   expect(await back()).toBe(true);
   await expect(page.locator('#settings-modal')).toBeHidden();
 
-  await enterCity(page);
+  await enterCity(page, { legacy: true });
   expect(await back()).toBe(false);
   await page.locator('#city-journal').click();
   expect(await back()).toBe(true);
@@ -541,7 +545,7 @@ test('adds the city clock and backpack to existing saves without losing progress
     defeatedBosses: ['kira'],
     clues: [{ bossId: 'kira', title: 'Pista salva' }],
     affinities: { unit_03: 'pulso' },
-    story: { started: false, chapter: 0 },
+    story: { started: true, chapter: 0 },
     city: { traced: ['kira'], life: { inventory: { coffee: 0, energyDrink: 0, synthetic: 0 } } }
   });
 });
@@ -578,9 +582,8 @@ test('resumes the prologue after reload and earns Kira’s proof by doing a favo
   };
   await page.goto('/');
   await enterCity(page);
-  await investigation();
-  await page.getByRole('button', { name: 'Começar investigação' }).click();
-  await walkTo(page, page.getByRole('button', { name: 'Ir para Casa de Kairo' }));
+  await expect(page.locator('[data-district="home"]')).toHaveAttribute('data-markers', /clue/);
+  await walkTo(page, page.locator('[data-district="home"]'));
   await read('Testar o leitor e a chave');
   const title = 'Ler as faturas com Dona Nair';
   await page.getByRole('button', { name: title }).click();
@@ -604,11 +607,16 @@ test('resumes the prologue after reload and earns Kira’s proof by doing a favo
   await read('Ouvir Kira sobre a rota vendida', 'Aceitar o favor de conferir o recibo na Feira');
   await walkTo(page, page.getByRole('button', { name: 'Feira do Viaduto' }));
   await read('Conferir o recibo anonimizado com Beto');
-  await walkTo(page, page.getByRole('button', { name: 'Estação Fantasma', exact: true }));
-  await read('Registrar a prova da Estação');
+  await walkTo(page, page.locator('[data-district="ringArchive"]'));
+  await read('Cruzar o código do terminal com Leila');
+  await walkTo(page, page.locator('[data-district="kira"]'));
+  const beforeReward = await page.evaluate(() => NB.Save.get().city.credits);
+  await read('Entregar o dossiê auditado a Kira');
+  expect(await page.evaluate(() => NB.Save.get().city.credits)).toBe(beforeReward + 35);
+  expect(await page.evaluate(() => NB.Save.get().unlockedCards)).toContain('exploit_15');
   await investigation();
   await expect(page.locator('#city-content')).toContainText('Quem pagou duas vezes');
-  await expect(page.locator('#city-content')).toContainText('O pagamento da rota saiu');
+  await expect(page.locator('#city-content')).toContainText('O dossiê auditado comprova');
   expect(await page.evaluate(() => NB.Save.isNodeDefeated('kira'))).toBe(false);
 });
 
@@ -636,15 +644,19 @@ test('unwinds the complete investigation with alternative routes and a recorded 
     finish('pass');
     finish('cipherDeal', 'supervised');
     finish('cipherAlt');
-    finish('cipherProof');
+    finish('cipherToken');
+    finish('cipherPeace');
     finish('cris');
     finish('vexDeal', 'witness');
+    finish('vexStub');
     finish('vexAlt');
-    finish('vexProof');
+    finish('vexPeace');
     finish('renan');
     finish('reserve');
     finish('press');
     finish('registry');
+    if (NB.Story.available(NB.Story.sceneById.archonDeal)) throw new Error('Archon open before the warning');
+    finish('archonPrep');
     finish('archonDeal');
     if (NB.Story.available(NB.Story.sceneById.ending)) throw new Error('Ending open before Archon duel');
     NB.Save.recordBossVictory(NB.Campaign.getNodeById('archon'));
@@ -802,7 +814,7 @@ test('shows the illustrated prologue only when starting the adventure', async ({
   await expect(prologue).toBeHidden();
   await expect(page.locator('#city-story')).toHaveClass('city-investigate');
   await page.locator('#city-story').click();
-  await expect(page.getByRole('button', { name: 'Começar investigação' })).toHaveClass('city-investigate');
+  await expect(page.getByRole('button', { name: 'Ir para Casa de Kairo' })).toBeVisible();
 });
 
 test('resumes suspended audio on a regular gesture and respects an explicit mute', async ({ page }) => {
@@ -906,7 +918,7 @@ test('keeps city navigation in place when reading investigation or district deta
   const expectedPosition = await nav.boundingBox();
   expect(await nav.getByRole('button', { name: 'Investigação' }).evaluate(button => button.scrollWidth <= button.clientWidth)).toBe(true);
   await nav.getByRole('button', { name: 'Investigação' }).click();
-  await expect(page.getByRole('button', { name: 'Começar investigação' })).toBeInViewport();
+  await expect(page.getByRole('button', { name: 'Ir para Casa de Kairo' })).toBeInViewport();
   expect(await nav.boundingBox()).toEqual(expectedPosition);
   await nav.getByRole('button', { name: 'Mapa', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Estação Fantasma' })).toBeInViewport();
@@ -915,7 +927,7 @@ test('keeps city navigation in place when reading investigation or district deta
 
 test('cancels or abandons a city duel and charges no additional fee on a stake', async ({ page }) => {
   await page.goto('/');
-  await enterCity(page);
+  await enterCity(page, { legacy: true });
   await page.getByRole('button', { name: 'Abrir dossiê' }).click();
   await page.getByRole('button', { name: 'Conectar e duelar' }).click();
   await page.getByRole('button', { name: 'Sair do duelo', exact: true }).click();
@@ -1086,4 +1098,80 @@ test('persists one Correio Expresso package and awards the speed bonus after ord
   await expect(page.locator('#city-feedback')).toContainText('bônus de velocidade: +7');
   await expect(page.locator('#city-credits')).toHaveText(`${35 + 6 + 2 * listing.distance + 7} créditos`);
   expect(await page.evaluate(() => NB.Save.get().city.life.activeDelivery)).toBeNull();
+});
+
+test('shows and filters story, duel and undiscovered-contact badges on both city surfaces', async ({ page }) => {
+  await page.goto('/');
+  await enterCity(page);
+  const home = page.locator('[data-district="home"]');
+  const arena = page.locator('[data-district="arena"]');
+  const filter = page.getByRole('group', { name: 'Filtros e legenda do mapa' });
+  await expect(home).toHaveAttribute('data-markers', 'clue secret');
+  await expect(arena).toHaveAttribute('data-markers', 'duel secret');
+  await expect(page.locator('[data-district="kira"]')).not.toHaveAttribute('data-markers', /duel/);
+  await filter.getByRole('button', { name: 'Pistas' }).click();
+  await expect(home).toBeVisible();
+  await expect(arena).toBeHidden();
+  await page.getByRole('button', { name: 'Bairros', exact: true }).click();
+  await expect(page.locator('[data-atlas-place="home"]')).toHaveAttribute('data-markers', 'clue secret');
+  await expect(page.locator('[data-atlas-place="arena"]')).toHaveCount(0);
+  await filter.getByRole('button', { name: 'Duelos' }).click();
+  await expect(page.locator('[data-atlas-place="arena"]')).toBeVisible();
+  await page.getByRole('button', { name: 'Mapa', exact: true }).click();
+  await filter.getByRole('button', { name: 'Segredos' }).click();
+  await expect(home).toBeVisible();
+  await home.click();
+  await expect(page.locator('#city-content')).toContainText('Ao chegar: Testar o leitor e a chave');
+});
+
+test('migrates an open legacy favor and shows the Archon warning before unlocking the confrontation', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('neon_breach_save_v1', JSON.stringify({
+      prologueSeen: true, city: { district: 'vex', credits: 35 },
+      story: { started: true, chapter: 4, flags: ['vexDeal', 'vexAlt'], choices: { vexDeal: 'witness' } }
+    }));
+  });
+  await page.goto('/');
+  await enterCity(page);
+  await expect(page.getByRole('button', { name: 'Apresentar a conferência testemunhada a Vex' })).toBeVisible();
+  expect(await page.evaluate(() => NB.Story.has('vexStub'))).toBe(true);
+  await page.evaluate(() => {
+    const save = NB.Save.get();
+    save.city.district = 'archon';
+    save.story.chapter = 5;
+    save.story.flags.push('protocol');
+    NB.City.resetView();
+  });
+  await expect(page.locator('#city-content')).toContainText('duelo obrigatório');
+  await expect(page.getByRole('button', { name: 'Confrontar Archon com os documentos' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Investigação', exact: true }).click();
+  await expect(page.locator('#city-content')).toContainText('baralho de 20 cartas');
+  await page.getByRole('button', { name: 'Confirmar preparação para a Torre' }).click();
+  await page.getByRole('button', { name: 'Registrar e sair' }).click();
+  await expect(page.getByRole('button', { name: 'Confrontar Archon com os documentos' })).toBeVisible();
+});
+
+test('applies the three pacifist card effects and validates the tracker affinity', async ({ page }) => {
+  await page.goto('/');
+  const result = await page.evaluate(() => {
+    NB.Input.startMatch({ mode: 'quick' });
+    const state = NB.State.get();
+    state.player.ram = 6;
+    const create = (id, uid, side) => NB.State.createFieldUnit(id, uid, side);
+    state.player.field = [create('unit_03', 800, 'player'), create('unit_08', 801, 'player'), null];
+    state.enemy.field = [create('unit_01', 802, 'enemy'), create('unit_07', 803, 'enemy'), null];
+    state.player.hand = [{ cardId: 'exploit_15', uid: 804 }, { cardId: 'exploit_16', uid: 805 }, { cardId: 'unit_31', uid: 806 }];
+    state.player.field[0].def -= 4;
+    const before = [state.player.field[0].def, state.player.field[0].maxDef, state.player.field[1].atk, state.enemy.field[1].atk];
+    const wrongAffinity = NB.State.executeExploit('player', 804, 0);
+    const tracker = NB.State.executeExploit('player', 804, 1);
+    const filter = NB.State.executeExploit('player', 805, 0);
+    const audit = NB.State.deployUnit('player', 806, 2);
+    return {
+      wrongAffinity, tracker, filter, audit,
+      delta: [state.player.field[0].def - before[0], state.player.field[0].maxDef - before[1],
+        state.player.field[1].atk - before[2], state.enemy.field[1].atk - before[3]]
+    };
+  });
+  expect(result).toEqual({ wrongAffinity: false, tracker: true, filter: true, audit: true, delta: [4, 1, 1, -1] });
 });

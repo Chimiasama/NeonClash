@@ -22,6 +22,54 @@
     39: { hp: 22, credits: 12, card: 'unit_23', deck: wagerBoss.deckList, canOverclock: true },
     ...NB.CityAtlas.residentDuels
   };
+  const markerTypes = {
+    clue: { icon: '◆', label: 'Pista ativa' },
+    duel: { icon: '⚔', label: 'Duelo disponível' },
+    secret: { icon: '✦', label: 'Contato ou segredo por descobrir' }
+  };
+  let mapFilter = 'all';
+
+  function urbanEncounter(save) {
+    const minute = save.city.life.minute;
+    const hour = Math.floor(minute % 1440 / 60);
+    const period = hour >= 6 && hour < 19 ? 'day' : 'night';
+    const day = Math.floor((minute - 360) / 1440);
+    const key = `${period}:${day}`;
+    const roster = NB.CityAtlas.encounters[period];
+    const roll = Math.imul(day + (period === 'day' ? 1 : 17), 2654435761) >>> 0;
+    return save.city.encounterWins.includes(key) ? null : { ...roster[roll % roster.length], key, period };
+  }
+
+  function locationMarkers(place, save, clueLocations, encounter) {
+    const hasDuel = place.id === 'arena' || encounter?.location === place.id ||
+      (NB.Campaign.NODES.some(boss => boss.id === place.id) && !access(place)) ||
+      NB.CityAtlas.residents.some(person => person.location === place.id && residentDuels[person.id]);
+    const hasSecret = NB.CityAtlas.residents.some(person =>
+      person.location === place.id && !save.city.discoveredResidents.includes(person.id)) ||
+      (place.id === 'garage' && !save.city.life.favors.includes('hillPath')) ||
+      (place.id === 'pump' && !save.city.life.favors.includes('pumpRelay'));
+    return [clueLocations.has(place.id) && 'clue', hasDuel && 'duel', hasSecret && 'secret'].filter(Boolean);
+  }
+
+  function applyMarkers(button, types) {
+    button.dataset.markers = types.join(' ');
+    const badges = document.createElement('span');
+    badges.className = 'city-map-badges';
+    badges.setAttribute('aria-hidden', 'true');
+    if (types.length) button.setAttribute('aria-description', types.map(type => markerTypes[type].label).join(' · '));
+    else button.removeAttribute('aria-description');
+    for (const type of types) {
+      const badge = document.createElement('span');
+      badge.className = `city-badge-${type}`;
+      badge.title = markerTypes[type].label;
+      badge.textContent = markerTypes[type].icon;
+      badges.append(badge);
+    }
+    const previous = button.querySelector('.city-map-badges');
+    if (previous) previous.replaceWith(badges);
+    else button.append(badges);
+  }
+
   let destination = null;
 
   function access(district) {
@@ -98,11 +146,26 @@
     };
     $('city-line').textContent = view === 'journal' ? 'Pistas extraídas e rastros confirmados na Antena.' : (cleared ? lines[district.id] : district.line);
     $('city-journal').setAttribute('aria-pressed', view === 'journal');
+    const clueLocations = new Set(NB.Story.getScenes().map(scene => scene.location));
+    const pending = NB.Story.pendingDuel();
+    if (pending) clueLocations.add(pending[0]);
+    const encounter = urbanEncounter(save);
+    const markers = new Map(districts.map(place => [place.id, locationMarkers(place, save, clueLocations, encounter)]));
     const marker = $('city-marker');
-    marker.style.left = `${district.x}%`;
-    marker.style.top = `${district.y}%`;
+    const position = NB.CityAtlas.mapPositions[district.id];
+    marker.style.left = `${position.x}%`;
+    marker.style.top = `${position.y}%`;
+    $('city-map').hidden = view === 'atlas';
+    const objectives = [...clueLocations].map(id => districts.find(place => place.id === id).name);
+    $('city-map-objectives').textContent = objectives.length ? `◆ Destino da investigação · ${objectives.join(' · ')}` : '';
+    for (const filter of $('city-map-legend').querySelectorAll('button')) {
+      filter.setAttribute('aria-pressed', String(filter.dataset.mapFilter === mapFilter));
+    }
     for (const pin of $('city-map').querySelectorAll('button')) {
       const place = districts.find(item => item.id === pin.dataset.district);
+      const types = markers.get(place.id);
+      applyMarkers(pin, types);
+      pin.hidden = mapFilter !== 'all' && !types.includes(mapFilter);
       const locked = Boolean(access(place));
       pin.classList.toggle('city-locked', locked);
       pin.classList.toggle('city-cleared', NB.Save.isNodeDefeated(place.id));
@@ -118,7 +181,7 @@
       NB.StoryUI.journal(content, district, selectDestination);
     } else if (view === 'atlas') {
       $('city-name').textContent = 'Bairros de Baixa Luz';
-      renderAtlas(content, district);
+      renderAtlas(content, district, markers);
     } else if (view === 'travel') {
       renderTravel(content, save);
     } else if (view === 'bag') {
@@ -149,21 +212,26 @@
       NB.StoryUI.local(content, district);
       renderContactServices(content, district.id);
       renderJobs(content, district.id, life);
+      if (encounter?.location === district.id) renderEncounter(content, encounter);
       renderResidents(content, district.id);
     }
   }
 
-  function renderAtlas(content, district) {
+  function renderAtlas(content, district, markers) {
     for (const area of NB.CityAtlas.neighborhoods) {
       const group = document.createElement('details');
       group.className = 'city-residents';
-      group.open = area.locations.includes(district.id);
+      const locations = area.locations.filter(id => mapFilter === 'all' || markers.get(id).includes(mapFilter));
+      if (!locations.length) continue;
+      group.open = area.locations.includes(district.id) || mapFilter !== 'all';
       const heading = document.createElement('summary');
       heading.textContent = area.name;
       group.append(heading);
-      for (const id of area.locations) {
+      for (const id of locations) {
         const place = districts.find(item => item.id === id);
-        addButton(group, place.name, () => selectDestination(id));
+        const row = addButton(group, place.name, () => selectDestination(id));
+        row.dataset.atlasPlace = id;
+        applyMarkers(row, markers.get(id));
       }
       content.append(group);
     }
@@ -252,6 +320,17 @@
       addButton(row, `Falar com ${person.name}`, () => {
         const count = residentVisits.get(person.id) || 0;
         residentVisits.set(person.id, count + 1);
+        const seen = NB.Save.get().city.discoveredResidents;
+        if (!seen.includes(person.id)) {
+          seen.push(person.id);
+          NB.Save.save();
+          const save = NB.Save.get();
+          const pin = $('city-map').querySelector(`[data-district="${location}"]`);
+          const types = locationMarkers(districtAtPosition(), save, new Set(NB.Story.getScenes().map(scene => scene.location)), urbanEncounter(save));
+          if (NB.Story.pendingDuel(location) && !types.includes('clue')) types.unshift('clue');
+          applyMarkers(pin, types);
+          pin.hidden = mapFilter !== 'all' && !types.includes(mapFilter);
+        }
         const replies = residentNotes[person.id];
         reply.textContent = replies ? replies[Math.min(count, replies.length - 1)] : [
           person.line,
@@ -320,6 +399,9 @@
     const life = save.city.life;
     const { streetRest, beds } = NB.CityLife;
     $('city-name').textContent = `Ir para ${place.name}`;
+    for (const scene of NB.Story.getScenes(place.id)) addText(content, `◆ Ao chegar: ${scene.title}`, 'city-active-destination');
+    if (NB.Story.pendingDuel(place.id)) addText(content, '◆ Ao chegar: abrir o dossiê da investigação', 'city-active-destination');
+    if (place.id === 'archon' && NB.Story.archonWarning()) addText(content, NB.Story.archonWarning(), 'city-notice');
     addText(content, `Energia atual: ${life.energy}. Os custos abaixo só são cobrados ao escolher um transporte.`);
     for (const route of NB.CityLife.routes(destination)) {
       const row = document.createElement('div');
@@ -719,11 +801,27 @@
     NB.Input.startMatch({ mode: 'arena', boss: stake ? wagerBoss : sparringBoss, stake, autoSound: false });
   }
 
+  function renderEncounter(content, encounter) {
+    addButton(content, `Desafiar ${encounter.name} · encontro urbano`, () => {
+      NB.Input.startMatch({
+        mode: 'arena',
+        boss: {
+          ...(encounter.period === 'night' ? wagerBoss : sparringBoss),
+          hp: encounter.hp, name: encounter.name, fullTitle: `${encounter.name} // Encontro urbano`,
+          encounterKey: encounter.key, encounterReward: encounter.credits
+        }
+      });
+    });
+  }
+
   function finishArena(state, winner) {
     const save = NB.Save.get();
     const residentId = state.boss.residentId;
     const duel = residentDuels[residentId];
-    const payout = winner === 'player' ? (duel ? duel.credits : state.stake ? 60 : 15) : 0;
+    const encounter = state.boss.encounterKey;
+    const payout = winner === 'player'
+      ? (encounter ? state.boss.encounterReward : duel ? duel.credits : state.stake ? 60 : 15) : 0;
+    if (winner === 'player' && encounter) save.city.encounterWins = [...save.city.encounterWins, encounter].slice(-4);
     state.payout = payout;
     if (winner === 'player' && duel && !save.city.residentWins.includes(residentId)) {
       save.city.residentWins.push(residentId);
@@ -756,21 +854,27 @@
   }
 
   function bindEvents() {
-    for (const district of districts.filter(place => !place.atlasOnly)) {
+    for (const district of districts) {
       const pin = addButton($('city-map'), '', () => selectDestination(district.id), false, 'city-pin');
       pin.dataset.district = district.id;
-      pin.style.left = `${district.x}%`;
-      pin.style.top = `${district.y}%`;
-      const icon = document.createElement('span');
-      icon.setAttribute('aria-hidden', 'true');
-      icon.textContent = district.icon;
-      const label = document.createElement('span');
-      label.textContent = district.short;
-      pin.append(icon, label);
+      const position = NB.CityAtlas.mapPositions[district.id];
+      pin.style.left = `${position.x}%`;
+      pin.style.top = `${position.y}%`;
+      pin.textContent = district.short || NB.CityAtlas.shortNames[district.id];
     }
+    $('city-map-legend').addEventListener('click', event => {
+      const filter = event.target.closest('[data-map-filter]');
+      if (!filter) return;
+      mapFilter = filter.dataset.mapFilter;
+      view = view === 'atlas' ? 'atlas' : 'district';
+      destination = null;
+      cancelJob();
+      announce('');
+      render();
+    });
     $('city-map-tab').addEventListener('click', () => {
       resetView();
-      $('city-map').scrollIntoView({ block: 'start' });
+      $('city-map-legend').scrollIntoView({ block: 'start' });
     });
     $('city-journal').addEventListener('click', toggleJournal);
     for (const [id, target] of [['city-bag', 'bag'], ['city-atlas', 'atlas'], ['city-story', 'story']]) {

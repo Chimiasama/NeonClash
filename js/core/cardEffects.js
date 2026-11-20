@@ -15,6 +15,11 @@
       const unit = state[targetSide].field[slot];
       return unit ? [{ unit, slot, side: targetSide }] : [];
     }
+    if (effect.target === 'strongestEnemy') {
+      const enemy = opposing(side);
+      const strongest = indexed(state[enemy].field).sort((a, b) => b.unit.atk - a.unit.atk)[0];
+      return strongest ? [{ ...strongest, side: enemy }] : [];
+    }
     if (effect.target === 'allies' || effect.target === 'enemies') {
       const targetSide = effect.target === 'allies' ? side : opposing(side);
       return indexed(state[targetSide].field).map(target => ({ ...target, side: targetSide }));
@@ -24,7 +29,9 @@
 
   function legalSlots(state, card, side) {
     if (card.targetType === 'ally_unit' || card.targetType === 'enemy_unit') {
-      return indexed(state[selectedSide(card, side)].field).map(target => target.slot);
+      return indexed(state[selectedSide(card, side)].field)
+        .filter(({ unit }) => !card.targetAffinities || card.targetAffinities.includes(unit.affinity))
+        .map(target => target.slot);
     }
     return !card.requiresEnemy || state[opposing(side)].field.some(Boolean) ? [null] : [];
   }

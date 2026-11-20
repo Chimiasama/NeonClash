@@ -140,15 +140,14 @@
     }
 
     const targetSide = card.targetType === 'ally_unit' ? 'player' : 'enemy';
-    const validSlots = [];
-    state[targetSide].field.forEach((u, idx) => { if (u) validSlots.push(idx); });
+    const validSlots = NB.CardEffects.legalSlots(state, card, 'player');
 
     if (validSlots.length === 1) {
       state.selectedHandUid = null;
       NB.State.executeExploit('player', item.uid, validSlots[0]);
     } else if (validSlots.length > 1) {
       state.phase = 'SELECT_TARGET';
-      state.pendingExploit = { uid: item.uid, cardId: card.id, targetSide };
+      state.pendingExploit = { uid: item.uid, cardId: card.id, targetSide, validSlots };
       state.selectedHandUid = null;
       NB.Physics.showToast('SELECIONE O ALVO NO CAMPO', 'var(--ram)');
       NB.UI.renderAll();
@@ -160,7 +159,7 @@
     const unit = state[side].field[slotIdx];
 
     if (state.phase === 'SELECT_TARGET' && state.pendingExploit) {
-      if (side === state.pendingExploit.targetSide && unit) {
+      if (side === state.pendingExploit.targetSide && unit && state.pendingExploit.validSlots?.includes(slotIdx)) {
         const { uid } = state.pendingExploit;
         state.pendingExploit = null;
         state.phase = 'PLAYER_MAIN';

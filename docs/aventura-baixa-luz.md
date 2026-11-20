@@ -1,13 +1,15 @@
 # NeonClash — guia e roteiro da aventura em Baixa Luz
 
-Documenta a aventura jogável na revisão `0440f72`. Contém spoilers, incluindo a responsabilidade de Archon e os três finais. Para a implementação e as regras gerais, veja a [referência técnica](referencia-tecnica.md).
+Documenta a aventura jogável com as cadeias pacifistas de três etapas. Contém spoilers, incluindo a responsabilidade de Archon e os três finais. Para a implementação e as regras gerais, veja a [referência técnica](referencia-tecnica.md).
 
 ## Como iniciar e acompanhar
 
 1. No início, toque em **Entrar na cidade**. Na primeira entrada por save, leia o prólogo em três quadros e toque em **Entrar em Baixa Luz**, ou escolha **Pular prólogo**. Voltar durante a apresentação leva ao menu e permite recomeçá-la.
-2. A posição inicial é a Estação Fantasma. Na barra inferior, abra **Investigação** e toque em **Começar investigação**. O primeiro destino é **Casa de Kairo**. A apresentação e a ativação da investigação são ações separadas.
+2. A posição inicial é a Estação Fantasma. Concluir ou pular o prólogo já inicia **A chave que ainda serve**. O mapa marca **Casa de Kairo** em ciano. Toque nesse pino para ver a primeira ação e escolher a viagem.
 3. Use **Ir para…** no diário, um pino de **Mapa** ou a lista de **Bairros**. Abrir a cotação é gratuito. Escolher um transporte confirma o deslocamento com seu tempo, energia e tarifa. Se atingir o limite de energia ou vigília, Kairo chega e dorme imediatamente. Em casa o descanso é seguro e gratuito. Nos demais destinos ela dorme na rua, com risco de assalto.
 4. Em cada local, toque na ação da investigação. Leia com **Continuar** e conclua com **Registrar e sair** ou escolhendo uma resposta na última página. Apenas concluir registra a prova e abre o próximo passo. Fechar no meio preserva a página lida. **Investigação** e **Pistas** mostram o diário narrativo quando a investigação está ativa. Provas concluídas oferecem **Reler cena**.
+
+O topo do mapa e a lista de **Bairros** usam a mesma legenda. **◆ Pistas** em ciano e âmbar indicam etapas ativas ou um duelo que move a história. **⚔ Duelos** em magenta marcam chefes disponíveis, o Ringue, moradores duelistas e o encontro urbano do período. **✦ Segredos** em verde marcam moradores ainda não ouvidos e favores locais por descobrir. Os botões **Todos**, **Pistas**, **Duelos** e **Segredos** filtram os destinos. A cotação de viagem antecipa a ação ativa e o painel do local permite concluí-la após chegar. **Investigação** preserva a leitura do caso.
 
 As tabelas indicam a ordem necessária, os caminhos equivalentes e os efeitos, além dos custos de cenas que consomem tempo. Cada uma dessas cenas também custa 4 de energia. Os custos de deslocamento são adicionais.
 
@@ -28,9 +30,9 @@ As tabelas indicam a ordem necessária, os caminhos equivalentes e os efeitos, a
 | Escolha | O que fazer | Efeito |
 | --- | --- | --- |
 | **Disputar a cópia em duelo** | Abra o dossiê na Estação e vença Kira. | Habilita a cena da prova e dá os prêmios normais de vitória. |
-| **Aceitar o favor de conferir o recibo na Feira** | Vá à Feira e escolha **Conferir o recibo anonimizado com Beto**. | Custa 35 min e 4 de energia. Beto confirma o código do equipamento e a dívida quitada que reapareceu. Habilita a mesma cena da prova. |
+| **Aceitar o favor de conferir o recibo na Feira** | Vá à Feira e escolha **Conferir o recibo anonimizado com Beto**. | Custa 25 min e 4 de energia. Beto encontra o carimbo de um terminal antigo do Ringue e encaminha a peça a Leila. |
 
-Volte à Estação e use **Registrar a prova da Estação**. O recibo liga o financiamento da rota ao projeto de recuperação da Vértice. Abre **Quem pagou duas vezes**.
+Na rota de duelo, volte à Estação e use **Registrar a prova da Estação**. Na rota pacifista, depois da Feira vá ao **Arquivo do Ringue** e use **Cruzar o código do terminal com Leila** (20 min, 4 de energia). Volte à **Estação Fantasma** e use **Entregar o dossiê auditado a Kira** para registrar a prova, receber **35 créditos** e desbloquear **Rastreador de Lote**. As duas rotas abrem **Quem pagou duas vezes**.
 
 ## 3. Quem pagou duas vezes
 
@@ -49,9 +51,9 @@ Volte à Estação e use **Registrar a prova da Estação**. O recibo liga o fin
 | Escolha | O que fazer | Efeito |
 | --- | --- | --- |
 | **Disputar o acesso no terminal** | Abra o dossiê e vença Cipher. | Habilita a cena da prova e dá os prêmios normais de vitória. |
-| **Combinar retirada supervisionada com Raquel** | Volte ao Corredor de Serviço e use **Retirar a cópia supervisionada**. | Custa 40 min e 4 de energia. Registra a cópia sem credenciais pessoais e abre a mesma cena da prova. |
+| **Combinar retirada supervisionada com Raquel** | Volte ao **Corredor de Serviço** e use **Solicitar a janela de manutenção isolada**. | Custa 25 min e 4 de energia. Raquel indica que falta o token óptico. |
 
-Volte à Muralha e use **Registrar as duas versões da ordem**. As versões divergem sobre a suspensão de Kairo e apontam para um anexo ligado a uma reserva no Hotel Espelho. Abre o capítulo seguinte.
+Na rota de duelo, volte à Muralha e use **Registrar as duas versões da ordem**. Para seguir sem duelo, vá à **Garagem da Íris** e use **Calibrar o filtro de isolamento com Íris** (25 min, 4 de energia). Na **Muralha Setorial**, use **Executar a extração isolada**. A mesma ação protege as credenciais, registra as versões da ordem e rende **50 créditos** e **Filtro de Isolamento**. As duas rotas abrem o capítulo seguinte.
 
 ## 5. O quarto que nunca foi ocupado
 
@@ -61,9 +63,9 @@ Volte à Muralha e use **Registrar as duas versões da ordem**. As versões dive
 | Escolha | O que fazer | Efeito |
 | --- | --- | --- |
 | **Disputar a entrega em duelo** | Abra o dossiê e vença Vex. | Habilita a cena da prova e dá os prêmios normais de vitória. |
-| **Pedir uma entrega testemunhada no Teatro** | No **Teatro do Espelho**, escolha **Acompanhar Bia na entrega do arquivo**. | Custa 30 min e 4 de energia. Celina abre a sala e Bia testemunha a conferência, habilitando a mesma cena da prova. |
+| **Pedir uma entrega testemunhada no Teatro** | Na **Pensão do Canal**, escolha **Levantar o canhoto da reserva com Cris**. | Custa 20 min e 4 de energia. Cris separa a evidência do registro de hóspedes. |
 
-Volte ao Hotel e use **Ler a ordem original com Vex**. O aviso de baixa de Kairo é anterior à emboscada. A ordem de recolher sua cópia traz a assinatura de Archon. Abre a preparação da transição.
+Na rota de duelo, volte ao Hotel e use **Ler a ordem original com Vex**. Na alternativa pacifista, do canhoto siga para o **Teatro do Espelho** e use **Conferir o horário do arquivo com Bia** (25 min, 4 de energia). Volte ao **Hotel Espelho** e escolha **Apresentar a conferência testemunhada a Vex**. A leitura comprova a assinatura de Archon e rende **65 créditos** e **Auditora de Rede**. As duas rotas abrem a preparação da transição.
 
 ## 6. Tirar a cidade do desligamento
 
@@ -73,9 +75,10 @@ Volte ao Hotel e use **Ler a ordem original com Vex**. O aviso de baixa de Kairo
 | 2a | Clínica do Morro → **Preparar a reserva de energia da Clínica** | Custa 25 min e 4 de energia. Prepara a bateria e os horários de troca. |
 | 2b | Antena Comunitária → **Reservar o canal com Nina**, ou Praça do Centro → **Entregar a cópia de transição à Isa** | São alternativas para a mesma confirmação. A Antena não tem custo de cena. A Praça custa 20 min e 4 de energia. Faça 2a e uma rota de 2b em qualquer ordem. |
 | 3 | Balcão Cívico → **Pedir a Nalva o histórico do cadastro** | Guarda o protocolo que preserva o histórico original. |
-| 4 | Torre Vértice → **Confrontar Archon com os documentos** | Kairo confronta quem autorizou a tomada de sua cópia. A conversa libera o dossiê. |
-| 5 | Torre Vértice → **Abrir dossiê** → vencer Archon | A vitória é exigida para liberar **Decidir como divulgar as provas**. |
-| 6 | Torre Vértice → **Decidir como divulgar as provas** | Escolha um dos três finais. Todos liberam o epílogo. |
+| 4 | Torre Vértice → **Confirmar preparação para a Torre** | O diário e o local avisam que o duelo é obrigatório e recomendam revisar o deck de 20 cartas e a energia. Registre a leitura para liberar a conversa. |
+| 5 | Torre Vértice → **Confrontar Archon com os documentos** | Kairo confronta quem autorizou a tomada de sua cópia. A conversa libera o dossiê. |
+| 6 | Torre Vértice → **Abrir dossiê** → vencer Archon | A vitória é exigida para liberar **Decidir como divulgar as provas**. |
+| 7 | Torre Vértice → **Decidir como divulgar as provas** | Escolha um dos três finais. Todos liberam o epílogo. |
 
 ### Os três finais
 
@@ -93,8 +96,8 @@ Na **Casa de Kairo**, escolha **Voltar à Casa e falar com Dona Nair**. A cena c
 
 ## Provas, atalhos e recompensas de combate
 
-- Nos confrontos com Kira, Cipher e Vex, a rota alternativa e a vitória habilitam a mesma cena de registro. A prova não avança o capítulo sozinha. É preciso voltar e concluir a cena. Usar o favor concede a prova narrativa, enquanto a vitória entrega também as recompensas e a marca de chefe derrotado.
-- Antes de resolver um desses confrontos, é possível mudar para o caminho alternativo pela ação oferecida no local do chefe, como **Conferir o recibo com Beto**. Trocar a rota só registra a decisão. Ainda é necessário viajar e concluir o favor. O duelo permanece acessível após a conversa, inclusive se quiser lutar depois pelo prêmio.
+- A vitória é o atalho de cada confronto. Ela libera a cena de registro e entrega os prêmios de combate. Cada cadeia pacifista leva a prova ao mesmo capítulo seguinte, por meio de um registro próprio e de uma recompensa exclusiva. Completar as três rende 150 créditos e três cartas antes de Archon.
+- Após escolher duelo, a ação alternativa fica disponível no local do chefe enquanto o confronto estiver pendente. Trocar a rota só registra a decisão. A recompensa exige concluir a última etapa do favor. O dossiê de combate permanece acessível para quem decidir lutar.
 - A investigação não exige rastrear as pistas clássicas da Antena. Com a investigação desativada, os dossiês seguem o fluxo **Kira → rastrear Kira → Cipher → rastrear Cipher → Vex → rastrear Vex → Archon**. A mesa de apostas exige a marca de vitória sobre Kira, mesmo que sua prova narrativa já tenha sido obtida por Beto.
 
 | Chefe | Local | Primeira vitória |
@@ -214,7 +217,23 @@ Escolhas exibidas
 
 1. Beto compara o valor e a data com a via da banca. O nome dos passageiros está coberto nas duas cópias.
 2. Beto — A dívida entrou quitada e reapareceu num recibo novo. Quem fez isso usou o código do equipamento da Estação.
-3. Ele entrega a via conferida. Kairo pode levá-la de volta a Kira.
+3. No verso, Beto encontra o carimbo de um terminal antigo do Ringue. Kairo guarda o código para conferir com Leila.
+
+#### Cruzar o código do terminal com Leila
+
+**Local** · Arquivo do Ringue
+
+1. Leila compara o carimbo com o livro de apostas. O código pertence a um terminal desativado.
+2. Leila — Quem reabriu essa dívida usou o número antigo. O dinheiro entrou por fora do caixa. Aqui está a cópia sem os nomes dos apostadores.
+
+#### Entregar o dossiê auditado a Kira
+
+**Local** · Estação Fantasma
+
+1. Kairo entrega a via de Beto com a conferência de Leila. Kira compara o carimbo com o recibo da rota.
+2. Kira — O projeto de recuperação da Vértice pagou a rota por fora do Ringue. Pode guardar a prova. Vou te passar um rastreador que separa esses números sem abrir a lista de passageiros.
+
+**Prova registrada** — O dossiê auditado comprova que o pagamento da rota saiu da verba da Vértice e entrou por fora do caixa do Ringue.
 
 #### Registrar a prova da Estação
 
@@ -300,12 +319,28 @@ Escolhas exibidas
 - **Disputar o acesso no terminal**
 - **Combinar retirada supervisionada com Raquel**
 
-#### Retirar a cópia supervisionada
+#### Solicitar a janela de manutenção isolada
 
 **Local** · Corredor de Serviço
 
-1. Raquel passa a ordem pelo terminal isolado. A coluna de credenciais pessoais fica no original.
-2. A cópia chega com o mesmo número da ordem e dois horários. Há um anexo ausente, associado a uma reserva no Hotel Espelho.
+1. Raquel encontra um horário em que a ordem pode ser copiada sem passar pela auditoria.
+2. Raquel — Falta o token de isolamento óptico. Leva essa peça para Íris. Se o filtro ficar certo, as credenciais continuam no cofre.
+
+#### Calibrar o filtro de isolamento com Íris
+
+**Local** · Garagem da Íris
+
+1. Íris testa o filtro em uma ficha antiga. O número da ordem atravessa o leitor. Os nomes ficam do outro lado.
+2. Íris — Agora leva o token para a Muralha. Raquel já sabe quais colunas precisa preservar.
+
+#### Executar a extração isolada
+
+**Local** · Muralha Setorial
+
+1. Raquel conecta o token. Cipher passa as duas versões pela janela isolada. As credenciais ficam no cofre.
+2. Cipher — A primeira suspende seu acesso. A segunda inclui um recolhimento. O anexo que sumiu estava ligado a uma reserva no Hotel Espelho. Leva o número a Cris.
+
+**Prova registrada** — A cópia isolada preserva as duas versões da ordem sem divulgar as credenciais. O anexo ausente aponta para o Hotel Espelho.
 
 #### Registrar as duas versões da ordem
 
@@ -341,12 +376,28 @@ Escolhas exibidas
 - **Disputar a entrega em duelo**
 - **Pedir uma entrega testemunhada no Teatro**
 
-#### Acompanhar Bia na entrega do arquivo
+#### Levantar o canhoto da reserva com Cris
+
+**Local** · Pensão do Canal
+
+1. Cris separa o canhoto da reserva sem hospedagem dos recibos de quem realmente dormiu na pensão.
+2. Cris — Esse número e esse horário bastam para Bia conferir a cópia. Os nomes dos hóspedes ficam aqui.
+
+#### Conferir o horário do arquivo com Bia
 
 **Local** · Teatro do Espelho
 
-1. Celina abre a sala de ensaio vazia. Bia entrega a chave e fica ao lado de Kairo enquanto a data do arquivo é conferida.
-2. O anexo fica pronto para leitura com Vex. A cópia de circulação ainda omite os nomes de quem estava sendo protegido.
+1. Celina abre a sala neutra do Teatro. Bia confronta o hash do horário com o canhoto de Cris.
+2. Bia — O horário do anexo bate com a reserva. Eu assino como testemunha. Agora Vex pode abrir o original sem expor os hóspedes.
+
+#### Apresentar a conferência testemunhada a Vex
+
+**Local** · Hotel Espelho
+
+1. Vex lê a conferência assinada por Bia e libera o original. O aviso de baixa já estava pronto antes de Kairo perder o sinal.
+2. Vex — A assinatura de Archon está aqui, na ordem de recolher sua cópia. A Auditora pode te ajudar a revisar o que ainda falta antes de subir a Torre.
+
+**Prova registrada** — O canhoto, a confirmação testemunhada e a ordem original mostram que a baixa precedeu a emboscada. Archon assinou o recolhimento.
 
 #### Ler a ordem original com Vex
 
@@ -404,6 +455,12 @@ Escolhas exibidas
 3. Kairo guarda o protocolo e segue para a Torre. A equipe já tem reserva e canal de confirmação.
 
 **Prova registrada** — O protocolo de Nalva preserva o histórico original do endereço e permite contestar a baixa com os documentos reunidos.
+
+#### Confirmar preparação para a Torre
+
+**Local** · Torre Vértice
+
+1. Archon exige um duelo obrigatório. Antes de subir, revise seu baralho de 20 cartas e confira se tem energia para o confronto.
 
 #### Confrontar Archon com os documentos
 
@@ -467,9 +524,7 @@ Escolhas exibidas
 
 ### Dossiês e pistas clássicas
 
-Com a investigação ativa, o dossiê usa uma fala única de Kairo. A campanha original usa as falas individuais abaixo.
-
-> O diário registra o que trouxe até aqui. Disputar este duelo libera o próximo passo da investigação.
+Os dossiês usam estas falas na campanha original. A investigação ativa mostra seu próprio contexto no dossiê.
 
 #### KIRA
 

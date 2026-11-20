@@ -469,7 +469,18 @@
   CARD_DB.exploit_13.keywords = ['SCAN'];
   CARD_DB.exploit_14.keywords = ['RECYCLE'];
 
-  for (const id of ['unit_28', 'unit_29', 'unit_30', 'exploit_12', 'exploit_13', 'exploit_14']) {
+  addExploit('exploit_15', 'Rastreador de Lote', 'Investigação', 1, 'ally_unit',
+    'Escolha uma unidade aliada de Sombra ou Neutra. Compre 1 carta e conceda +1 ATK à unidade.',
+    [{ type: 'draw', value: 1 }, { type: 'atk', target: 'selected', value: 1 }]);
+  CARD_DB.exploit_15.targetAffinities = ['sombra', null];
+  addExploit('exploit_16', 'Filtro de Isolamento', 'Proteção', 2, 'ally_unit',
+    'Restaure até 3 DEF da unidade aliada e conceda +1 DEF permanente.',
+    [{ type: 'repair', target: 'selected', value: 3 }, { type: 'def', target: 'selected', value: 1 }]);
+  addUnit('unit_31', 'Auditora de Rede', 'Suporte tático', 2, 4, 'malha', [],
+    'Ao entrar, reduz em 1 o ATK da unidade inimiga com maior ATK. Empates favorecem a primeira posição.',
+    [{ type: 'atk', target: 'strongestEnemy', value: -1 }]);
+
+  for (const id of ['unit_28', 'unit_29', 'unit_30', 'exploit_12', 'exploit_13', 'exploit_14', 'exploit_15', 'exploit_16', 'unit_31']) {
     CARD_DB[id].proceduralOnly = true;
   }
 
