@@ -33,7 +33,7 @@
           <span id="turn-badge" class="turn-counter tabular">T1</span>
         </div>
         <div class="top-controls">
-          <button id="btn-png-modal" class="hud-btn chamfer-sm" type="button">ARQUIVOS PNG</button>
+          <button id="btn-png-modal" class="hud-btn chamfer-sm" type="button">ARTES</button>
           <button id="btn-sound" class="hud-btn chamfer-sm muted-sound" type="button">SOM: OFF</button>
         </div>
       </header>
@@ -263,7 +263,7 @@
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
           <div>
             <div class="title-sub" style="color:var(--cyan)">ASSETS LOCAIS (CAMINHO RELATIVO)</div>
-            <div style="font-family:var(--font-mono);font-size:15px;font-weight:900;">ARQUIVOS PNG ESPERADOS</div>
+            <div style="font-family:var(--font-mono);font-size:15px;font-weight:900;">ARQUIVOS DE ARTE</div>
           </div>
           <button id="btn-png-close" class="hud-btn chamfer-sm" type="button">FECHAR</button>
         </div>
@@ -360,14 +360,14 @@
 
         <div class="deck-footer-bar">
           <div id="deck-footer-hint" class="deck-footer-hint">
-            Toque em qualquer carta desbloqueada para inspecionar a arte e editar o baralho.
+            Toque em uma carta para ver a arte e os detalhes.
           </div>
         </div>
       </div>
     </div>
 
     <!-- Modal 8: Inspetor de Carta em Tela Cheia (Alta Visibilidade da Arte) -->
-    <div id="card-inspector-modal" class="full-modal">
+    <div id="card-inspector-modal" class="full-modal" role="dialog" aria-modal="true" aria-labelledby="insp-name">
       <div id="inspector-panel" class="inspector-panel chamfer-md">
         <div class="inspector-topbar">
           <div class="inspector-nav-group">
@@ -385,6 +385,8 @@
         </div>
 
         <div id="insp-art-stage" class="inspector-art-stage chamfer-sm"></div>
+
+        <p id="insp-unlock-note" class="inspector-unlock-note" hidden></p>
 
         <div id="insp-lore" class="inspector-lore"></div>
 

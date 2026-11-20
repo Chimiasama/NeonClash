@@ -694,7 +694,7 @@
           <div class="png-path">${item.path}</div>
           <span class="png-card-label">${item.label}</span>
         </div>
-        <span class="png-status ${st}">${st === 'loaded' ? 'PNG LOCAL' : 'CANVAS'}</span>
+        <span class="png-status ${st}">${st === 'loaded' ? 'ARTE LOCAL' : 'CANVAS'}</span>
       `;
       list.appendChild(row);
     });

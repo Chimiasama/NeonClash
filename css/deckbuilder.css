@@ -307,11 +307,7 @@
   color: #FF7DA8;
   line-height: 1.2;
 }
-.locked-cipher-code {
-  font-family: var(--font-mono);
-  font-size: 7px;
-  color: rgba(132, 160, 220, 0.65);
-}
+
 
 .deck-footer-bar {
   display: grid;
@@ -332,10 +328,10 @@
 }
 
 /* =========================================================================
-   INSPETOR DE CARTA EM TELA CHEIA (ALTA VISIBILIDADE DA ARTE PNG)
+   INSPETOR DE CARTA
 ========================================================================= */
 #card-inspector-modal {
-  z-index: 48;
+  z-index: 51;
   padding: 10px;
   background: rgba(4, 6, 12, 0.94);
   backdrop-filter: blur(6px);
@@ -344,7 +340,7 @@
 .inspector-panel {
   width: 100%;
   max-width: 420px;
-  max-height: 95dvh;
+  max-height: 100%;
   background: linear-gradient(180deg, #131830 0%, #090C17 100%);
   border: 2px solid var(--cyan);
   box-shadow: 0 0 38px rgba(0, 240, 255, 0.3);
@@ -353,6 +349,7 @@
   flex-direction: column;
   gap: 9px;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .inspector-panel.exploit-theme {
   border-color: var(--amber);
@@ -381,6 +378,8 @@
   padding: 5px 9px;
   cursor: pointer;
 }
+.inspector-topbar button { min-width: 44px; min-height: 44px; }
+.inspector-nav-btn:disabled { opacity: .45; cursor: default; }
 .inspector-nav-btn:active { transform: scale(0.95); }
 
 .inspector-title-row {
@@ -407,12 +406,12 @@
   color: var(--amber);
 }
 
-/* Vitrine de Arte Grande — 100% desobstruída para admirar PNGs de IA */
+
 .inspector-art-stage {
   position: relative;
   width: 100%;
-  aspect-ratio: 1 / 0.96;
-  max-height: 44dvh;
+  aspect-ratio: 1;
+  max-height: 54dvh;
   background: #050710;
   border: 2px solid rgba(0, 240, 255, 0.55);
   box-shadow: inset 0 0 28px rgba(0, 0, 0, 0.7), 0 0 22px rgba(0, 240, 255, 0.2);
@@ -428,26 +427,13 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 .inspector-art-stage .art-fallback { z-index: 1; }
 .inspector-art-stage img:not(.art-fallback) { z-index: 2; }
-.inspector-art-stage .holo-sheen {
-  z-index: 3;
-  opacity: 0.45;
-}
-.inspector-file-chip {
-  position: absolute;
-  bottom: 6px;
-  right: 6px;
-  z-index: 4;
-  font-family: var(--font-mono);
-  font-size: 8.5px;
-  color: rgba(232, 244, 255, 0.78);
-  background: rgba(6, 8, 16, 0.78);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  padding: 2px 6px;
-}
+
+.inspector-unlock-note { color: var(--amber); font-size: 13px; }
+.inspector-deck-controls[hidden] { display: none; }
 
 .inspector-lore {
   font-style: italic;

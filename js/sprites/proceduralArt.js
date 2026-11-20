@@ -775,7 +775,6 @@
 
   function initAssets() {
     NB.Cards.ASSET_LIST.forEach(item => {
-      generateProceduralArt(item.id);
       assetStatus[item.id] = 'loading';
       const probe = new Image();
       probe.onload = function () {
@@ -791,33 +790,40 @@
   }
 
   function createArtMarkup(id, imgPath, altText, fallbackId = NB.Cards.CARD_DB[id]?.fallbackArt || id) {
-    const fallbackUrl = generateProceduralArt(fallbackId);
     const wrap = document.createDocumentFragment();
+    const status = assetStatus[id];
+    function fallbackImage(alt) {
+      const img = document.createElement('img');
+      img.className = 'art-fallback';
+      img.src = generateProceduralArt(fallbackId);
+      img.alt = alt;
+      return img;
+    }
 
-    const fb = document.createElement('img');
-    fb.className = 'art-fallback';
-    fb.src = fallbackUrl;
-    fb.alt = altText;
-    wrap.appendChild(fb);
+    if (status === 'fallback') {
+      wrap.appendChild(fallbackImage(altText));
+    } else {
+      const fallback = status === 'loaded' ? null : fallbackImage('');
+      if (fallback) wrap.appendChild(fallback);
 
-    if (assetStatus[id] !== 'fallback') {
-      const realImg = document.createElement('img');
-      realImg.src = imgPath;
-      realImg.alt = altText;
-      realImg.onload = function () {
-        if (realImg.naturalWidth > 0) {
-          assetStatus[id] = 'loaded';
-        } else {
-          realImg.style.display = 'none';
-          assetStatus[id] = 'fallback';
-        }
+      const real = document.createElement('img');
+      real.alt = altText;
+      real.onload = () => {
+        assetStatus[id] = 'loaded';
+        fallback?.remove();
       };
-      realImg.onerror = function () {
-        realImg.style.display = 'none';
+      real.onerror = () => {
         assetStatus[id] = 'fallback';
-        if (NB.UI && NB.UI.refreshPngModalIfOpen) NB.UI.refreshPngModalIfOpen();
+        if (fallback) {
+          fallback.alt = altText;
+          real.remove();
+        } else {
+          real.replaceWith(fallbackImage(altText));
+        }
+        NB.UI?.refreshPngModalIfOpen();
       };
-      wrap.appendChild(realImg);
+      real.src = imgPath;
+      wrap.appendChild(real);
     }
     return wrap;
   }

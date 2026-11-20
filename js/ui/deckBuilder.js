@@ -5,6 +5,7 @@
   let draftDeck = [];
   let currentFilter = 'all';
   let inspectedCardId = null;
+  let inspectorOriginId = null;
   let returnTarget = 'title';
 
   function getAllCardDefs() {
@@ -27,10 +28,11 @@
     const nodes = NB.Campaign ? NB.Campaign.NODES : [];
     for (const node of nodes) {
       if (Array.isArray(node.rewardCards) && node.rewardCards.includes(cardId)) {
-        return `Derrote ${node.name} (${node.nodeCode}) para descriptografar`;
+        return `Derrote ${node.name} (${node.nodeCode}) para desbloquear esta carta.`;
       }
     }
-    return 'Avance na campanha para descriptografar';
+    if (NB.CityData.stock.some(item => item.id === cardId)) return 'Disponível na Feira do Viaduto.';
+    return 'Avance na campanha para desbloquear esta carta.';
   }
 
   function getDeckBreakdown() {
@@ -73,7 +75,7 @@
 
     const hintEl = document.getElementById('deck-footer-hint');
     if (isValid) {
-      hintEl.innerHTML = 'Baralho ativo <strong>pronto para Campanha e Duelo Rápido</strong> (máx. 2 cópias/carta).';
+      hintEl.textContent = 'Toque em uma carta para ver a arte e os detalhes.';
     } else {
       hintEl.innerHTML = `Adicione mais <strong style="color:var(--amber)">${max - total} carta(s)</strong> ou toque em <strong>AUTO-COMPLETAR</strong> para salvar.`;
     }
@@ -90,20 +92,21 @@
     });
   }
 
-  function renderGrid() {
-    const grid = document.getElementById('collection-grid');
-    grid.innerHTML = '';
-
-    const unlockedSet = getUnlockedSet();
-    const allCards = getAllCardDefs();
-
-    const filtered = allCards.filter(card => {
+  function getFilteredCards() {
+    return getAllCardDefs().filter(card => {
       if (currentFilter === 'unit') return card.kind === 'unit';
       if (currentFilter === 'exploit') return card.kind === 'exploit';
       if (currentFilter === 'indeck') return countCopies(card.id) > 0;
       return true;
     });
+  }
 
+  function renderGrid() {
+    const grid = document.getElementById('collection-grid');
+    grid.innerHTML = '';
+
+    const unlockedSet = getUnlockedSet();
+    const filtered = getFilteredCards();
     if (filtered.length === 0) {
       const empty = document.createElement('div');
       empty.style.gridColumn = '1 / -1';
@@ -120,6 +123,9 @@
 
       const tile = document.createElement('button');
       tile.type = 'button';
+      tile.dataset.cardId = card.id;
+      tile.setAttribute('aria-haspopup', 'dialog');
+      tile.setAttribute('aria-label', card.name + (isUnlocked ? '' : ' · bloqueada'));
       tile.className = 'col-card chamfer-sm' +
         (card.kind === 'exploit' ? ' type-exploit' : '') +
         (!isUnlocked ? ' locked' : '') +
@@ -161,8 +167,8 @@
         cipher.className = 'locked-cipher-overlay';
         cipher.innerHTML = `
           <span class="locked-cipher-icon">🔒</span>
-          <span class="locked-cipher-label">DADOS BLOQUEADOS</span>
-          <span class="locked-cipher-code">ENC::${card.id.toUpperCase()}</span>
+          <span class="locked-cipher-label">BLOQUEADA</span>
+
         `;
         artBox.appendChild(cipher);
       }
@@ -179,8 +185,8 @@
         `;
       } else {
         foot.innerHTML = `
-          <div class="col-card-name" style="color:var(--text-muted)">[CRIPTOGRAFADO]</div>
-          <div class="col-card-meta tabular"><span style="color:var(--magenta)">BLOQUEADO</span><span>??/??</span></div>
+          <div class="col-card-name" style="color:var(--text-muted)">${card.name}</div>
+          <div class="col-card-meta tabular"><span style="color:var(--magenta)">BLOQUEADA</span></div>
         `;
       }
 
@@ -188,12 +194,6 @@
       tile.appendChild(foot);
 
       tile.addEventListener('click', () => {
-        if (!isUnlocked) {
-          NB.Audio.playSelect();
-          NB.Physics.vibrateCard();
-          NB.Physics.showToast(getUnlockSourceText(card.id).toUpperCase(), 'var(--magenta)');
-          return;
-        }
         NB.Audio.playSelect();
         NB.Physics.vibrateCard();
         openInspector(card.id);
@@ -212,28 +212,37 @@
 
   /* Inspetor em Tela Cheia */
   function openInspector(cardId) {
-    if (!getUnlockedSet().has(cardId)) return;
+    if (!NB.Cards.CARD_DB[cardId]) return;
+    inspectorOriginId = cardId;
     inspectedCardId = cardId;
     renderInspector();
+    document.getElementById('deck-modal').inert = true;
     document.getElementById('card-inspector-modal').classList.add('open');
+    document.getElementById('inspector-panel').scrollTop = 0;
+    document.getElementById('btn-insp-close').focus();
   }
 
   function closeInspector() {
+    if (!inspectedCardId) return;
     inspectedCardId = null;
     document.getElementById('card-inspector-modal').classList.remove('open');
+    document.getElementById('deck-modal').inert = false;
+    const origin = document.querySelector(`[data-card-id="${inspectorOriginId}"]`);
+    (origin || document.querySelector('.deck-filter-btn.active'))?.focus();
+    inspectorOriginId = null;
   }
 
   function stepInspector(delta) {
     if (!inspectedCardId) return;
-    const unlockedIds = getAllCardDefs()
-      .filter(c => getUnlockedSet().has(c.id))
-      .map(c => c.id);
-    if (unlockedIds.length <= 1) return;
-    const idx = unlockedIds.indexOf(inspectedCardId);
-    const nextIdx = (idx + delta + unlockedIds.length) % unlockedIds.length;
-    inspectedCardId = unlockedIds[nextIdx];
+    const cards = getFilteredCards();
+    if (!cards.length) return;
+    const current = cards.findIndex(card => card.id === inspectedCardId);
+    const next = current < 0 ? (delta > 0 ? 0 : cards.length - 1)
+      : (current + delta + cards.length) % cards.length;
+    inspectedCardId = cards[next].id;
     NB.Audio.playSelect();
     renderInspector();
+    document.getElementById('inspector-panel').scrollTop = 0;
   }
 
   function renderInspector() {
@@ -250,13 +259,14 @@
     const artStage = document.getElementById('insp-art-stage');
     artStage.innerHTML = '';
     artStage.appendChild(NB.Sprites.createArtMarkup(card.id, card.img, card.name));
-    const sheen = document.createElement('div');
-    sheen.className = 'holo-sheen';
-    artStage.appendChild(sheen);
-    const fileChip = document.createElement('span');
-    fileChip.className = 'inspector-file-chip';
-    fileChip.textContent = card.img;
-    artStage.appendChild(fileChip);
+    const isUnlocked = getUnlockedSet().has(card.id);
+    const unlockNote = document.getElementById('insp-unlock-note');
+    unlockNote.hidden = isUnlocked;
+    unlockNote.textContent = isUnlocked ? '' : getUnlockSourceText(card.id);
+    document.querySelector('.inspector-deck-controls').hidden = !isUnlocked;
+    const canStep = getFilteredCards().some(item => item.id !== card.id);
+    document.getElementById('btn-insp-prev').disabled = !canStep;
+    document.getElementById('btn-insp-next').disabled = !canStep;
 
     document.getElementById('insp-lore').textContent = `"${card.lore || card.subtitle}"`;
 
@@ -425,6 +435,13 @@
     });
     document.getElementById('btn-insp-remove').addEventListener('click', () => {
       if (inspectedCardId) removeCard(inspectedCardId);
+    });
+    document.getElementById('card-inspector-modal').addEventListener('keydown', event => {
+      if (event.key === 'Escape') closeInspector();
+      else if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+        event.preventDefault();
+        stepInspector(event.key === 'ArrowLeft' ? -1 : 1);
+      }
     });
     document.getElementById('card-inspector-modal').addEventListener('click', (e) => {
       if (e.target.id === 'card-inspector-modal') closeInspector();

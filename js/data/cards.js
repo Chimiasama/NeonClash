@@ -56,7 +56,7 @@
       ramGain: 2,
       keywords: [],
       copies: 1,
-      img: './cards/unit_01.png',
+      img: './cards/unit_01.webp',
       accent: '#00F0FF',
       lore: 'Forjado nas oficinas clandestinas do Setor 9, seu chassi de carbono guarda o código de honra dos antigos runners.',
       desc: 'Unidade tática equilibrada de linha de frente. Gera +2 RAM ao entrar em campo.'
@@ -71,7 +71,7 @@
       ramGain: 3,
       keywords: [],
       copies: 1,
-      img: './cards/unit_02.png',
+      img: './cards/unit_02.webp',
       accent: '#39FF14',
       ability: 'EXTRA_RAM',
       lore: 'Rasteja pelos dutos de fibra ótica desviando energia residual direto para o deck de Kairo.',
@@ -87,7 +87,7 @@
       ramGain: 2,
       keywords: ['FIREWALL'],
       copies: 1,
-      img: './cards/unit_03.png',
+      img: './cards/unit_03.webp',
       accent: '#38BDF8',
       lore: 'Um protocolo militar roubado que projeta escudos hexagonais impenetráveis no ciberespaço.',
       desc: '[FIREWALL] Muralha blindada de 7 DEF que obriga o inimigo a enfrentá-la antes de atingir seu HP. Gera +2 RAM.'
@@ -102,7 +102,7 @@
       ramGain: 2,
       keywords: ['ZERO_DAY'],
       copies: 1,
-      img: './cards/unit_04.png',
+      img: './cards/unit_04.webp',
       accent: '#00F0FF',
       lore: 'Atravessa barreiras de autenticação em milissegundos, deixando apenas um rastro de estática ciano.',
       desc: '[ZERO-DAY] Ignora o BOOTING e ataca no mesmo turno em que entra em campo. Gera +2 RAM.'
@@ -117,7 +117,7 @@
       ramGain: 2,
       keywords: [],
       copies: 1,
-      img: './cards/unit_05.png',
+      img: './cards/unit_05.webp',
       accent: '#FFB800',
       lore: 'Protótipo aéreo de combate urbano equipado com lâminas térmicas de alta voltagem.',
       desc: 'Alto poder de fogo (5 ATK), excelente parceira para ataques combinados de Overclock. Gera +2 RAM.'
@@ -132,7 +132,7 @@
       ramGain: 2,
       keywords: ['ZERO_DAY'],
       copies: 1,
-      img: './cards/unit_06.png',
+      img: './cards/unit_06.webp',
       accent: '#FF0055',
       lore: 'Cão caçador sintético solto nos becos da sub-rede para farejar assinaturas neurais vulneráveis.',
       desc: '[ZERO-DAY] Predador de ataque instantâneo com 4 ATK no turno de entrada. Gera +2 RAM.'
@@ -147,7 +147,7 @@
       ramGain: 2,
       keywords: [],
       copies: 1,
-      img: './cards/unit_07.png',
+      img: './cards/unit_07.webp',
       accent: '#F59E0B',
       lore: 'Ex-operador de demolição da Vértice reconstruído com blindagem pesada de titânio cromado.',
       desc: 'Colosso ciborgue 6/6 capaz de esmagar defensores pesados ou liderar um Overclock devastador. Gera +2 RAM.'
@@ -162,7 +162,7 @@
       ramGain: 2,
       keywords: ['DRENO'],
       copies: 1,
-      img: './cards/unit_08.png',
+      img: './cards/unit_08.webp',
       accent: '#C084FC',
       ability: 'PING_1',
       lore: 'Uma IA fantasma nascida de servidores mortos que se alimenta da memória ativa de hackers descuidados.',
@@ -178,7 +178,7 @@
       ramGain: 2,
       keywords: ['VIRUS'],
       copies: 1,
-      img: './cards/unit_09.png',
+      img: './cards/unit_09.webp',
       accent: '#39FF14',
       lore: 'Suas foices serrilhadas injetam código polimórfico que corrói os servomotores do alvo a cada corte.',
       desc: '[VÍRUS] Ao causar dano em uma unidade inimiga, reduz permanentemente o ATK dela em -2. Gera +2 RAM.'
@@ -193,7 +193,7 @@
       ramGain: 2,
       keywords: ['FIREWALL'],
       copies: 1,
-      img: './cards/unit_10.png',
+      img: './cards/unit_10.webp',
       accent: '#0EA5E9',
       lore: 'Monólito de criptografia quântica projetado para segurar invasões inteiras no perímetro corporativo.',
       desc: '[FIREWALL] Protege sua integridade obrigando o oponente a atacar ou bloquear esta unidade primeiro. Gera +2 RAM.'
@@ -208,7 +208,7 @@
       ramGain: 2,
       keywords: ['DRENO'],
       copies: 1,
-      img: './cards/unit_11.png',
+      img: './cards/unit_11.webp',
       accent: '#E879F9',
       lore: 'Serpente cibernética que crava presas de fibra ótica nos terminais rivais para sugar ciclos de RAM.',
       desc: '[DRENO] Ao atingir o HP do hacker inimigo diretamente, rouba 1 de RAM dele para você. Gera +2 RAM.'
@@ -223,7 +223,7 @@
       ramGain: 2,
       keywords: ['FIREWALL', 'VIRUS'],
       copies: 1,
-      img: './cards/unit_12.png',
+      img: './cards/unit_12.webp',
       accent: '#84CC16',
       lore: 'Um nó de contenção contaminado que devolve enxames de nanovírus a qualquer atacante que o toque.',
       desc: '[FIREWALL] [VÍRUS] Força combates diretos e reduz permanentemente em -2 o ATK das unidades que ferir. Gera +2 RAM.'
@@ -238,7 +238,7 @@
       ramGain: 2,
       keywords: ['ZERO_DAY', 'DRENO'],
       copies: 1,
-      img: './cards/unit_13.png',
+      img: './cards/unit_13.webp',
       accent: '#22D3EE',
       lore: 'Mercenário veloz da sub-rede cuja katana de plasma corta firewalls e drena créditos num só golpe.',
       desc: '[ZERO-DAY] [DRENO] Ataca no turno em que entra e rouba 1 RAM ao causar dano direto ao HP inimigo. Gera +2 RAM.'
@@ -253,7 +253,7 @@
       ramGain: 2,
       keywords: ['VIRUS'],
       copies: 1,
-      img: './cards/unit_14.png',
+      img: './cards/unit_14.webp',
       accent: '#A3E635',
       lore: 'Um programa-besta banido da Deep Net que devora bancos de dados inteiros e infecta o que sobrevive.',
       desc: '[VÍRUS] Besta digital 5/5 que corrói permanentemente -2 ATK de qualquer unidade inimiga atingida. Gera +2 RAM.'
@@ -266,7 +266,7 @@
       cost: 2,
       keywords: [],
       copies: 1,
-      img: './cards/exploit_01.png',
+      img: './cards/exploit_01.webp',
       accent: '#FFB800',
       targetType: 'ally_unit',
       lore: 'Destrava os limitadores térmicos de uma unidade aliada para extrair potência brutal acima do limite.',
@@ -280,7 +280,7 @@
       cost: 2,
       keywords: [],
       copies: 1,
-      img: './cards/exploit_02.png',
+      img: './cards/exploit_02.webp',
       accent: '#FF0055',
       targetType: 'none',
       lore: 'Descarga elétrica ilegal disparada direto pela interface neural do oponente, ignorando defesas físicas.',
@@ -294,7 +294,7 @@
       cost: 4,
       keywords: [],
       copies: 1,
-      img: './cards/exploit_03.png',
+      img: './cards/exploit_03.webp',
       accent: '#FF0055',
       targetType: 'enemy_unit',
       lore: 'Chave-mestra de desligamento remoto criada pela Diretoria Negra para apagar agentes traidores em um clique.',
@@ -308,7 +308,7 @@
       cost: 3,
       keywords: [],
       copies: 1,
-      img: './cards/exploit_04.png',
+      img: './cards/exploit_04.webp',
       accent: '#39FF14',
       targetType: 'none',
       lore: 'Pacote de emergência do mercado negro que sela vazamentos neurais e reforça a blindagem da equipe.',
@@ -322,7 +322,7 @@
       cost: 3,
       keywords: ['VIRUS'],
       copies: 1,
-      img: './cards/exploit_05.png',
+      img: './cards/exploit_05.webp',
       accent: '#FFB800',
       targetType: 'none',
       lore: 'Detona uma onda eletromagnética suja que frita circuitos hostis e paralisa armamentos em massa.',
@@ -336,7 +336,7 @@
       cost: 2,
       keywords: ['DRENO'],
       copies: 1,
-      img: './cards/exploit_06.png',
+      img: './cards/exploit_06.webp',
       accent: '#E879F9',
       targetType: 'none',
       lore: 'Injeta um túnel fantasma no barramento do alvo para roubar RAM e extrair pacotes secretos.',
@@ -383,7 +383,7 @@
   const AVATAR_ASSET = AVATAR_ASSETS.vex;
 
   const ASSET_LIST = [
-    ...Object.values(CARD_DB).filter(c => !c.fallbackArt).map(c => ({
+    ...Object.values(CARD_DB).map(c => ({
       id: c.id,
       label: c.name + ' (' + (c.kind === 'unit' ? 'Unidade' : 'Exploit') + ')',
       path: c.img

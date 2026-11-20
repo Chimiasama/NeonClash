@@ -1,26 +1,31 @@
-Coloque aqui as artes PNG das 20 cartas do NEON BREACH: CLASH.
+Ilustrações das cartas de NEON BREACH: CLASH.
 No Android Studio, copie esta pasta para: app/src/main/assets/cards/
 
 Unidades (14):
-- unit_01.png (Kuroi-01)
-- unit_02.png (Spidey-Drone)
-- unit_03.png (Aegis-Wall · FIREWALL)
-- unit_04.png (Ghost-Runner · ZERO-DAY)
-- unit_05.png (Valkyrie-X)
-- unit_06.png (Neon-Hound · ZERO-DAY)
-- unit_07.png (Chrome-Brute)
-- unit_08.png (Data-Wraith · DRENO)
-- unit_09.png (Trojan-Mantis · VÍRUS)
-- unit_10.png (Bastion-Core · FIREWALL)
-- unit_11.png (Siphon-Viper · DRENO)
-- unit_12.png (Plague-Node · FIREWALL + VÍRUS)
-- unit_13.png (Flash-Ronin · ZERO-DAY + DRENO)
-- unit_14.png (Malware-Rex · VÍRUS)
+- unit_01.webp (Kuroi-01)
+- unit_02.webp (Spidey-Drone)
+- unit_03.webp (Aegis-Wall · FIREWALL)
+- unit_04.webp (Ghost-Runner · ZERO-DAY)
+- unit_05.webp (Valkyrie-X)
+- unit_06.webp (Neon-Hound · ZERO-DAY)
+- unit_07.webp (Chrome-Brute)
+- unit_08.webp (Data-Wraith · DRENO)
+- unit_09.webp (Trojan-Mantis · VÍRUS)
+- unit_10.webp (Bastion-Core · FIREWALL)
+- unit_11.webp (Siphon-Viper · DRENO)
+- unit_12.webp (Plague-Node · FIREWALL + VÍRUS)
+- unit_13.webp (Flash-Ronin · ZERO-DAY + DRENO)
+- unit_14.webp (Malware-Rex · VÍRUS)
 
 Exploits (6):
-- exploit_01.png (Chip Overclock)
-- exploit_02.png (Spike Neural)
-- exploit_03.png (Kill-Switch)
-- exploit_04.png (Patch v9)
-- exploit_05.png (Bomba EMP)
-- exploit_06.png (Sifão de Memória)
+- exploit_01.webp (Chip Overclock)
+- exploit_02.webp (Spike Neural)
+- exploit_03.webp (Kill-Switch)
+- exploit_04.webp (Patch v9)
+- exploit_05.webp (Bomba EMP)
+- exploit_06.webp (Sifão de Memória)
+
+Feira do Viaduto:
+- drone-viaduto.webp
+- moto-fantasma.webp
+- guarda-feira.webp

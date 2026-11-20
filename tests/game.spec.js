@@ -157,3 +157,36 @@ test('plays distinct music themes and keeps the player’s mute preference', asy
   await page.getByRole('button', { name: 'Entrar na cidade' }).click();
   expect(await page.evaluate(() => NB.Audio.enabled)).toBe(false);
 });
+
+test('opens and navigates the enlarged card inspector above the deck', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 600 });
+  await page.goto('/');
+  await page.getByRole('button', { name: /Meu Deck/i }).click();
+  const card = page.getByRole('button', { name: 'Kuroi-01', exact: true });
+  await card.click();
+
+  const inspector = page.getByRole('dialog', { name: 'KUROI-01' });
+  await expect(inspector).toBeVisible();
+  await expect(inspector.locator('#insp-stats')).toContainText('ATK');
+  const art = inspector.getByRole('img', { name: 'Kuroi-01' });
+  await expect(art).toHaveAttribute('src', './cards/unit_01.webp');
+  await expect.poll(() => art.evaluate(image => image.naturalWidth)).toBeGreaterThan(400);
+
+  await inspector.getByRole('button', { name: 'Carta seguinte' }).click();
+  await expect(page.getByRole('dialog', { name: 'SPIDEY-DRONE' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(card).toBeFocused();
+});
+
+test('previews locked cards without making them available to edit', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: /Meu Deck/i }).click();
+  await page.getByRole('button', { name: 'Bastion-Core · bloqueada' }).click();
+  const inspector = page.getByRole('dialog', { name: 'BASTION-CORE' });
+  await expect(inspector).toBeVisible();
+  await expect(inspector).toContainText(/Derrote CIPHER/);
+  await expect(inspector.locator('.inspector-deck-controls')).toBeHidden();
+  await inspector.getByRole('button', { name: 'Fechar' }).click();
+  await expect(page.getByRole('button', { name: 'Bastion-Core · bloqueada' })).toBeFocused();
+});
