@@ -335,15 +335,29 @@
       label.textContent = district.short;
       pin.append(icon, label);
     }
-    $('city-journal').addEventListener('click', () => {
-      const district = districtAtPosition();
-      view = view === 'journal' ? 'district' : 'journal';
-      NB.Audio.setScene(view === 'journal' ? 'city' : district.music || district.id);
-      cancelJob();
-      announce('');
-      render();
-    });
+    $('city-journal').addEventListener('click', toggleJournal);
   }
 
-  NB.City = { open, resetView, bindEvents, finishArena, access, cancelJob };
+  function toggleJournal() {
+    const district = districtAtPosition();
+    view = view === 'journal' ? 'district' : 'journal';
+    NB.Audio.setScene(view === 'journal' ? 'city' : district.music || district.id);
+    cancelJob();
+    announce('');
+    render();
+  }
+
+  function handleBack() {
+    if (view === 'journal') {
+      toggleJournal();
+      $('city-journal').focus();
+      return true;
+    }
+    if (!job) return false;
+    resetView();
+    $('city-content').querySelector('button')?.focus();
+    return true;
+  }
+
+  NB.City = { open, resetView, bindEvents, finishArena, access, cancelJob, handleBack };
 })(window.NB = window.NB || {});

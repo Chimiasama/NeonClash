@@ -190,3 +190,100 @@ test('previews locked cards without making them available to edit', async ({ pag
   await inspector.getByRole('button', { name: 'Fechar' }).click();
   await expect(page.getByRole('button', { name: 'Bastion-Core · bloqueada' })).toBeFocused();
 });
+
+test('Back unwinds the inspector, deck, city overlays and dossier one at a time', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 450 });
+  await page.goto('/');
+  const back = () => page.evaluate(() => NB.Input.handleBack());
+
+  expect(await back()).toBe(false);
+  await page.locator('#btn-title-deck').click();
+  await page.getByRole('button', { name: 'Kuroi-01', exact: true }).click();
+  expect(await back()).toBe(true);
+  await expect(page.locator('#card-inspector-modal')).toBeHidden();
+  await expect(page.locator('#deck-modal')).toBeVisible();
+  expect(await back()).toBe(true);
+  await expect(page.locator('#title-modal')).toBeVisible();
+
+  await page.locator('#btn-title-settings').click();
+  const reset = page.locator('#btn-reset-save');
+  await reset.click();
+  await expect(reset).toHaveAttribute('data-confirm', '1');
+  expect(await back()).toBe(true);
+  await expect(reset).toHaveAttribute('data-confirm', '0');
+  await expect(page.locator('#settings-modal')).toBeVisible();
+  expect(await back()).toBe(true);
+  await expect(page.locator('#settings-modal')).toBeHidden();
+
+  await page.getByRole('button', { name: 'Entrar na cidade' }).click();
+  expect(await back()).toBe(false);
+  await page.locator('#city-journal').click();
+  expect(await back()).toBe(true);
+  await expect(page.locator('#city-journal')).toHaveAttribute('aria-pressed', 'false');
+
+  await page.getByRole('button', { name: 'Antena Comunitária' }).click();
+  await page.getByRole('button', { name: 'Trabalho de hacker' }).click();
+  expect(await back()).toBe(true);
+  await expect(page.getByRole('button', { name: 'Trabalho de hacker' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Estação Fantasma' }).click();
+  await page.getByRole('button', { name: 'Abrir dossiê' }).click();
+  const dossier = page.getByRole('dialog', { name: 'Dossiê do Alvo' });
+  await expect(dossier.getByRole('button', { name: 'VOLTAR', exact: true })).toBeInViewport({ ratio: 1 });
+  await expect(dossier.getByRole('button', { name: 'Conectar e duelar' })).toBeInViewport({ ratio: 1 });
+  await dossier.getByRole('button', { name: 'VOLTAR', exact: true }).click();
+  await expect(dossier).toBeHidden();
+  await expect(page.getByRole('heading', { name: 'Estação Fantasma' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Abrir dossiê' }).click();
+  expect(await back()).toBe(true);
+  await expect(dossier).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Abrir dossiê' })).toBeFocused();
+  expect(await back()).toBe(false);
+});
+
+test('Back clears combat selections before allowing an exit prompt', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Duelo rápido' }).click();
+  const back = () => page.evaluate(() => NB.Input.handleBack());
+  expect(await back()).toBe(false);
+  await page.locator('.hand-card').first().click();
+  await expect(page.locator('#visor-layer')).toBeVisible();
+  expect(await back()).toBe(true);
+  await expect(page.locator('#visor-layer')).toBeHidden();
+  expect(await page.evaluate(() => NB.State.get().selectedHandUid)).toBeNull();
+
+  await page.evaluate(() => {
+    const state = NB.State.get();
+    state.phase = 'PLAYER_OVERCLOCK';
+    state.overclockUnits = [0];
+    NB.UI.renderAll();
+  });
+  expect(await back()).toBe(true);
+  expect(await page.evaluate(() => NB.State.get().phase)).toBe('PLAYER_ATTACK');
+  expect(await back()).toBe(true);
+  expect(await page.evaluate(() => NB.State.get().phase)).toBe('PLAYER_MAIN');
+
+  await page.evaluate(() => {
+    const state = NB.State.get();
+    state.phase = 'SELECT_TARGET';
+    state.pendingExploit = { targetSide: 'enemy', cardId: 'exploit_03' };
+    NB.UI.renderAll();
+  });
+  expect(await back()).toBe(true);
+  expect(await page.evaluate(() => NB.State.get().pendingExploit)).toBeNull();
+
+  await page.evaluate(() => {
+    const state = NB.State.get();
+    state.phase = 'PLAYER_DEFENSE';
+    state.activeDefenderSlot = 0;
+    state.defenseMap = { 0: 1 };
+    NB.UI.renderAll();
+  });
+  expect(await back()).toBe(true);
+  expect(await page.evaluate(() => NB.State.get().activeDefenderSlot)).toBeNull();
+  expect(await back()).toBe(true);
+  expect(await page.evaluate(() => NB.State.get().defenseMap)).toEqual({});
+  expect(await back()).toBe(false);
+  expect(await page.evaluate(() => NB.State.get().turn)).toBe(1);
+});

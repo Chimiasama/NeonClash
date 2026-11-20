@@ -202,25 +202,27 @@
     </div>
 
     <!-- Modal 3: Dossiê do Alvo -->
-    <div id="dossier-modal" class="full-modal">
-      <div class="modal-panel chamfer-md" style="border-color:var(--magenta)">
-        <div class="netmap-header">
-          <div>
-            <div id="dossier-node-code" class="title-sub" style="color:var(--amber)">NÓ 01 · 18 HP</div>
-            <div style="font-family:var(--font-mono);font-size:15px;font-weight:900;">DOSSIÊ DO ALVO</div>
-          </div>
-          <button id="btn-dossier-back" class="hud-btn chamfer-sm" type="button">VOLTAR</button>
+    <div id="dossier-modal" class="full-modal" role="dialog" aria-modal="true" aria-labelledby="dossier-heading">
+      <div class="modal-panel dossier-panel chamfer-md" style="border-color:var(--magenta)">
+        <div class="dossier-header">
+          <div id="dossier-node-code" class="title-sub" style="color:var(--amber)">NÓ 01 · 18 HP</div>
+          <h2 id="dossier-heading">DOSSIÊ DO ALVO</h2>
         </div>
-        <div class="dossier-head">
-          <div id="dossier-avatar" class="dossier-avatar chamfer-sm"></div>
-          <div style="display:flex;flex-direction:column;gap:4px;min-width:0;">
-            <div id="dossier-title" style="font-family:var(--font-mono);font-size:13px;font-weight:900;color:#fff;">KIRA // Rato de Sub-rede</div>
-            <div id="dossier-archetype" style="font-family:var(--font-mono);font-size:10.5px;color:var(--cyan);">Agressivo · [ZERO-DAY]</div>
-            <div id="dossier-reward-line" style="font-size:10.5px;color:var(--ram);line-height:1.3;">Recompensa: 2 cartas + Pista</div>
+        <div class="dossier-content">
+          <div class="dossier-head">
+            <div id="dossier-avatar" class="dossier-avatar chamfer-sm"></div>
+            <div style="display:flex;flex-direction:column;gap:4px;min-width:0;">
+              <div id="dossier-title" style="font-family:var(--font-mono);font-size:13px;font-weight:900;color:#fff;">KIRA // Rato de Sub-rede</div>
+              <div id="dossier-archetype" style="font-family:var(--font-mono);font-size:10.5px;color:var(--cyan);">Agressivo · [ZERO-DAY]</div>
+              <div id="dossier-reward-line" style="font-size:10.5px;color:var(--ram);line-height:1.3;">Recompensa: 2 cartas + Pista</div>
+            </div>
           </div>
+          <div id="dossier-dialogue" class="dossier-dialogue"></div>
         </div>
-        <div id="dossier-dialogue" class="dossier-dialogue"></div>
-        <button id="btn-dossier-duel" class="btn-launch chamfer-sm" type="button" style="background:linear-gradient(135deg,#D90048,#FF2A70);color:#fff;box-shadow:0 0 22px rgba(255,0,85,0.45)">CONECTAR E DUELAR</button>
+        <div class="dossier-actions">
+          <button id="btn-dossier-back" class="btn-secondary chamfer-sm" type="button">VOLTAR</button>
+          <button id="btn-dossier-duel" class="btn-launch chamfer-sm" type="button">CONECTAR E DUELAR</button>
+        </div>
       </div>
     </div>
 

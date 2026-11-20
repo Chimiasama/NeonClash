@@ -58,6 +58,30 @@
 .btn-quick-duel:active { transform: scale(0.98); }
 
 /* Modal Dossiê do Alvo */
+.dossier-panel { max-height: 100%; }
+.dossier-header, .dossier-actions { flex-shrink: 0; }
+#dossier-heading { font: 900 15px var(--font-mono); }
+.dossier-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.dossier-head, .dossier-dialogue { flex-shrink: 0; }
+.dossier-actions {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+}
+.dossier-actions button { min-height: 44px; }
+.dossier-actions .btn-launch {
+  padding-inline: 8px;
+  background: linear-gradient(135deg, #d90048, #ff2a70);
+  color: #fff;
+}
+
 .dossier-head {
   display: grid;
   grid-template-columns: 76px 1fr;

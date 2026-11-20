@@ -460,7 +460,8 @@
 
     document.querySelector('.city-panel').inert = true;
     document.getElementById('dossier-modal').classList.add('open');
-    launchBtn.focus();
+    document.querySelector('.dossier-content').scrollTop = 0;
+    document.getElementById('btn-dossier-back').focus();
   }
 
   /* Tela Pós-Duelo / Extração de Dados Concluída */

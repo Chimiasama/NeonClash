@@ -1,11 +1,15 @@
 package io.github.chimiasama.neonclash;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.window.OnBackInvokedCallback;
+import android.window.OnBackInvokedDispatcher;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
@@ -21,6 +25,9 @@ import androidx.webkit.WebViewAssetLoader;
 
 public final class MainActivity extends Activity {
     private WebView game;
+    private OnBackInvokedCallback backCallback;
+    private boolean backPending;
+    private AlertDialog exitDialog;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -68,6 +75,11 @@ public final class MainActivity extends Activity {
         setContentView(viewport);
         enterFullscreen();
         viewport.requestApplyInsets();
+        if (Build.VERSION.SDK_INT >= 33) {
+            backCallback = this::handleBack;
+            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+                    OnBackInvokedDispatcher.PRIORITY_DEFAULT, backCallback);
+        }
         game.loadUrl("https://" + WebViewAssetLoader.DEFAULT_DOMAIN + "/game/index.html?android=1");
     }
 
@@ -81,6 +93,29 @@ public final class MainActivity extends Activity {
         WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(getWindow(), game);
         controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
         controller.hide(WindowInsetsCompat.Type.systemBars());
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public void onBackPressed() {
+        handleBack();
+    }
+
+    private void handleBack() {
+        if (backPending || exitDialog != null || isFinishing() || isDestroyed()) return;
+        backPending = true;
+        game.evaluateJavascript("Boolean(window.NB?.Input?.handleBack?.())", handled -> {
+            backPending = false;
+            if ("true".equals(handled) || isFinishing() || isDestroyed()) return;
+            exitDialog = new AlertDialog.Builder(this)
+                    .setTitle("Fechar Neon Clash?")
+                    .setMessage("Deseja sair do jogo?")
+                    .setNegativeButton("Continuar jogando", null)
+                    .setPositiveButton("Fechar jogo", (dialog, button) -> finishAndRemoveTask())
+                    .create();
+            exitDialog.setOnDismissListener(dialog -> exitDialog = null);
+            exitDialog.show();
+        });
     }
 
     @Override
@@ -99,6 +134,10 @@ public final class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        if (Build.VERSION.SDK_INT >= 33 && backCallback != null) {
+            getOnBackInvokedDispatcher().unregisterOnBackInvokedCallback(backCallback);
+        }
+        if (exitDialog != null) exitDialog.dismiss();
         setContentView(new View(this));
         game.destroy();
         super.onDestroy();

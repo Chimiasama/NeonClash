@@ -272,6 +272,56 @@
     }
   }
 
+  // True tells the Android activity that the game handled Back.
+  function handleBack() {
+    const isOpen = id => document.getElementById(id).classList.contains('open');
+    const closeButtons = [
+      ['card-inspector-modal', 'btn-insp-close'],
+      ['png-modal', 'btn-png-close'],
+      ['settings-modal', 'btn-settings-close'],
+      ['dossier-modal', 'btn-dossier-back'],
+      ['deck-modal', 'btn-deck-close']
+    ];
+    for (const [modal, button] of closeButtons) {
+      if (isOpen(modal)) {
+        if (modal === 'settings-modal' && document.getElementById('btn-reset-save').dataset.confirm === '1') {
+          NB.UI.renderSettingsModal();
+        } else {
+          document.getElementById(button).click();
+        }
+        return true;
+      }
+    }
+
+    if (isOpen('title-modal')) return false;
+    if (isOpen('netmap-modal')) return NB.City.handleBack();
+
+    const state = NB.State.get();
+    if (isOpen('gameover-modal')) {
+      if (state.mode === 'quick') openTitleScreen();
+      else openNetMap();
+      return true;
+    }
+    if (isOpen('visor-layer')) {
+      document.getElementById('btn-visor-close').click();
+      return true;
+    }
+    if (!state) return false;
+
+    if (['PLAYER_ATTACK', 'PLAYER_OVERCLOCK', 'SELECT_TARGET'].includes(state.phase)) {
+      document.getElementById('btn-secondary-action').click();
+      return true;
+    }
+    if (state.phase === 'PLAYER_DEFENSE' &&
+        (state.activeDefenderSlot !== null || Object.keys(state.defenseMap).length > 0)) {
+      if (state.activeDefenderSlot !== null) state.activeDefenderSlot = null;
+      else state.defenseMap = {};
+      NB.UI.renderAll();
+      return true;
+    }
+    return false;
+  }
+
   function bindEvents() {
     document.querySelectorAll('.slot').forEach(slotEl => {
       slotEl.addEventListener('click', () => {
@@ -346,7 +396,10 @@
     document.getElementById('btn-visor-exec').addEventListener('click', () => attemptExecuteSelectedCard());
     const dismissVisor = () => {
       const state = NB.State.get();
-      if (state) state.selectedHandUid = null;
+      if (state) {
+        state.selectedHandUid = null;
+        state.inspectFieldCard = null;
+      }
       NB.UI.closeVisor();
       NB.UI.renderAll();
     };
@@ -505,6 +558,7 @@
 
   NB.Input = {
     bindEvents,
+    handleBack,
     openTitleScreen,
     openNetMap,
     startMatch,
