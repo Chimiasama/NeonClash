@@ -1,0 +1,171 @@
+# NeonClash — referência técnica
+
+Retrato da implementação em `0440f72`. Para acompanhar a história passo a passo, consulte o [guia da aventura](aventura-baixa-luz.md). O [plano de expansão](plano-expansao.md) documenta metas futuras.
+
+## Produto e superfícies
+
+NeonClash é um jogo solo em português que combina exploração urbana, investigação e duelos de cartas contra IA. A protagonista Kairo circula por Baixa Luz e confronta a Vértice. Os mesmos arquivos do jogo rodam no navegador e na WebView do APK Android. O jogo usa dados e recursos empacotados, com progresso local por instalação ou origem do navegador.
+
+| Superfície | Comportamento |
+| --- | --- |
+| Início | Exibe progresso, início da aventura, duelo rápido, coleção, galeria e volume/configurações. A primeira entrada na aventura apresenta três quadros do prólogo. Concluir ou pular marca a apresentação no save. |
+| Cidade | Área rolável com relógio, créditos, energia, mapa e detalhes. A barra inferior mantém Mapa, Investigação, Bairros, Mochila, Pistas, Meu Deck, Galeria, Config. e Início acessíveis. |
+| Investigação | Mostra passos disponíveis, viagens até os locais, cenas paginadas com retomada, decisões e provas já reunidas. Há destaque neon para ações relevantes. |
+| Mercado e oficina | Compra de cartas na Feira. A oficina de Lume tem vitrine ilustrada das unidades possuídas, prévia de afinidade e confirmação. |
+| Duelo | Dossiê com voltar ou iniciar, tabuleiro com três posições por lado, mão, visor de cartas, indicação de fase, previsão de defesa e tela de estatísticas/recompensas. |
+| Coleção | Busca textual sem distinção de acentos, filtros, três baralhos, autocompletar e inspetor ampliado. |
+| Galeria | Reúne cenas, retratos e cartas vistas, com visualização sem recorte e descrição. Acessível pelo início e pela cidade. |
+| Configurações | Som geral, volume independente para música e efeitos e confirmação de reset do progresso. O painel de artes do combate mostra o estado dos recursos. |
+
+## Estrutura e fluxo de execução
+
+`index.html` declara as telas, os controles, os arquivos CSS e a ordem dos scripts `defer`. Os scripts expõem módulos em `window.NB`. A entrada efetiva é `js/main.js`, que carrega o save, inicia a resolução das artes, conecta eventos, prepara o estado inicial e restaura o áudio. A entrada Android acrescenta `?android=1` para solicitar reprodução na abertura. O uso de plugins React e Tailwind na configuração do Vite convive com a interface do jogo, escrita em HTML, CSS e JavaScript imperativo.
+
+| Camada | Módulos e responsabilidades |
+| --- | --- |
+| Dados | `js/data/cards.js` contém catálogo, afinidades e palavras-chave. `campaign.js` contém oponentes, baralhos, dossiês e recompensas. `cityAtlas.js` contém bairros, locais e moradores. `city.js` complementa os locais, estoque, rastros e adversários do Ringue. `story.js` contém capítulos, cenas, condições e escolhas. `challenges.js` descreve os desafios e decks emprestados. `dialogue.js` seleciona falas de combate. `music.js` e `soundEffects.js` definem trilhas e timbres. |
+| Domínio | `js/core/saveManager.js` normaliza e salva progresso. `cityLife.js` calcula deslocamentos, relógio, descanso e inventário. `story.js` valida pré-requisitos e avança capítulos. `gameState.js` mantém partida, baralhos, mesa, recursos e resultado. `cardEffects.js` resolve efeitos declarativos e estima seu valor para a IA. `combatEngine.js` resolve choques, bloqueios e Overclock. `aiController.js` decide invocações, Exploits, ataques e bloqueios. |
+| Interface | `js/ui/inputController.js` orquestra navegação, entrada e confirmação. `renderer.js` atualiza HUD, tabuleiro, mão, visor, dossiê e resultado. `city.js` apresenta o mapa e as ações urbanas. `story.js` implementa prólogo, leitor e diário. `deckBuilder.js` implementa coleção e editor. `gallery.js` detecta e exibe artes vistas. |
+| Apresentação | `js/audio/soundEngine.js` agenda música e sintetiza efeitos. `js/physics/fxEngine.js` faz animações, partículas em canvas, feixes, retornos visuais e vibração quando suportada. `js/sprites/proceduralArt.js` resolve artes locais e pode gerar substitutas. `css/` divide base, HUD, cartas, modais, campanha, coleção e cidade. |
+| Empacotamento | `vite.config.ts` usa base relativa e copia `src/assets`, `css`, `js`, `cards`, `avatars` e `audio` para `dist`. O projeto `android/` usa `dist` como assets do aplicativo. |
+
+Os controles consultam o estado corrente antes de realizar ações. Um duelo tem um identificador de geração em memória. As esperas animadas verificam essa geração para cancelar operações pendentes quando o jogador sai ou começa outra partida. Turnos, seleção, mão, campo e descarte pertencem à partida em memória. Recompensas, gastos, avanço urbano e resultados registrados pertencem ao save.
+
+## Save, migração e preferências
+
+| Chave ou campo | Conteúdo |
+| --- | --- |
+| `localStorage.neon_breach_save_v1` | Documento JSON do progresso. O carregamento completa campos ausentes, valida IDs de cartas, ajusta limites e reconstrói decks inválidos. |
+| Coleção e decks | `unlockedCards`, `customDeck`, `deckSlot` ativo e `deckSlots` para guardar as demais configurações. Os 12 IDs iniciais são preservados. |
+| Histórico | `defeatedBosses`, `clues`, `challengeWins`, `wins`, `matches` e `city.residentWins`. As primeiras vitórias liberam os prêmios próprios. |
+| Cidade | `city.credits`, `city.district`, `city.traced` e `city.life`. Vida urbana guarda minutos absolutos, vigília, energia, implante, veículos, estoque, favores, turno do quiosque e aviso de colapso. |
+| Investigação | `prologueSeen` controla a apresentação. `story` guarda ativação, capítulo, flags de passos, escolhas, páginas lidas e cenas de evidência. |
+| Personalização | `affinities` guarda recalibrações por ID. `seenArt` guarda caminhos dos recursos já visualizados, com deduplicação. |
+| Áudio | `neon_breach_sound` guarda `on` ou `off`. `neon_breach_volume` guarda os dois valores de 0 a 100. Ambos têm padrão 70%. |
+
+Uma partida nova começa na Estação Fantasma às 08:00 do dia 1, com 35 créditos, energia 100 e baralho inicial de 20 cartas. O reset da partida geral redefine o progresso da chave de save. As preferências de áudio usam chaves próprias. A galeria começa a coletar imagens quando o recurso é usado. Saves anteriores sem registro da arte passam a incluí-la quando ela reaparece.
+
+## Cidade, tempo e economia
+
+O atlas contém 10 bairros, 23 locais e 100 registros de NPC. O mapa oferece pinos dos locais principais. **Bairros** oferece também locais do atlas. Uma viagem tem cotação e execução. Abrir a cotação não cobra nem avança o relógio. Ao escolher transporte, o motor verifica disponibilidade, cobra a tarifa, salva a posição de destino e aplica tempo e energia.
+
+A distância é `max(2, ceil(hypot(Δx, Δy) / 10))` com as coordenadas do mapa. Na tabela, `d` representa essa distância.
+
+| Transporte | Tempo | Energia | Créditos e condição |
+| --- | --- | --- | --- |
+| A pé | 7 × d min | 2 × d | Grátis. |
+| Bicicleta | 4 × d min | d | Compra por 100. Entre Oficinas e Morro, o favor de Aline reduz a distância para `max(2, ceil(d × 0,55))`. |
+| Ônibus | 3 × d + 5 min | d | 4 por viagem. |
+| Moto | 2 × d min | d | Compra por 450. |
+| Balsa | 2 × d min | d | 3 por travessia Canal–Cais. Opera das 07:00 às 18:00, com a partida às 18:00 já indisponível. Requer ajudar Maíra na Casa de Bombas. |
+
+- O dia da interface vai das 06:00 às 19:00. A vigília máxima normal é 16 h. O implante de 130 créditos aumenta o limite para 20 h e a capacidade para 120 de energia.
+- Chegar com energia zero ou atingir o limite de vigília dispara o descanso. Em casa são 8 h grátis e energia cheia. Em outro local são 5 h na rua, energia volta a 60 e há 30% de chance de perder 60% do saldo restante, arredondado para cima. A tarifa vem antes do cálculo da perda.
+- Dormir voluntariamente restaura toda a energia e zera a vigília. Casa custa 0/8 h, Pensão custa 12/7 h e Hotel Espelho custa 26/5 h. A cama precisa estar acessível no local onde Kairo está e o saldo precisa cobrir o preço.
+- A mochila comporta 12 consumíveis no total. Café custa 4 e dá +15, energético custa 9 e dá +28, estímulo sintético custa 16 e dá +45. O consumo respeita o teto de energia e não reinicia a vigília.
+- Na Antena, o trabalho usa seis símbolos, 3,5 s de memorização e 12 s de entrada. Um erro reinicia a sequência e tira 2 s do prazo. A conclusão rende 20 créditos. Trabalho concluído ou expirado custa 45 min e 8 de energia. No fluxo original, rastrear pista usa quatro símbolos visíveis, sem cronômetro, e avança os mesmos 45 min e 8 de energia quando concluído.
+- O turno noturno do Quiosque funciona das 19:00 à 01:00, com um pagamento por janela. Rende 14 créditos e custa 60 min e 12 de energia. Ajudar Maíra rende 16 créditos e custa 30 min e 5 de energia.
+- Cada morador listado permite conversar. Repetir a conversa na mesma sessão muda a resposta quando aplicável. Damião tem 10 HP e paga 5 por vitória. Tuca tem 14 HP e paga 7, com carta na primeira vitória. Dora tem 22 HP, usa Overclock e paga 12, com carta na primeira vitória. O estoque da Feira e essas vitórias oferecem rotas que podem coincidir.
+- A Feira vende `unit_21` por 45, `unit_22` por 65, `unit_23` por 85 e `exploit_07` por 30. A oficina muda a afinidade por 15 créditos e restaura a original gratuitamente. Suas mudanças são de afinidade e convivem com ATK e DEF base.
+
+## Combate, cartas e progressão
+
+O catálogo atual tem **32 cartas**, sendo 21 unidades e 11 Exploits. Cada deck do jogador tem 20 cartas e aceita até duas cópias de cada ID. Há 12 cartas inicialmente disponíveis. A coleção usa ID estável, metadados de arte, descrição e atributos. Cartas novas entram pelo catálogo em `cards.js` e pela respectiva rota de aquisição. IDs têm lacunas históricas e o sufixo maior não representa a contagem.
+
+1. Cada lado começa com 0 RAM. Kairo tem 20 HP. A partida distribui quatro cartas iniciais por lado. A mão comporta seis cartas, com descarte quando uma compra excede esse limite. Quando o deck fica vazio, o descarte é embaralhado para continuar comprando.
+2. Em seu turno, Kairo pode invocar uma unidade se houver posição livre, obter a RAM da carta e usar Exploits enquanto puder pagar. Uma unidade normalmente passa por boot antes de poder atacar. O turno seguinte libera as unidades e compra uma carta. A IA segue fluxo de compra, invocação, Exploits e ataque, com perfil do oponente.
+3. Ataques são escolhidos antes da confirmação. Um atacante bloqueado troca dano simultâneo de ATK contra DEF com a unidade que bloqueou. DEF perdida persiste e uma unidade com DEF zero é destruída. Ataques sem bloqueio atingem HP. O painel prevê dano para bloqueios atribuídos, inclusive perfuração.
+4. Overclock consome 3 RAM e duas unidades prontas. Elas combinam o ataque, concentram a resposta do bloqueio na unidade líder e o excesso sobre a DEF do bloqueador atinge HP. Uma dupla com duas afinidades não neutras e diferentes ganha +1 contra um bloqueador.
+5. HP zero encerra o duelo. A tela final registra turnos, dano, unidades inimigas destruídas e Exploits usados. Partidas urbanas resolvidas normalmente custam 40 min e 8 de energia. **Sair do duelo** abre confirmação e registra derrota, com até 3 créditos de taxa fora da aposta. Aposta já paga fica no Ringue e o duelo rápido é gratuito.
+
+| Regra | Aplicação |
+| --- | --- |
+| Afinidade | Pulso vence Malha, Malha vence Sombra, Sombra vence Pulso. Em choque normal, vantagem dá +1 de dano se a unidade tem ATK positivo. Neutra fica fora do ciclo. Recompilar modifica a afinidade durante a partida. |
+| Zero-Day | A unidade pode atacar no turno em que entra. |
+| Firewall | Dá prioridade de bloqueio/ataque e pode interceptar automaticamente atacantes ainda sem bloqueio. |
+| Vírus | Após causar dano de combate a uma unidade que sobreviveu, reduz seu ATK em 2, até o mínimo de zero. |
+| Dreno | Rouba até 1 RAM ao causar dano direto a HP. Outros efeitos podem drenar valores próprios. |
+| Exploits | Validam RAM e alvos antes de consumir a carta. Efeitos incluem dano direto, dano ou bônus de atributos, cura de HP, reparo limitado ao máximo de DEF, destruição, compra, dreno e afinidade. Há também efeitos de entrada de unidade. |
+
+| Modo | Acesso e resultado |
+| --- | --- |
+| Campanha narrativa | Cada chefe é liberado por sua conversa de investigação. Kira, Cipher e Vex permitem obter a prova sem vitória de combate. Archon exige vitória. O [guia](aventura-baixa-luz.md) descreve todos os efeitos. |
+| Campanha original | Com a investigação desativada, segue a sequência de dossiês, vitórias e rastros da Antena. |
+| Duelo rápido | Oponente sorteado, usa o deck do jogador, registra vitórias/partidas sem custo urbano ou prêmios de campanha. |
+| Desafio de rua | Oponente do Ringue com 14 HP. Vitória paga 15 créditos e a entrada é grátis. |
+| Mesa de apostas | Liberada ao derrotar Kira. Entrada de 25 créditos, vitória paga 60 e derrota mantém a entrada no Ringue. |
+| Moradores | Damião no Quiosque, Tuca e Dora no Ringue. Usam o sistema de arena, com perfis e prêmios próprios. |
+| Desafios de arquétipo | Turno da Estação (Infiltração/Kira), Linha de Contenção (Blindagem/Cipher), Ruído na Escuta (Sabotagem/Vex) e Frequência Cruzada (Overclock/Archon). Emprestam decks de 20 cartas com afinidades de fábrica e liberam duas cartas por primeira vitória. |
+
+### Fases e pontos de extensão
+
+`PLAYER_MAIN` concentra invocações e Exploits. `SELECT_TARGET` aguarda o alvo de um Exploit. `PLAYER_ATTACK` permite seleção de atacantes e `PLAYER_OVERCLOCK` prepara a dupla. `ENEMY_TURN` executa a IA. `PLAYER_DEFENSE` recebe os bloqueios. `COMBAT_ANIM` protege a resolução animada. `GAME_OVER` encerra as ações da partida. A IA avalia alvos e efeitos possíveis, conserva RAM para Overclock quando seu perfil permite e considera prioridades de Firewall.
+
+Unidades são instâncias de campo com UID, ATK e DEF atuais, DEF máxima, afinidade e marcadores de boot e ataque. Exploits declarativos usam alvo próprio, inimigo ou nenhum alvo, com ações sobre uma unidade, aliados ou inimigos conforme a definição. As cartas emprestadas dos desafios não substituem o deck ativo. O limite de duas cópias vale para os decks do jogador. Os baralhos dos adversários são listas de dados próprias.
+
+| Desafio | Cartas da primeira vitória |
+| --- | --- |
+| Turno da Estação | Mensageira de Fase e Passagem de Serviço |
+| Linha de Contenção | Sentinela do Canal e Cerâmica de Reparo |
+| Ruído na Escuta | Escuta do Cais e Ferrugem Óptica |
+| Frequência Cruzada | Condutor Bifásico e Ponte Dupla |
+
+## Artes, áudio e navegação no Android
+
+- O jogo usa imagens locais, principalmente WebP e PNG. A arte procedural serve como fallback. A galeria cadastra a abertura, o mapa, o marcador, os quadros do prólogo, imagens de locais, retratos e cartas. O observador de interseção registra imagens carregadas que atingem 50% da área visível, excluindo conteúdo inerte, miniaturas bloqueadas da coleção e a própria galeria. Abrir o inspetor de uma carta bloqueada conta como ver sua arte. Categorias vazias e artes não vistas não antecipam conteúdo.
+- Web Audio usa nove temas sintetizados (abertura, cidade, Feira, Antena, Ringue, Kira, Cipher, Vex e Archon) e 14 efeitos. O agendamento é por passos musicais, com síntese procedimental, trilha contextual e um modo de combate. Música e efeitos passam por canais independentes, com compressão nos efeitos e limitação no master. O primeiro gesto normal retoma áudio se a política do navegador bloquear a abertura. Silêncio explícito persiste.
+- O APK usa uma `MainActivity` Java e `WebViewAssetLoader` em `https://appassets.androidplatform.net/game/`. Restringe a navegação à origem e ao caminho do jogo, habilita JavaScript e DOM Storage e desabilita acesso via arquivos e conteúdo. Pausa/retoma o áudio com o ciclo de vida da Activity.
+- A Activity usa modo imersivo e aplica insets de barras, recorte e gestos. O botão Voltar consulta `NB.Input.handleBack()`, que fecha a camada aberta ou desfaz a seleção/estado de navegação quando aplicável. Se o jogo devolve `false`, o Android mostra a confirmação de saída e pode encerrar a Activity.
+
+## Desenvolvimento, testes e distribuição
+
+| Item | Configuração |
+| --- | --- |
+| Web | Node.js 24 e npm. `npm ci`, `npm run dev` (porta 3000), `npm run lint` (TypeScript), `npm run build` e `npm run preview`. |
+| Testes | `tests/game.spec.js` tem 36 cenários Playwright na revisão de referência. Usa perfil Pixel 7 e o build servido na porta 4317. Cobre combate, campanha, cidade, economia, galeria, áudio, deck e navegação. Para rodar localmente, gere `dist`, instale Chromium com `npx playwright install chromium` ou defina `CHROMIUM_PATH`, e execute `npm test`. |
+| Android | Application ID `io.github.chimiasama.neonclash`, versão `0.1.0` e código 1. JDK 17, AGP 9.5.1, Gradle 9.9.2, SDK alvo/compile 35, mínimo 23 e Build Tools 36.0.0. A Activity usa orientação retrato. |
+| APK | Depois do build web, execute `./gradlew :app:assembleDebug` em `android/`. Saída `android/app/build/outputs/apk/debug/app-debug.apk`, com assinatura de depuração. |
+| CI | `.github/workflows/android.yml` usa Linux, Chrome preinstalado quando disponível e Chromium Playwright como alternativa. Executa lint, build e testes, gera o APK, verifica assinatura e arquivos internos e publica `NeonClash-debug` como artefato. Gatilhos configurados para push/PR na `main` e execução manual. |
+
+## Conteúdo atual e metas
+
+O jogo disponível tem 32 cartas, 10 bairros, 23 locais, 100 moradores cadastrados, quatro chefes, quatro desafios de arquétipo e 29 cenas da investigação. O [plano de expansão](plano-expansao.md) descreve a meta de 500 cartas, sendo 495 encontráveis e cinco secretas de missão. Os roteiros de construção e descrições de moradores nos demais arquivos de `docs/` registram escopo planejado além dos recursos já descritos aqui.
+
+## Catálogo atual por ID
+
+Os nomes e os atributos base abaixo também identificam a arte, a rota de aquisição e a afinidade de fábrica no código.
+
+| ID | Carta | Tipo | ATK / DEF · RAM, ou custo | Afinidade |
+| --- | --- | --- | --- | --- |
+| `unit_01` | Kuroi-01 | Unidade | 4 / 4 · +2 RAM | Neutra |
+| `unit_02` | Spidey-Drone | Unidade | 3 / 3 · +3 RAM | Neutra |
+| `unit_03` | Aegis-Wall | Unidade | 2 / 7 · +2 RAM | Malha |
+| `unit_04` | Ghost-Runner | Unidade | 3 / 2 · +2 RAM | Sombra |
+| `unit_05` | Valkyrie-X | Unidade | 5 / 3 · +2 RAM | Pulso |
+| `unit_06` | Neon-Hound | Unidade | 4 / 2 · +2 RAM | Pulso |
+| `unit_07` | Chrome-Brute | Unidade | 6 / 6 · +2 RAM | Pulso |
+| `unit_08` | Data-Wraith | Unidade | 3 / 5 · +2 RAM | Sombra |
+| `unit_09` | Trojan-Mantis | Unidade | 3 / 4 · +2 RAM | Sombra |
+| `unit_10` | Bastion-Core | Unidade | 3 / 6 · +2 RAM | Malha |
+| `unit_11` | Siphon-Viper | Unidade | 4 / 3 · +2 RAM | Sombra |
+| `unit_12` | Plague-Node | Unidade | 2 / 5 · +2 RAM | Malha |
+| `unit_13` | Flash-Ronin | Unidade | 4 / 3 · +2 RAM | Pulso |
+| `unit_14` | Malware-Rex | Unidade | 5 / 5 · +2 RAM | Pulso |
+| `exploit_01` | Chip Overclock | Exploit | 2 RAM | — |
+| `exploit_02` | Spike Neural | Exploit | 2 RAM | — |
+| `exploit_03` | Kill-Switch | Exploit | 4 RAM | — |
+| `exploit_04` | Patch v9 | Exploit | 3 RAM | — |
+| `exploit_05` | Bomba EMP | Exploit | 3 RAM | — |
+| `exploit_06` | Sifão de Memória | Exploit | 2 RAM | — |
+| `unit_21` | Drone do Viaduto | Unidade | 1 / 4 · +3 RAM | Malha |
+| `unit_22` | Moto-Fantasma | Unidade | 3 / 3 · +2 RAM | Sombra |
+| `unit_23` | Guarda da Feira | Unidade | 3 / 5 · +2 RAM | Malha |
+| `exploit_07` | Recompilar | Exploit | 1 RAM | — |
+| `unit_24` | Mensageira de Fase | Unidade | 2 / 2 · +2 RAM | Sombra |
+| `unit_25` | Sentinela do Canal | Unidade | 1 / 5 · +2 RAM | Malha |
+| `unit_26` | Escuta do Cais | Unidade | 2 / 3 · +2 RAM | Sombra |
+| `unit_27` | Condutor Bifásico | Unidade | 4 / 3 · +2 RAM | Pulso |
+| `exploit_08` | Passagem de Serviço | Exploit | 2 RAM | — |
+| `exploit_09` | Cerâmica de Reparo | Exploit | 1 RAM | — |
+| `exploit_10` | Ferrugem Óptica | Exploit | 2 RAM | — |
+| `exploit_11` | Ponte Dupla | Exploit | 2 RAM | — |
