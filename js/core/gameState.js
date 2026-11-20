@@ -33,13 +33,15 @@
     const mode = options.mode || 'campaign';
     const boss = options.boss || (NB.Campaign ? NB.Campaign.NODES[0] : null);
     const playerMaxHp = NB.Cards.MAX_HP;
-    const enemyMaxHp = (boss && boss.hp) ? boss.hp : NB.Cards.MAX_HP;
+    const cipherInterference = mode === 'campaign' && boss?.id === 'archon' && NB.Story.eclipseInterference();
+    const enemyMaxHp = cipherInterference ? 18 : boss?.hp || NB.Cards.MAX_HP;
 
     return {
       mode,
       stake: options.stake || 0,
       challenge: options.challenge || null,
       boss,
+      cipherInterference,
       turn: 1,
       phase: 'PLAYER_MAIN',
       winner: null,

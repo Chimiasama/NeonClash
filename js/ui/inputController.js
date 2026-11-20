@@ -36,6 +36,11 @@
     const mode = options.mode || 'campaign';
     const boss = options.boss || (mode === 'quick' ? NB.Campaign.getRandomBoss() : NB.Campaign.NODES[0]);
 
+    if (mode === 'campaign' && boss.id === 'archon' && NB.Story.finalBattle() && !NB.Story.get().kiraSupportUsed && NB.Story.get().allies.kira) {
+      NB.Story.applyKiraSupport();
+      NB.Save.save();
+    }
+
     if (options.autoSound !== false) NB.Audio.activateOnEntry();
 
     hideAllScreens();

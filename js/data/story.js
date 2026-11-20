@@ -1,6 +1,14 @@
 (function (NB) {
   'use strict';
 
+  const prologue = [
+    ['prologo-oficina', 'As casas que ficaram acesas',
+      'Kairo cresceu no Viaduto. Durante as enchentes, ela instalou baterias para manter geladeiras de remédios e rádios ligados. A Vértice contratou sua equipe e entregou Terminais Portáteis de Diagnóstico de Malha. Os técnicos chamavam esses aparelhos de decks e usavam suas simulações de carga e intrusão para testar os medidores.'],
+    ['prologo-estacao', 'A noite em que o rádio calou',
+      'O Ringue e hackers de rua desbloquearam os decks e chamaram a adaptação de NeonClash. Os protocolos apareciam como cartas: Pulso sobrecarregava, Malha continha e Sombra abria brechas silenciosas. Meses depois, Kairo descobriu que medidores que ela tinha assinado pararam de pedir manutenção. Ela marcou um encontro na Estação Fantasma para comparar os registros. Homens com lanternas chegaram antes do contato. Nina chamou pelo rádio até Kairo perder o sinal.'],
+    ['prologo-casa', 'A chave ainda serve',
+      'Dois dias depois, seu cartão já não abre a própria casa. A chave antiga abre. Dona Nair guardou as faturas que a Vértice diz nunca ter emitido. Kairo quer descobrir quem tirou aquelas casas do cadastro e reparar o estrago que sua assinatura ajudou a fazer.']
+  ];
   const chapters = [
     'A chave que ainda serve', 'O bilhete da Estação', 'Quem pagou duas vezes',
     'O guarda do funcionamento', 'O quarto que nunca foi ocupado', 'Tirar a cidade do desligamento',
@@ -52,10 +60,15 @@
   scene('guard', 1, 'kira', 'Conferir a entrada com Severino', ['invoice'], 'route', [
     'Severino abre o livro do pátio. Duas entradas estão abaixo do número do lote da Feira.',
     'Severino — Trouxeram o bilhete corrigido para justificar a entrada. Eu anotei a placa antes de abrir o portão.',
+    'Severino — Lembra dos Terminais Portáteis de Diagnóstico de Malha? A equipe da Vértice usava esses decks para simular carga e intrusão nos medidores. Agora até o portão registra a assinatura deles.',
     'Kairo confere o horário. A equipe já estava no pátio quando o ônibus fez o desvio.'
   ], { evidence: 'O livro de Severino confirma a entrada pelo pátio antes da chegada de Kairo. A equipe mostrou o itinerário corrigido.' });
 
-  scene('kiraDeal', 1, 'kira', 'Ouvir Kira sobre a rota vendida', ['route'], 'kiraDeal', dialogue[1], {
+  scene('kiraDeal', 1, 'kira', 'Ouvir Kira sobre a rota vendida', ['route'], 'kiraDeal', [
+    'Kira — Aqui na Estação, um duelo disputa o controle administrativo de um nó em tempo real. O Ringue deu o nome NeonClash para o que os técnicos já carregavam no bolso.',
+    'Kairo — Pulso força a carga, Malha contém o impacto e Sombra procura a brecha. Quem segura o nó decide qual protocolo fica de pé.',
+    ...dialogue[1]
+  ], {
     choices: [
       { id: 'duel', label: 'Disputar a cópia em duelo' },
       { id: 'delivery', label: 'Aceitar o favor de conferir o recibo na Feira', finale: 'kiraPeace' }
@@ -65,18 +78,19 @@
   scene('delivery', 1, 'market', 'Conferir o recibo anonimizado com Beto', ['kiraDeal'], 'delivery', [
     'Beto compara o valor e a data com a via da banca. O nome dos passageiros está coberto nas duas cópias.',
     'Beto — A dívida entrou quitada e reapareceu num recibo novo. Quem fez isso usou o código do equipamento da Estação.',
-    'No verso, Beto encontra o carimbo de um terminal antigo do Ringue. Kairo guarda o código para conferir com Leila.'
+    'No verso, Beto encontra o carimbo de um terminal antigo do Ringue. Kairo guarda o código para conferir com Leila.',
+    'Beto — O irmão da Kira precisava de tratamento na Clínica do Morro. Ela estava vendendo qualquer rota que pagasse pelo próximo atendimento.'
   ], { when: 'kiraDelivery', minutes: 25 });
 
   scene('kiraAudit', 1, 'ringArchive', 'Cruzar o código do terminal com Leila', ['delivery'], 'kiraAudit', [
     'Leila compara o carimbo com o livro de apostas. O código pertence a um terminal desativado.',
-    'Leila — Quem reabriu essa dívida usou o número antigo. O dinheiro entrou por fora do caixa. Aqui está a cópia sem os nomes dos apostadores.'
+    'Leila — A dívida do irmão já estava quitada. Quem cobrou de novo usou o número antigo e lançou o dinheiro por fora do caixa. Aqui está a cópia sem os nomes dos apostadores.'
   ], { when: 'kiraDelivery', minutes: 20 });
 
   scene('kiraPeace', 1, 'kira', 'Entregar o dossiê auditado a Kira', ['kiraAudit'], 'kiraProof', [
-    'Kairo entrega a via de Beto com a conferência de Leila. Kira compara o carimbo com o recibo da rota.',
-    'Kira — O projeto de recuperação da Vértice pagou a rota por fora do Ringue. Pode guardar a prova. Vou te passar um rastreador que separa esses números sem abrir a lista de passageiros.'
-  ], { when: 'kiraDelivery', next: true, reward: { credits: 35, card: 'exploit_15' },
+    'Kairo entrega a via de Beto com a conferência de Leila. Kira compara o carimbo com o recibo da rota e reconhece a quitação do tratamento do irmão.',
+    'Kira — O projeto da Vértice pagou a rota por fora do Ringue. Me fizeram vender teu trajeto por uma conta que já estava paga. Guarda a prova e leva meu rastreador. Se a Torre fechar em volta de você, chama no rádio.'
+  ], { when: 'kiraDelivery', next: true, ally: 'kira', reward: { credits: 35, card: 'exploit_15' },
     evidence: 'O dossiê auditado comprova que o pagamento da rota saiu da verba da Vértice e entrou por fora do caixa do Ringue.' });
 
   scene('kiraProof', 1, 'kira', 'Registrar a prova da Estação', ['kiraDeal'], 'kiraProof', [
@@ -105,8 +119,8 @@
     'Os recibos estão de volta à mesa. Kairo pode contar que sua assinatura aparece na remessa ou deixar a explicação para depois da conferência no Cais.',
     'Nair — Se você já sabe como a gente saiu da lista, senta. Eu tenho tempo pra uma resposta inteira.'
   ], { next: true, choices: [
-    { id: 'tell', label: 'Explicar agora o que assinei', reaction: 'Nair puxa uma cadeira. Ela anota o ponto que ainda falta provar e pede uma cópia para a reunião dos moradores.' },
-    { id: 'check', label: 'Combinar voltar depois da conferência', reaction: 'Nair empresta os recibos até a visita ao Cais. Ela reserva um espaço em branco para a resposta de Kairo.' }
+    { id: 'tell', label: 'Explicar agora o que assinei', reaction: 'Nair puxa uma cadeira. Ela anota o que falta provar e reúne os vizinhos. A Feira e o Quiosque dão 20% de desconto nos consumíveis para ajudar Kairo a continuar.' },
+    { id: 'check', label: 'Combinar voltar depois da conferência', reaction: 'Nair empresta os recibos até a visita ao Cais. Ela deixa o espaço em branco. Vai guardar os comprovantes, mas quer ouvir de Kairo o que aconteceu.' }
   ] });
 
   scene('pass', 3, 'archive', 'Pedir a janela de manutenção a Raquel', ['nairChoice'], 'pass', [
@@ -125,19 +139,26 @@
 
   scene('cipherToken', 3, 'garage', 'Calibrar o filtro de isolamento com Íris', ['cipherAlt'], 'cipherToken', [
     'Íris testa o filtro em uma ficha antiga. O número da ordem atravessa o leitor. Os nomes ficam do outro lado.',
-    'Íris — Agora leva o token para a Muralha. Raquel já sabe quais colunas precisa preservar.'
+    'Íris — Agora leva o token para a Muralha. Foram esses técnicos que mantiveram as bombas e a Clínica ligadas durante as enchentes. O nome deles fica no cofre.'
   ], { when: 'cipherAlternative', minutes: 25 });
 
   scene('cipherPeace', 3, 'cipher', 'Executar a extração isolada', ['cipherToken'], 'cipherProof', [
     'Raquel conecta o token. Cipher passa as duas versões pela janela isolada. As credenciais ficam no cofre.',
-    'Cipher — A primeira suspende seu acesso. A segunda inclui um recolhimento. O anexo que sumiu estava ligado a uma reserva no Hotel Espelho. Leva o número a Cris.'
-  ], { when: 'cipherAlternative', next: true, reward: { credits: 50, card: 'exploit_16' },
+    'Cipher — A primeira suspende seu acesso. A segunda inclui um recolhimento. O anexo que sumiu estava ligado a uma reserva no Hotel Espelho. Leva o número a Cris. Quando chegar à Torre, eu ainda tenho acesso à primeira camada de defesa do Eclipse.'
+  ], { when: 'cipherAlternative', followup: 'meridianoRadio', ally: 'cipher', reward: { credits: 50, card: 'exploit_16' },
     evidence: 'A cópia isolada preserva as duas versões da ordem sem divulgar as credenciais. O anexo ausente aponta para o Hotel Espelho.' });
 
   scene('cipherProof', 3, 'cipher', 'Registrar as duas versões da ordem', ['cipherDeal'], 'cipherProof', [
     'A ordem de Cipher manda suspender o acesso de Kairo. A segunda versão tem um anexo de recolhimento que desapareceu do cofre.',
     'Cipher — Esse recibo de reserva foi anexado quando passaram a ordem para outra equipe. Leva o número para Cris antes de tentar abrir o registro todo.'
-  ], { when: 'cipherResolution', next: true, evidence: 'O cofre contém versões diferentes da mesma ordem. O anexo que falta aponta para uma reserva no Hotel Espelho.' });
+  ], { when: 'cipherResolution', followup: 'meridianoRadio', evidence: 'O cofre contém versões diferentes da mesma ordem. O anexo que falta aponta para uma reserva no Hotel Espelho.' });
+
+  scene('meridianoRadio', 3, 'cipher', 'Interceptação de Rádio', ['cipherProof'], 'meridianoContact', [
+    'A frequência privada de Kairo acorda com três estalos. Era o sinal da equipe de manutenção durante as enchentes.',
+    'Archon — Lembra da bateria que mandamos para a rua da Nair? A Holding Meridiano, nossa diretoria externa, me deu até sexta para cortar os endereços deficitários. Se eu não entregasse os números, cancelariam a concessão. Toda Baixa Luz ficaria no escuro.',
+    'Kairo — Você tirou as casas da lista para o contrato fechar. Lá embaixo a gente continuou atendendo gente que, para a diretoria, tinha deixado de existir.',
+    'Archon — Eu sabia o que custava perder a equipe inteira. Achei que podia escolher quais ruas manter. Segue o recibo da reserva, Kairo. Depois me diz quem mais assinou.'
+  ], { next: true, evidence: 'A Holding Meridiano exigiu cortes até sexta-feira sob pena de cancelar a concessão. Archon admitiu excluir endereços para manter o contrato.' });
 
   scene('cris', 4, 'pension', 'Comparar as fichas de reserva com Cris', ['cipherProof'], 'reservation', [
     'Cris põe uma ficha de reserva sem entrada efetiva do lado do recibo usado para acolher Kairo.',
@@ -149,7 +170,9 @@
     'Vex aponta para o corredor cheio e propõe mostrar o anexo fora dali.',
     'Vex — Guardei a cópia original porque a hora da ordem me chamou atenção. Posso colocar a cópia na mesa em duelo. Celina também tem uma sala, se você levar o arquivo junto com Bia.',
     'Kairo pode escolher quem testemunha a entrega. A lista de hóspedes fica no hotel.'
-  ], { choices: [{ id: 'duel', label: 'Disputar a entrega em duelo' }, { id: 'witness', label: 'Pedir uma entrega testemunhada no Teatro', finale: 'vexPeace' }] });
+  ], { aside: { label: 'Perguntar quanto vale uma testemunha',
+    reply: 'Kairo — Você vendia silêncio por diária. Quanto vale uma testemunha hoje? Vex — Se ela voltar viva pra casa, hoje vale mais que qualquer contrato.' },
+    choices: [{ id: 'duel', label: 'Disputar a entrega em duelo' }, { id: 'witness', label: 'Pedir uma entrega testemunhada no Teatro', finale: 'vexPeace' }] });
 
   scene('vexStub', 4, 'pension', 'Levantar o canhoto da reserva com Cris', ['vexDeal'], 'vexStub', [
     'Cris separa o canhoto da reserva sem hospedagem dos recibos de quem realmente dormiu na pensão.',
@@ -157,14 +180,14 @@
   ], { when: 'vexAlternative', minutes: 20 });
 
   scene('vexAlt', 4, 'theatre', 'Conferir o horário do arquivo com Bia', ['vexStub'], 'vexAlt', [
-    'Celina abre a sala neutra do Teatro. Bia confronta o hash do horário com o canhoto de Cris.',
-    'Bia — O horário do anexo bate com a reserva. Eu assino como testemunha. Agora Vex pode abrir o original sem expor os hóspedes.'
+    'Celina abre a sala neutra do Teatro. Vex escondeu Helena ali depois que a ex-auditora descobriu a fraude da Holding Meridiano. Bia compara o selo de horário do arquivo com o canhoto de Cris.',
+    'Helena — Bia assina a conferência comigo. Leva esta chave complementar para Vex. Ela abre o anexo de horário sem expor os hóspedes.'
   ], { when: 'vexAlternative', minutes: 25 });
 
   scene('vexPeace', 4, 'vex', 'Apresentar a conferência testemunhada a Vex', ['vexAlt'], 'vexProof', [
-    'Vex lê a conferência assinada por Bia e libera o original. O aviso de baixa já estava pronto antes de Kairo perder o sinal.',
-    'Vex — A assinatura de Archon está aqui, na ordem de recolher sua cópia. A Auditora pode te ajudar a revisar o que ainda falta antes de subir a Torre.'
-  ], { when: 'vexAlternative', next: true, reward: { credits: 65, card: 'unit_31' },
+    'Vex lê a conferência assinada por Bia e Helena. A chave complementar autentica o anexo e ele libera o original. O aviso de baixa já estava pronto antes de Kairo perder o sinal.',
+    'Vex — A assinatura de Archon está aqui, na ordem de recolher sua cópia. A Auditora pode te ajudar na Torre. Depois leva a via de Helena à Isa: os números alcançam gente acima do Archon.'
+  ], { when: 'vexAlternative', next: true, ally: 'vex', reward: { credits: 65, card: 'unit_31' },
     evidence: 'O canhoto, a confirmação testemunhada e a ordem original mostram que a baixa precedeu a emboscada. Archon assinou o recolhimento.' });
 
   scene('vexProof', 4, 'vex', 'Ler a ordem original com Vex', ['vexDeal'], 'vexProof', dialogue[4],
@@ -173,6 +196,7 @@
   scene('renan', 5, 'docks', 'Reproduzir os dois comandos com Renan', ['vexProof'], 'grid', [
     'Renan carrega uma cópia isolada do painel. Kairo digita o número do medidor de Dona Nair.',
     'Na primeira versão, o endereço entra na fila de verificação. Na segunda, some da lista e o painel permite desligá-lo.',
+    'Renan — Os anexos da Holding Meridiano mostram o que Archon fez para manter a concessão. Contou como estáveis os bairros ricos e apagou da amostra as ruas em que a gente mais precisou trocar bateria.',
     'Renan — Eu consigo transferir o controle. A clínica precisa de uma bateria carregada e a equipe precisa de um canal para confirmar cada linha.',
     'Kairo anota duas rotas para a comunicação: a Antena ou a entrega do arquivo à Isa na praça.'
   ], { evidence: 'No painel isolado, a versão nova exclui o endereço e permite seu corte. O Cais confirmou como transferir o controle.' });
@@ -194,6 +218,7 @@
 
   scene('registry', 5, 'registry', 'Pedir a Nalva o histórico do cadastro', ['reserve', 'communication'], 'protocol', [
     'Nalva confere o recibo de Dona Nair e emite o histórico do endereço de Kairo com um número de pedido.',
+    'Nalva — A Holding Meridiano recebeu o relatório alterado. No arquivo original, a ordem manda cortar primeiro os endereços mais pobres. A pressão da diretoria está assinada no protocolo.',
     'Nalva — Esse número fica com você. Se alguém oferecer uma segunda via por fora, pergunta se o prédio inteiro voltou a constar.',
     'Kairo guarda o protocolo e segue para a Torre. A equipe já tem reserva e canal de confirmação.'
   ], { evidence: 'O protocolo de Nalva preserva o histórico original do endereço e permite contestar a baixa com os documentos reunidos.' });
@@ -203,10 +228,16 @@
     archonWarning
   ]);
 
-  scene('archonDeal', 5, 'archon', 'Confrontar Archon com os documentos', ['archonReady'], 'archonDeal', dialogue[5]);
+  scene('archonDeal', 5, 'archon', 'Confrontar Archon com os documentos', ['archonReady'], 'archonDeal', [
+    ...dialogue[5],
+    'Kairo conecta seu Terminal Portátil de Diagnóstico ao barramento central. Renan aguarda no Cais para receber o controle da rede elétrica.',
+    'No console mestre da diretoria, Archon aciona o Núcleo Eclipse, a IA Autônoma de Contenção Corporativa. A máquina trava a transferência e assume a defesa do barramento.',
+    'Archon — Você está usando o protocolo de campo que eu te ensinei contra a própria malha central, Kairo!'
+  ], { aside: { label: 'Perguntar quanto vale uma rua no balanço',
+    reply: 'Kairo — Qual era a cotação de uma rua no seu balanço? Archon — Menos que uma concessão na sexta. Mais do que consigo admitir olhando para você.' } });
 
   scene('ending', 5, 'archon', 'Decidir como divulgar as provas', ['archonDeal'], 'ending', [
-    'O duelo terminou. Renan pede a confirmação para assumir a operação. Nina e Isa esperam para saber quais provas vão circular e quando.',
+    'O Núcleo Eclipse perdeu o controle do barramento. Kairo confirma a transferência e Renan assume a rede elétrica. Nina e Isa esperam para saber quais provas vão circular e quando.',
     'Kairo separa os textos autorizados dos registros pessoais. A equipe pode divulgar agora com o plano de transição, entregar os arquivos a um conselho ou aceitar a regularização limitada oferecida por Archon.'
   ], { when: 'archonWon', next: true, choices: [
     { id: 'publish', label: 'Publicar com transição comunitária', reaction: 'Isa distribui a primeira edição na praça. A Clínica continua ligada durante a troca de controle.' },
@@ -220,5 +251,15 @@
     'Nair coloca outra solicitação sobre a mesa. Desta vez, há lugar para anotar o que a cidade respondeu.'
   ]);
 
-  NB.StoryData = { chapters, scenes, archonWarning };
+  const alliedLines = {
+    preparation: 'Kira — Os drones foram atrás do sinal da minha sub-rede. Fica onde está e respira. Quando eu abrir a passagem, você sobe. Kairo recupera até 10 de energia sem gastar tempo nem créditos.',
+    isa: 'Isa compara a chave de Helena ao relatório. Já pode mostrar que a Holding Meridiano recebeu números adulterados e acompanhou a ordem de corte.',
+    publish: 'A edição inclui os horários certificados por Helena. A investigação alcança a Holding Meridiano, e a diretoria externa é chamada a explicar a ordem de corte.',
+    council: 'O conselho protege o depoimento de Helena e usa a via certificada para convocar a Holding Meridiano. A auditoria passa dos escritórios de Archon à diretoria externa.',
+    settle: 'Mesmo com o acordo limitado, Isa protocola a prova de Helena. Há uma investigação separada sobre a Holding Meridiano, com o relatório original anexado.',
+    tell: 'Dona Nair põe o protocolo ao lado da assinatura. Os vizinhos trazem as próprias contas para ajudar a conferir as próximas casas. Nair — Você não veio prometer que ia dar conta sozinha. Você veio contar a verdade. Foi assim que deu pra gente chegar junto.',
+    check: 'Dona Nair abre a página que deixou em branco. Nair — Nesse tempo todo eu fiquei imaginando que parte você achava que eu não aguentava ouvir. Fala agora. Ainda dá para começar a devolver a confiança.'
+  };
+
+  NB.StoryData = { chapters, scenes, archonWarning, prologue, alliedLines };
 })(window.NB = window.NB || {});

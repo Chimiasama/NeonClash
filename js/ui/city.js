@@ -195,6 +195,7 @@
       renderSupplies(content, save.city, district.id);
     } else if (district.id === 'market') {
       renderMarket(content, save);
+      renderSupplies(content, save.city, district.id);
     } else if (district.id === 'relay') {
       renderRelay(content, save);
     } else if (district.id === 'arena') {
@@ -459,8 +460,10 @@
 
   function renderSupplies(content, state, districtId) {
     const life = state.life;
-    const goods = districtId === 'kiosk'
-      ? Object.entries(NB.CityLife.items).map(([id, item]) => ({ id, ...item, detail: `+${item.energy} de energia`, owned: false }))
+    const sellsConsumables = districtId === 'kiosk' || districtId === 'market';
+    if (sellsConsumables && NB.Story.get().nairTruthEarly === true) addText(content, 'Rede de Dona Nair · 20% de desconto em consumíveis.', 'city-notice');
+    const goods = sellsConsumables
+      ? Object.entries(NB.CityLife.items).map(([id, item]) => ({ id, ...item, price: NB.CityLife.consumablePrice(id), detail: `+${item.energy} de energia`, owned: false }))
       : [
         ...['bike', 'motorbike'].map(id => ({ id, ...NB.CityLife.transport[id], owned: life.vehicles.includes(id) })),
         { id: 'implant', name: 'Implante de vigília', price: NB.CityLife.implantPrice, owned: life.implant,
@@ -475,7 +478,7 @@
         if (!NB.CityLife.buy(item.id)) return;
         render();
         announce(`${item.name} adquirido.`);
-      }, item.owned || state.credits < item.price || (districtId === 'kiosk' && NB.CityLife.bagCount(life) >= NB.CityLife.bagLimit));
+      }, item.owned || state.credits < item.price || (sellsConsumables && NB.CityLife.bagCount(life) >= NB.CityLife.bagLimit));
       content.append(row);
     }
     if (districtId === 'kiosk') {

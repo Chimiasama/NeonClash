@@ -25,6 +25,9 @@
     document.getElementById('turn-badge').textContent = 'T' + state.turn;
     document.getElementById('enemy-name-label').textContent = boss.fullTitle;
 
+    const interference = document.getElementById('enemy-interference');
+    interference.hidden = !state.cipherInterference;
+    interference.textContent = state.cipherInterference ? NB.Dialogue.cipherInterference : '';
     document.getElementById('enemy-hp-text').textContent = `${state.enemy.hp}/${state.enemy.maxHp} HP`;
     document.getElementById('enemy-ram-text').textContent = `${state.enemy.ram} RAM`;
     document.getElementById('enemy-deck-text').textContent = `D:${state.enemy.deck.length} M:${state.enemy.hand.length}`;
@@ -461,7 +464,8 @@
   function openDossier(bossId) {
     const boss = NB.Campaign.getNodeById(bossId);
     NB.Audio.setScene(boss.id);
-    document.getElementById('dossier-node-code').textContent = `${boss.nodeCode} · ${boss.hp} HP`;
+    const cipherInterference = boss.id === 'archon' && NB.Story.eclipseInterference();
+    document.getElementById('dossier-node-code').textContent = `${boss.nodeCode} · ${cipherInterference ? 18 : boss.hp} HP`;
     document.getElementById('dossier-title').textContent = boss.fullTitle;
     document.getElementById('dossier-archetype').textContent = boss.archetype;
 
@@ -472,7 +476,7 @@
 
     const dlgBox = document.getElementById('dossier-dialogue');
     dlgBox.innerHTML = '';
-    const dialogue = NB.Story.active()
+    const dialogue = NB.Story.active() && boss.id !== 'archon'
       ? [{ speaker: 'KAIRO', text: 'O diário registra o que trouxe até aqui. Disputar este duelo libera o próximo passo da investigação.' }]
       : boss.dossierDialogue;
     dialogue.forEach(line => {
@@ -485,6 +489,13 @@
       `;
       dlgBox.appendChild(div);
     });
+
+    if (cipherInterference) {
+      const status = document.createElement('p');
+      status.className = 'city-notice';
+      status.textContent = NB.Dialogue.cipherInterference;
+      dlgBox.append(status);
+    }
 
     const rewardPreview = (boss.rewardCards || [])
       .map(cid => NB.Cards.CARD_DB[cid]?.name)

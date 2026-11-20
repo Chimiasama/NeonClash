@@ -614,6 +614,9 @@ test('resumes the prologue after reload and earns Kira’s proof by doing a favo
   await read('Entregar o dossiê auditado a Kira');
   expect(await page.evaluate(() => NB.Save.get().city.credits)).toBe(beforeReward + 35);
   expect(await page.evaluate(() => NB.Save.get().unlockedCards)).toContain('exploit_15');
+  expect(await page.evaluate(() => JSON.parse(localStorage.neon_breach_save_v1).story.allies)).toEqual({
+    kira: true, cipher: false, vex: false
+  });
   await investigation();
   await expect(page.locator('#city-content')).toContainText('Quem pagou duas vezes');
   await expect(page.locator('#city-content')).toContainText('O dossiê auditado comprova');
@@ -646,6 +649,7 @@ test('unwinds the complete investigation with alternative routes and a recorded 
     finish('cipherAlt');
     finish('cipherToken');
     finish('cipherPeace');
+    finish('meridianoRadio');
     finish('cris');
     finish('vexDeal', 'witness');
     finish('vexStub');
@@ -663,10 +667,10 @@ test('unwinds the complete investigation with alternative routes and a recorded 
     finish('ending', 'council');
     finish('epilogue');
     return { complete: NB.Story.has('epilogue'), evidence: NB.Story.get().evidence.length,
-      aftermath: NB.Story.aftermath('square'), choice: NB.Story.choice('ending'),
+      aftermath: NB.Story.aftermath('square'), choice: NB.Story.choice('ending'), allies: NB.Story.get().allies,
       repeat: NB.Story.finish('epilogue') };
   });
-  expect(result).toMatchObject({ complete: true, evidence: 15, choice: 'council', repeat: false });
+  expect(result).toMatchObject({ complete: true, evidence: 16, choice: 'council', repeat: false, allies: { kira: false, cipher: true, vex: true } });
   expect(result.aftermath).toContain('conselho');
 });
 
@@ -1174,4 +1178,109 @@ test('applies the three pacifist card effects and validates the tracker affinity
     };
   });
   expect(result).toEqual({ wrongAffinity: false, tracker: true, filter: true, audit: true, delta: [4, 1, 1, -1] });
+});
+
+test('opens the Meridiano interception immediately after the Muralha proof', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('neon_breach_save_v1', JSON.stringify({
+    prologueSeen: true, defeatedBosses: ['cipher'], city: { district: 'cipher' },
+    story: { started: true, chapter: 3, flags: ['cipherDeal'] }
+  })));
+  await page.goto('/');
+  await enterCity(page);
+  await page.getByRole('button', { name: 'Registrar as duas versões da ordem' }).click();
+  await page.getByRole('button', { name: 'Continuar', exact: true }).click();
+  await page.getByRole('button', { name: 'Registrar e sair' }).click();
+  const call = page.getByRole('dialog', { name: 'Interceptação de Rádio' });
+  await expect(call).toBeVisible();
+  await call.getByRole('button', { name: 'Continuar', exact: true }).click();
+  await expect(call).toContainText('Holding Meridiano');
+  expect(await page.evaluate(() => NB.Story.get().chapter)).toBe(3);
+  for (let pageNumber = 0; pageNumber < 2; pageNumber++) {
+    await call.getByRole('button', { name: 'Continuar', exact: true }).click();
+  }
+  await call.getByRole('button', { name: 'Registrar e sair' }).click();
+  await expect(page.locator('[data-district="pension"]')).toHaveAttribute('data-markers', /clue/);
+});
+
+test('gives Kira only one recovery and starts the final Eclipse battle at 18 HP with Cipher', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('neon_breach_save_v1', JSON.stringify({
+    prologueSeen: true, city: { district: 'archon', life: { energy: 75 } },
+    story: { started: true, chapter: 5, flags: ['protocol'], allies: { kira: true, cipher: true, vex: false } }
+  })));
+  await page.goto('/');
+  await enterCity(page);
+  await page.getByRole('button', { name: 'Confirmar preparação para a Torre' }).click();
+  await page.getByRole('button', { name: 'Continuar', exact: true }).click();
+  await expect(page.locator('#story-line')).toContainText('Os drones');
+  await page.getByRole('button', { name: 'Registrar e sair' }).click();
+  await expect(page.locator('#city-energy')).toHaveAttribute('value', '85');
+  await page.evaluate(() => {
+    const scene = NB.Story.sceneById.archonDeal;
+    NB.Story.remember(scene.id, NB.Story.getLines(scene).length - 1);
+    NB.Story.finish(scene.id);
+    NB.City.resetView();
+  });
+  await page.getByRole('button', { name: 'Abrir dossiê', exact: true }).click();
+  await expect(page.locator('#dossier-node-code')).toContainText('18 HP');
+  await expect(page.locator('#dossier-title')).toHaveText('ARCHON // Núcleo Eclipse');
+  await page.getByRole('button', { name: 'Conectar e duelar' }).click();
+  await expect(page.locator('#enemy-hp-text')).toHaveText('18/18 HP');
+  await expect(page.locator('#enemy-interference')).toHaveText('Interferência de Cipher: Firewall primário desativado');
+  const comparison = await page.evaluate(() => {
+    const boss = NB.Campaign.getNodeById('archon');
+    NB.Input.startMatch({ mode: 'quick', boss });
+    const quick = NB.State.get().enemy.hp;
+    NB.Story.get().allies.cipher = false;
+    NB.Input.startMatch({ mode: 'campaign', boss });
+    return [quick, NB.State.get().enemy.hp, NB.Save.get().city.life.energy];
+  });
+  expect(comparison).toEqual([20, 20, 85]);
+});
+
+test('applies Nair solidarity at the counter and preserves Helena’s evidence across each ending', async ({ page }) => {
+  await page.goto('/');
+  const outcomes = await page.evaluate(() => {
+    const save = NB.Save.get();
+    save.story = NB.Story.normalize({
+      started: true, chapter: 2, flags: ['outages', 'vexProof'], evidence: ['vexPeace']
+    });
+    NB.Story.remember('tellingNair', 1);
+    NB.Story.finish('tellingNair', 'tell');
+    const discounts = [];
+    for (const place of ['market', 'kiosk']) {
+      save.city.district = place;
+      const before = save.city.credits;
+      NB.CityLife.buy('energyDrink');
+      discounts.push(before - save.city.credits);
+    }
+    const endings = ['publish', 'council', 'settle'].map(id => {
+      save.story.choices.ending = id;
+      return NB.Story.getLines(NB.Story.sceneById.epilogue).find(line => line.includes('Holding Meridiano'));
+    });
+    return { discounts, endings, nairTruthEarly: save.story.nairTruthEarly, vex: save.story.allies.vex };
+  });
+  expect(outcomes).toMatchObject({ discounts: [7, 7], nairTruthEarly: true, vex: true });
+  expect(outcomes.endings.every(line => line.includes('Helena'))).toBe(true);
+  expect(new Set(outcomes.endings).size).toBe(3);
+
+  for (const [location, chapter, flag, scene, reply] of [
+    ['vex', 4, 'reservation', 'Negociar acesso à ordem original', 'Perguntar quanto vale uma testemunha'],
+    ['archon', 5, 'archonReady', 'Confrontar Archon com os documentos', 'Perguntar quanto vale uma rua no balanço']
+  ]) {
+    await page.evaluate(({ location, chapter, flag }) => {
+      const save = NB.Save.get();
+      save.city.district = location;
+      save.story = NB.Story.normalize({ started: true, chapter, flags: [flag], choices: { tellingNair: 'check' } });
+      NB.Input.openNetMap();
+    }, { location, chapter, flag });
+    await page.getByRole('button', { name: scene, exact: true }).click();
+    const reader = page.getByRole('dialog', { name: scene });
+    const next = reader.getByRole('button', { name: 'Continuar', exact: true });
+    while (await next.isVisible()) await next.click();
+    const aside = reader.getByRole('button', { name: reply });
+    await expect(aside).toBeVisible();
+    await aside.click();
+    await expect(reader.locator('#story-options p')).toContainText('Kairo —');
+    await reader.getByRole('button', { name: 'VOLTAR', exact: true }).click();
+  }
 });

@@ -264,12 +264,23 @@
     return true;
   }
 
+  function consumablePrice(id) {
+    return Math.round(items[id].price * (NB.Story.get().nairTruthEarly === true ? 0.8 : 1));
+  }
+
+  function recoverEnergy(amount) {
+    const { life } = city();
+    const gain = Math.min(amount, maxEnergy(life) - life.energy);
+    life.energy += gain;
+    return gain;
+  }
+
   function buy(id) {
     const state = city();
     const item = items[id];
     const mode = transport[id];
-    if (item && state.district === 'kiosk' && state.credits >= item.price && bagCount(state.life) < bagLimit) {
-      state.credits -= item.price;
+    if (item && ['kiosk', 'market'].includes(state.district) && state.credits >= consumablePrice(id) && bagCount(state.life) < bagLimit) {
+      state.credits -= consumablePrice(id);
       state.life.inventory[id]++;
     } else if (mode?.price && state.district === 'garage' && state.credits >= mode.price && !state.life.vehicles.includes(id)) {
       state.credits -= mode.price;
@@ -343,6 +354,6 @@
   }
 
   NB.CityLife = { items, transport, beds, streetRest, bagLimit, implantPrice, normalize, clock, maxEnergy, maxAwake,
-    bagCount, routes, advance, travel, sleep, buy, use, nightShift, workNightShift, helpContact, takeNotice,
+    bagCount, routes, advance, travel, sleep, buy, use, nightShift, workNightShift, helpContact, takeNotice, consumablePrice, recoverEnergy,
     relayModes, demand, jobQuote, work, finishSignal, startDelivery, cancelDelivery };
 })(window.NB = window.NB || {});

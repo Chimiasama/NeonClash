@@ -135,18 +135,18 @@
       nodeCode: 'NÓ 04 · CHEFE FINAL',
       name: 'ARCHON',
       title: 'Diretor de Operações Negras',
-      fullTitle: 'ARCHON // Diretor de Operações Negras',
+      fullTitle: 'ARCHON // Núcleo Eclipse',
       avatar: './avatars/archon.png',
       accent: '#FFB800',
-      hp: 22,
-      archetype: 'Híbrido · OVERCLOCK Frequente',
+      hp: 20,
+      archetype: 'IA Autônoma de Contenção Corporativa · OVERCLOCK',
       canOverclock: true,
       rewardCards: ['unit_07', 'exploit_03'],
       clueTitle: 'PISTA FINAL · OPERAÇÃO ECLIPSE EXPOSTA',
-      clueText: 'O núcleo central de ARCHON foi destruído e os arquivos da Operação Eclipse vazaram para toda a rede. Sua vingança foi concluída e seu nome limpo.',
+      clueText: 'O Núcleo Eclipse perdeu o controle do barramento. Renan pode assumir a rede elétrica. Os documentos da Vértice estão preservados para a decisão de Kairo.',
       dossierDialogue: [
-        { speaker: 'ARCHON', text: 'Impressionante, Kairo. Ensinei você a ver a cidade como um circuito. A Operação Eclipse só fez a pergunta seguinte: quem pode ser desligado?' },
-        { speaker: 'KAIRO', text: 'Você me traiu para enterrar os testes ilegais, Archon. Hoje eu derrubo seu núcleo e exponho tudo na rede aberta!' }
+        { speaker: 'ARCHON', text: 'Você está usando o protocolo de campo que eu te ensinei contra a própria malha central, Kairo! Console mestre, acione o Núcleo Eclipse.' },
+        { speaker: 'KAIRO', text: 'Meu terminal já está no barramento central. Vou tirar a rede elétrica da contenção do Eclipse e entregar o controle a Renan.' }
       ],
       deckList: [
         'unit_07', 'unit_07',
@@ -161,16 +161,16 @@
         'exploit_05', 'exploit_06'
       ],
       lines: {
-        start: ['"Eu criei você na rede, Kairo. E vou deletá-lo pessoalmente."', '"Contemple o verdadeiro poder do Overclock corporativo!"'],
-        playerSummonStrong: ['"Boa tentativa. Mas minhas unidades dominam o núcleo."', '"Apenas mais sucata diante da Operação Eclipse."'],
-        playerExploit: ['"Você ousa usar minhas próprias técnicas contra mim?"', '"Um arranhão irrelevante no servidor central."'],
-        hit: ['"Insolente! Como conseguiu romper minha guarda?!"', '"Você ficou mais forte no subsolo, Kairo..."'],
-        critical: ['"Não! Os arquivos da Operação Eclipse não podem vazar!"', '"Núcleo em colapso! Ativando potência máxima!"'],
-        attack: ['"Esmaguem esse traidor!"', '"Sinta o peso das Operações Negras!"'],
-        overclock: ['"⚡ OVERCLOCK SUPREMO! NENHUM FIREWALL VAI TE SALVAR!"', '"⚡ UNITE ATTACK ATIVADO! PREPARE-SE PARA A PERFURAÇÃO!"'],
-        destroyPlayer: ['"Fraco demais para me enfrentar."', '"Você nunca deveria ter voltado, Kairo."'],
-        playerCritical: ['"Sua vingança termina aqui, discípulo."', '"Mais um golpe e você vira poeira digital."'],
-        summon: ['"Convocando unidade de elite das Operações Negras."', '"Acumulando RAM para o golpe final..."']
+        start: ['"Archon no console: Você está usando o protocolo de campo que eu te ensinei contra a própria malha central, Kairo!"'],
+        playerSummonStrong: ['"Eclipse: protocolo de campo reconhecido. Aplicando isolamento."'],
+        playerExploit: ['"Eclipse: tentativa de alterar permissões no barramento. Bloqueio parcial."'],
+        hit: ['"Eclipse: perda de integridade no servidor central."'],
+        critical: ['"Eclipse: integridade crítica. Transferência administrativa iminente."'],
+        attack: ['"Eclipse: iniciando contenção nas interfaces de campo."'],
+        overclock: ['"Eclipse: Overclock de contenção autorizado pelo console mestre."'],
+        destroyPlayer: ['"Eclipse: segmento de diagnóstico removido do barramento."'],
+        playerCritical: ['"Archon no console: Seu terminal está no limite. Renan ainda não recebeu a rede."'],
+        summon: ['"Eclipse: nova camada de defesa ativa no servidor."']
       }
     }
   ];

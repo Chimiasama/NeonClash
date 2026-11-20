@@ -25,7 +25,7 @@
     if (!scene || (replay ? !NB.Story.has(scene.grants) : !NB.Story.available(scene))) return;
     if (!replay && scene.location !== NB.Save.get().city.district) return;
     const lines = NB.Story.getLines(scene);
-    reading = { scene, replay, lines, cursor: replay ? 0 : (NB.Story.get().read[id] ?? 0), origin: document.activeElement };
+    reading = { scene, replay, lines, cursor: replay ? 0 : Math.min(NB.Story.get().read[id] ?? 0, lines.length - 1), origin: document.activeElement };
     document.querySelector('.city-panel').inert = true;
     $('story-modal').classList.add('open');
     renderPage();
@@ -47,11 +47,15 @@
       return;
     }
     const { scene } = reading;
+    const energyBefore = NB.Save.get().city.life.energy;
     if (!NB.Story.finish(scene.id, selected)) return;
     const reaction = scene.choices?.find(option => option.id === selected)?.reaction;
     const reward = scene.reward && `+ ${scene.reward.credits} créditos e ${NB.Cards.CARD_DB[scene.reward.card].name}.`;
+    const recovered = scene.id === 'archonPrep' ? NB.Save.get().city.life.energy - energyBefore : 0;
     close();
-    NB.City.refreshStory([reaction || (scene.evidence ? 'Prova registrada no diário.' : 'Investigação atualizada.'), reward].filter(Boolean).join(' '));
+    NB.City.refreshStory([reaction || (scene.evidence ? 'Prova registrada no diário.' : 'Investigação atualizada.'), reward,
+      recovered ? `Kira abriu o caminho. +${recovered} de energia.` : ''].filter(Boolean).join(' '));
+    if (scene.followup) open(scene.followup);
   }
 
   function renderPage() {
@@ -67,6 +71,14 @@
     if (!art.hidden && art.getAttribute('src') !== source) art.src = source;
     const options = $('story-options');
     options.replaceChildren();
+    if (!reading.replay && cursor === lines.length - 1 && scene.aside && NB.Story.get().nairTruthEarly === false) {
+      if (reading.heardAside) text(options, scene.aside.reply);
+      else button(options, scene.aside.label, () => {
+        reading.heardAside = true;
+        renderPage();
+        options.lastElementChild?.focus();
+      });
+    }
     if (cursor > 0) button(options, 'Anterior', () => step(-1));
     if (cursor < lines.length - 1) {
       button(options, 'Continuar', () => step(1)).classList.add('story-primary');
@@ -157,14 +169,7 @@
     }
   }
 
-  const prologue = [
-    ['prologo-oficina', 'As casas que ficaram acesas',
-      'Kairo cresceu no Viaduto. Durante as enchentes, ela instalou baterias para manter geladeiras de remédios e rádios ligados. A Vértice contratou sua equipe depois que a água baixou. Com salário e peças novas, dava para atender mais casas.'],
-    ['prologo-estacao', 'A noite em que o rádio calou',
-      'Meses depois, Kairo descobriu que medidores que ela tinha assinado pararam de pedir manutenção. Ela marcou um encontro na Estação Fantasma para comparar os registros. Homens com lanternas chegaram antes do contato. Nina chamou pelo rádio até Kairo perder o sinal.'],
-    ['prologo-casa', 'A chave ainda serve',
-      'Dois dias depois, seu cartão já não abre a própria casa. A chave antiga abre. Dona Nair guardou as faturas que a Vértice diz nunca ter emitido. Kairo quer descobrir quem tirou aquelas casas do cadastro e reparar o estrago que sua assinatura ajudou a fazer.']
-  ];
+  const { prologue } = NB.StoryData;
   let prologuePage = 0;
 
   function renderPrologue() {

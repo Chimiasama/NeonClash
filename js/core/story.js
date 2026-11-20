@@ -1,7 +1,7 @@
 (function (NB) {
   'use strict';
 
-  const { chapters, scenes } = NB.StoryData;
+  const { chapters, scenes, alliedLines } = NB.StoryData;
   const sceneById = Object.fromEntries(scenes.map(scene => [scene.id, scene]));
   const duels = {
     kira: { chapter: 1, deal: 'kiraDeal', route: 'delivery', label: 'Seguir a cadeia de Beto e Leila' },
@@ -14,14 +14,20 @@
     const flags = [...new Set((Array.isArray(raw?.flags) ? raw.flags : []).filter(id => scenes.some(scene => scene.grants === id)))];
     if ((flags.includes('vexAlt') || Number.isInteger(raw?.read?.vexAlt)) && !flags.includes('vexStub')) flags.push('vexStub');
     if (flags.includes('archonDeal') && !flags.includes('archonReady')) flags.push('archonReady');
+    const extraPages = { epilogue: 3, archonPrep: 1, press: 1 };
     const read = Object.fromEntries(Object.entries(raw?.read || {}).filter(([id, cursor]) =>
-      Object.hasOwn(sceneById, id) && Number.isInteger(cursor) && cursor >= 0 && cursor < sceneById[id].lines.length + (id === 'epilogue' ? 2 : 0)));
+      Object.hasOwn(sceneById, id) && Number.isInteger(cursor) && cursor >= 0 && cursor < sceneById[id].lines.length + (extraPages[id] || 0)));
     const choices = Object.fromEntries(Object.entries(raw?.choices || {}).filter(([id, value]) =>
       Object.hasOwn(sceneById, id) && sceneById[id].choices?.some(choice => choice.id === value)));
     const evidence = [...new Set((Array.isArray(raw?.evidence) ? raw.evidence : []).filter(id =>
       Object.hasOwn(sceneById, id) && sceneById[id].evidence && flags.includes(sceneById[id].grants)))];
     const chapter = Number.isInteger(raw?.chapter) ? Math.min(chapters.length - 1, Math.max(0, raw.chapter)) : 0;
-    return { started: raw?.started === true || prologueSeen, chapter, flags, choices, read, evidence };
+    const allies = Object.fromEntries(['kira', 'cipher', 'vex'].map(id => [id,
+      typeof raw?.allies?.[id] === 'boolean' ? raw.allies[id] : evidence.includes(`${id}Peace`)]));
+    const nairTruthEarly = typeof raw?.nairTruthEarly === 'boolean' ? raw.nairTruthEarly :
+      choices.tellingNair ? choices.tellingNair === 'tell' : null;
+    return { started: raw?.started === true || prologueSeen, chapter, flags, choices, read, evidence,
+      allies, nairTruthEarly, kiraSupportUsed: raw?.kiraSupportUsed === true };
   }
 
   const get = () => NB.Save.get().story;
@@ -62,16 +68,33 @@
   }
 
   function getLines(scene) {
+    const story = get();
+    if (scene.id === 'archonPrep' && story.allies.kira) return [...scene.lines, alliedLines.preparation];
+    if (scene.id === 'press' && story.allies.vex) return [scene.lines[0], alliedLines.isa, ...scene.lines.slice(1)];
     if (scene.id !== 'epilogue') return scene.lines;
     const ending = sceneById.ending.choices.find(option => option.id === choice('ending'));
     return [
       scene.lines[0],
       ending?.reaction || 'O destino das cópias está registrado no diário.',
-      choice('tellingNair') === 'tell'
-        ? 'Dona Nair abre a página em que Kairo explicou a assinatura e põe o protocolo novo ao lado.'
-        : 'Kairo volta ao espaço em branco no caderno de Dona Nair e termina a explicação que tinha prometido.',
+      ...(story.allies.vex && ending ? [alliedLines[ending.id]] : []),
+      story.nairTruthEarly ? alliedLines.tell : alliedLines.check,
       ...scene.lines.slice(1)
     ];
+  }
+
+  function applyKiraSupport() {
+    const story = get();
+    if (!story.allies.kira || story.kiraSupportUsed) return 0;
+    story.kiraSupportUsed = true;
+    return NB.CityLife.recoverEnergy(10);
+  }
+
+  function finalBattle() {
+    return active() && get().chapter === 5 && has('archonDeal') && !won('archon');
+  }
+
+  function eclipseInterference() {
+    return finalBattle() && get().allies.cipher;
   }
 
   function finish(id, selected) {
@@ -82,6 +105,9 @@
     if (scene.choices) story.choices[id] = selected;
     story.flags.push(scene.grants);
     if (scene.evidence) story.evidence.push(id);
+    if (id === 'tellingNair') story.nairTruthEarly = selected === 'tell';
+    if (scene.ally) story.allies[scene.ally] = true;
+    if (id === 'archonPrep' && !won('archon')) applyKiraSupport();
     if (scene.reward) NB.Save.applyInvestigationReward(scene.reward);
     if (scene.next) story.chapter++;
     if (scene.minutes) NB.CityLife.advance(scene.minutes, 4);
@@ -115,7 +141,7 @@
 
   function aftermath(location) {
     const ending = choice('ending');
-    if (!ending) return '';
+    if (!ending) return location === 'square' && get().chapter === 5 && get().allies.vex ? alliedLines.isa : '';
     if (location === 'square') {
       if (ending === 'publish') return 'A primeira edição da Isa circula na praça. As provas estão disponíveis com os dados pessoais protegidos.';
       if (ending === 'council') return 'Isa fixou no balcão a data em que o conselho deve responder pela guarda dos documentos.';
@@ -131,5 +157,5 @@
   }
 
   NB.Story = { normalize, get, start, active, matchAccess, pendingDuel, alternate, getScenes, available, finish,
-    remember, getLines, aftermath, archonWarning: () => active() && get().chapter === 5 && has('protocol') && !won('archon') ? NB.StoryData.archonWarning : '', has, choice, sceneById, chapters };
+    remember, getLines, aftermath, applyKiraSupport, finalBattle, eclipseInterference, archonWarning: () => active() && get().chapter === 5 && has('protocol') && !won('archon') ? NB.StoryData.archonWarning : '', has, choice, sceneById, chapters };
 })(window.NB = window.NB || {});

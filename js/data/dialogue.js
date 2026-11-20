@@ -26,7 +26,10 @@
     if (el) el.textContent = text;
   }
 
+  const cipherInterference = 'Interferência de Cipher: Firewall primário desativado';
+
   NB.Dialogue = {
+    cipherInterference,
     pickLine,
     setDialogue
   };

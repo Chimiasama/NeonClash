@@ -1,6 +1,6 @@
 # NeonClash — referência técnica
 
-Retrato da implementação após a expansão das rotas pacifistas e dos marcadores do mapa. Para acompanhar a história passo a passo, consulte o [guia da aventura](aventura-baixa-luz.md). O [plano de expansão](plano-expansao.md) documenta metas futuras.
+Retrato da implementação após a atualização narrativa do Núcleo Eclipse. Para acompanhar a história passo a passo, consulte o [guia da aventura](aventura-baixa-luz.md). O [plano de expansão](plano-expansao.md) documenta metas futuras.
 
 ## Produto e superfícies
 
@@ -39,7 +39,7 @@ Os controles consultam o estado corrente antes de realizar ações. Um duelo tem
 | Coleção e decks | `unlockedCards`, `customDeck`, `deckSlot` ativo e `deckSlots` para guardar as demais configurações. Os 12 IDs iniciais são preservados. |
 | Histórico | `defeatedBosses`, `clues`, `challengeWins`, `wins`, `matches` e `city.residentWins`. `city.discoveredResidents` registra os moradores ouvidos. `city.encounterWins` guarda as últimas vitórias dos encontros por período. As primeiras vitórias liberam os prêmios próprios. |
 | Cidade | `city.credits`, `city.district`, `city.traced` e `city.life`. Vida urbana guarda minutos absolutos, vigília, energia, implante, veículos, estoque, favores, turno do quiosque, contagem diária de trabalhos, entrega ativa e aviso da última ação. |
-| Investigação | `prologueSeen` controla a apresentação. `story` guarda ativação, capítulo, flags de passos, escolhas, páginas lidas e cenas de evidência. |
+| Investigação | `prologueSeen` controla a apresentação. `story` guarda ativação, capítulo, flags de passos, escolhas, páginas lidas, cenas de evidência, `allies`, `nairTruthEarly` e a aplicação única de `kiraSupportUsed`. |
 | Personalização | `affinities` guarda recalibrações por ID. `seenArt` guarda caminhos dos recursos já visualizados, com deduplicação. |
 | Áudio | `neon_breach_sound` guarda `on` ou `off`. `neon_breach_volume` guarda os dois valores de 0 a 100. Ambos têm padrão 70%. |
 
@@ -62,7 +62,7 @@ A distância é `max(2, ceil(hypot(Δx, Δy) / 10))` com as coordenadas do mapa.
 - O dia da interface vai das 06:00 às 19:00. A vigília máxima normal é 16 h. O implante de 130 créditos aumenta o limite para 20 h e a capacidade para 120 de energia.
 - Chegar com energia zero ou atingir o limite de vigília dispara o descanso. Em casa são 8 h grátis e energia cheia. Em outro local são 5 h na rua, energia volta a 60 e há 30% de chance de perder 60% do saldo restante, arredondado para cima. A tarifa vem antes do cálculo da perda.
 - Dormir voluntariamente restaura toda a energia e zera a vigília. Casa custa 0/8 h, Pensão custa 12/7 h e Hotel Espelho custa 26/5 h. A cama precisa estar acessível no local onde Kairo está e o saldo precisa cobrir o preço.
-- A mochila comporta 12 consumíveis no total. Café custa 4 e dá +15, energético custa 9 e dá +28, estímulo sintético custa 16 e dá +45. O consumo respeita o teto de energia e não reinicia a vigília.
+- A mochila comporta 12 consumíveis no total. A Feira e o Quiosque vendem os mesmos consumíveis. Contar cedo a verdade a Dona Nair reduz o preço em 20%, arredondado ao crédito mais próximo. A decisão adiada abre falas opcionais com Vex e Archon. Café custa 4 e dá +15, energético custa 9 e dá +28, estímulo sintético custa 16 e dá +45. O consumo respeita o teto de energia e não reinicia a vigília.
 - No fluxo original, rastrear pista usa quatro símbolos visíveis, dispensa cronômetro e avança 45 min e 8 de energia quando concluído. O rastreamento é uma etapa de progressão à parte dos trabalhos pagos.
 - Ajudar Maíra rende 16 créditos e custa 30 min e 5 de energia.
 - Cada morador listado permite conversar. Repetir a conversa na mesma sessão muda a resposta quando aplicável. Damião tem 10 HP e paga 5 por vitória. Tuca tem 14 HP e paga 7, com carta na primeira vitória. Dora tem 22 HP, usa Overclock e paga 12, com carta na primeira vitória. O estoque da Feira e essas vitórias oferecem rotas que podem coincidir.
@@ -101,6 +101,20 @@ Kira exige Beto → Leila → Estação. Cipher exige Raquel → Íris → Mural
 | Turno do Quiosque | Quiosque 24h, das 19h à 01h inclusive | 60 min e 12 energia | 14 créditos. O turno mantém seu limite de um pagamento por janela. |
 
 A entrega sorteia um destino com distância original `d ≥ 4`. `activeDelivery` guarda destino, minuto de início e distância, permitindo uma entrega por vez. Chegar pela viagem normal conclui o contrato. O tempo real inclui desvios e espera entre a aceitação e a chegada. Quando ele fica dentro de `7d` minutos, o bônus é `min(12, max(0, floor(10 × (1 − tempoReal / (7d)))))`. Após `8d` minutos, a base cai para 75%, arredondada para baixo, e o bônus é zero. A saturação incide depois do cálculo. A entrega é creditada na chegada, antes de eventual descanso forçado.
+
+### Terminais, Holding Meridiano e aliados
+
+O prólogo apresenta os Terminais Portáteis de Diagnóstico de Malha que a Vértice distribuía aos técnicos. A adaptação NeonClash transforma os protocolos industriais de Pulso, Malha e Sombra em cartas visuais. O clímax usa a interface do duelo para representar a transferência do barramento elétrico a Renan sob a contenção do Núcleo Eclipse, acionado por Archon no console mestre.
+
+A prova de Cipher abre automaticamente **Interceptação de Rádio**. A chamada registra a exigência de cortes pela Holding Meridiano e, ao ser concluída, libera o próximo capítulo. Saves que já passaram pela Muralha mantêm seu capítulo. As cenas de Renan e Nalva ligam a concessão, os relatórios adulterados e o corte de endereços mais pobres.
+
+| Aliado | Condição e efeito |
+| --- | --- |
+| Kira | A conclusão pacifista ativa a rota que desvia os drones. A preparação da Torre restaura até 10 energia, limitado ao máximo de Kairo e uma vez por save. |
+| Cipher | A extração isolada ativa a interferência. O duelo final da campanha começa com 18 HP, em vez de 20. O dossiê e a interface de combate mostram o aviso. Desafios, duelos rápidos e revanches após a vitória usam 20 HP. |
+| Vex | A conclusão com Helena e Bia ativa provas complementares. Isa comenta a documentação na Praça e cada final recebe uma passagem própria sobre a Holding Meridiano no epílogo. |
+
+A normalização do save deriva aliados antigos da evidência da conclusão pacifista e recupera `nairTruthEarly` da escolha original quando necessário. Recompensas existentes permanecem nas respectivas chaves de save. Os três IDs do lote pacifista são `exploit_15`, `exploit_16` e `unit_31`.
 
 ## Combate, cartas e progressão
 
@@ -159,14 +173,14 @@ Unidades são instâncias de campo com UID, ATK e DEF atuais, DEF máxima, afini
 | Item | Configuração |
 | --- | --- |
 | Web | Node.js 24 e npm. `npm ci`, `npm run dev` (porta 3000), `npm run lint` (TypeScript), `npm run build` e `npm run preview`. |
-| Testes | `tests/game.spec.js` tem 44 cenários Playwright. Usa perfil Pixel 7 e o build servido na porta 4317. Cobre combate, campanha, cidade, economia, galeria, áudio, deck e navegação. Para rodar localmente, gere `dist`, instale Chromium com `npx playwright install chromium` ou defina `CHROMIUM_PATH`, e execute `npm test`. |
+| Testes | `tests/game.spec.js` tem 47 cenários Playwright. Usa perfil Pixel 7 e o build servido na porta 4317. Cobre combate, campanha, cidade, economia, galeria, áudio, deck e navegação. Para rodar localmente, gere `dist`, instale Chromium com `npx playwright install chromium` ou defina `CHROMIUM_PATH`, e execute `npm test`. |
 | Android | Application ID `io.github.chimiasama.neonclash`, versão `0.1.0` e código 1. JDK 17, AGP 9.5.1, Gradle 9.9.2, SDK alvo/compile 35, mínimo 23 e Build Tools 36.0.0. A Activity usa orientação retrato. |
 | APK | Depois do build web, execute `./gradlew :app:assembleDebug` em `android/`. Saída `android/app/build/outputs/apk/debug/app-debug.apk`, com assinatura de depuração. |
 | CI | `.github/workflows/android.yml` usa Linux, Chrome preinstalado quando disponível e Chromium Playwright como alternativa. Executa lint, build e testes, gera o APK, verifica assinatura e arquivos internos e publica `NeonClash-debug` como artefato. Gatilhos configurados para push/PR na `main` e execução manual. |
 
 ## Conteúdo atual e metas
 
-O jogo disponível tem 41 cartas, 10 bairros, 23 locais, 100 moradores cadastrados, quatro chefes, quatro desafios de arquétipo e 36 cenas da investigação. O [plano de expansão](plano-expansao.md) descreve a meta de 500 cartas, sendo 495 encontráveis e cinco secretas de missão. Os roteiros de construção e descrições de moradores nos demais arquivos de `docs/` registram escopo planejado além dos recursos já descritos aqui.
+O jogo disponível tem 41 cartas, 10 bairros, 23 locais, 100 moradores cadastrados, quatro chefes, quatro desafios de arquétipo e 37 cenas da investigação. O [plano de expansão](plano-expansao.md) descreve a meta de 500 cartas, sendo 495 encontráveis e cinco secretas de missão. Os roteiros de construção e descrições de moradores nos demais arquivos de `docs/` registram escopo planejado além dos recursos já descritos aqui.
 
 O lote piloto usa arte procedural. Condensador Coral, Ímã de Núcleo e Janela Espectral são vendidos na Feira. Catadora de Ecos, Ferro de Pulso e Pressão de Sucata são prêmios das primeiras vitórias sobre Giba, Aline e Nanda, respectivamente. Os três adversários também usam cartas do lote.
 

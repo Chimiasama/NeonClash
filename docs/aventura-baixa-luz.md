@@ -1,6 +1,12 @@
 # NeonClash — guia e roteiro da aventura em Baixa Luz
 
-Documenta a aventura jogável com as cadeias pacifistas de três etapas. Contém spoilers, incluindo a responsabilidade de Archon e os três finais. Para a implementação e as regras gerais, veja a [referência técnica](referencia-tecnica.md).
+Documenta a aventura jogável com as cadeias pacifistas e os aliados do Núcleo Eclipse. Contém spoilers, incluindo a responsabilidade de Archon e os três finais. Para a implementação e as regras gerais, veja a [referência técnica](referencia-tecnica.md).
+
+## O que Kairo leva para um duelo
+
+Os decks são **Terminais Portáteis de Diagnóstico de Malha**. A Vértice os distribuía a técnicos para simular carga e intrusão nos medidores. O Ringue e hackers de rua desbloquearam a interface e passaram a chamar o sistema de **NeonClash**. As cartas representam protocolos industriais. Pulso força a carga elétrica, Malha contém o impacto e Sombra procura brechas silenciosas. Um duelo disputa quem controla administrativamente um nó da rede em tempo real.
+
+Na Torre, Kairo conecta o terminal ao barramento central para transferir a rede elétrica a Renan. Archon opera o console mestre e aciona o **Núcleo Eclipse**, uma IA Autônoma de Contenção Corporativa. Vencer significa derrubar a contenção para que Renan assuma a operação.
 
 ## Como iniciar e acompanhar
 
@@ -30,9 +36,9 @@ As tabelas indicam a ordem necessária, os caminhos equivalentes e os efeitos, a
 | Escolha | O que fazer | Efeito |
 | --- | --- | --- |
 | **Disputar a cópia em duelo** | Abra o dossiê na Estação e vença Kira. | Habilita a cena da prova e dá os prêmios normais de vitória. |
-| **Aceitar o favor de conferir o recibo na Feira** | Vá à Feira e escolha **Conferir o recibo anonimizado com Beto**. | Custa 25 min e 4 de energia. Beto encontra o carimbo de um terminal antigo do Ringue e encaminha a peça a Leila. |
+| **Aceitar o favor de conferir o recibo na Feira** | Vá à Feira e escolha **Conferir o recibo anonimizado com Beto**. | Custa 25 min e 4 de energia. Beto encontra o carimbo de um terminal antigo do Ringue e explica que Kira precisava pagar o tratamento do irmão na Clínica do Morro. |
 
-Na rota de duelo, volte à Estação e use **Registrar a prova da Estação**. Na rota pacifista, depois da Feira vá ao **Arquivo do Ringue** e use **Cruzar o código do terminal com Leila** (20 min, 4 de energia). Volte à **Estação Fantasma** e use **Entregar o dossiê auditado a Kira** para registrar a prova, receber **35 créditos** e desbloquear **Rastreador de Lote**. As duas rotas abrem **Quem pagou duas vezes**.
+Na rota de duelo, volte à Estação e use **Registrar a prova da Estação**. Na rota pacifista, depois da Feira vá ao **Arquivo do Ringue** e use **Cruzar o código do terminal com Leila** (20 min, 4 de energia). Leila confirma que a dívida do irmão já estava quitada antes da cobrança feita por fora do caixa. Volte à **Estação Fantasma** e use **Entregar o dossiê auditado a Kira** para registrar a prova, receber **35 créditos**, desbloquear **Rastreador de Lote** e ganhar a ajuda de Kira. As duas rotas abrem **Quem pagou duas vezes**.
 
 ## 3. Quem pagou duas vezes
 
@@ -41,7 +47,7 @@ Na rota de duelo, volte à Estação e use **Registrar a prova da Estação**. N
 | 1 | Arquivo do Ringue → **Conferir o livro de apostas com Leila** | Confirma que a dívida original de Kira já estava quitada. A segunda cobrança veio de fora do caixa. |
 | 2 | Garagem da Íris → **Comparar as duas versões com Íris** | Custa 25 min e 4 de energia. A primeira regra pedia verificar o endereço. A segunda o apagava do sistema. A assinatura de Kairo aparece na remessa. |
 | 3 | Clínica do Morro → **Visitar a casa atendida pela Clínica** | Ada liga as falhas reais à exclusão dos endereços e exige consentimento para usar nomes. |
-| 4 | Casa de Kairo → **Decidir o que contar a Dona Nair** | **Explicar agora o que assinei** faz Nair anotar a explicação e pedir cópia. **Combinar voltar depois da conferência** faz Nair deixar espaço para a resposta. Ambas abrem o capítulo seguinte e mudam uma fala do epílogo. |
+| 4 | Casa de Kairo → **Decidir o que contar a Dona Nair** | **Explicar agora o que assinei** mobiliza os vizinhos e concede 20% de desconto nos consumíveis da Feira e do Quiosque, com arredondamento ao crédito mais próximo. **Combinar voltar depois da conferência** abre respostas cínicas opcionais com Vex e Archon. As duas escolhas levam a conversas diferentes com Nair no epílogo. |
 
 ## 4. O guarda do funcionamento
 
@@ -53,7 +59,7 @@ Na rota de duelo, volte à Estação e use **Registrar a prova da Estação**. N
 | **Disputar o acesso no terminal** | Abra o dossiê e vença Cipher. | Habilita a cena da prova e dá os prêmios normais de vitória. |
 | **Combinar retirada supervisionada com Raquel** | Volte ao **Corredor de Serviço** e use **Solicitar a janela de manutenção isolada**. | Custa 25 min e 4 de energia. Raquel indica que falta o token óptico. |
 
-Na rota de duelo, volte à Muralha e use **Registrar as duas versões da ordem**. Para seguir sem duelo, vá à **Garagem da Íris** e use **Calibrar o filtro de isolamento com Íris** (25 min, 4 de energia). Na **Muralha Setorial**, use **Executar a extração isolada**. A mesma ação protege as credenciais, registra as versões da ordem e rende **50 créditos** e **Filtro de Isolamento**. As duas rotas abrem o capítulo seguinte.
+Na rota de duelo, volte à Muralha e use **Registrar as duas versões da ordem**. Para seguir sem duelo, vá à **Garagem da Íris** e use **Calibrar o filtro de isolamento com Íris** (25 min, 4 de energia). Na **Muralha Setorial**, use **Executar a extração isolada**. A mesma ação protege as credenciais dos técnicos das enchentes, registra as versões da ordem e rende **50 créditos**, **Filtro de Isolamento** e a ajuda de Cipher. Nas duas rotas, registrar a prova abre imediatamente a **Interceptação de Rádio**. Archon conta que a Holding Meridiano exigiu os cortes até sexta-feira sob ameaça de cancelar a concessão inteira. Conclua a chamada para abrir o capítulo seguinte.
 
 ## 5. O quarto que nunca foi ocupado
 
@@ -65,19 +71,19 @@ Na rota de duelo, volte à Muralha e use **Registrar as duas versões da ordem**
 | **Disputar a entrega em duelo** | Abra o dossiê e vença Vex. | Habilita a cena da prova e dá os prêmios normais de vitória. |
 | **Pedir uma entrega testemunhada no Teatro** | Na **Pensão do Canal**, escolha **Levantar o canhoto da reserva com Cris**. | Custa 20 min e 4 de energia. Cris separa a evidência do registro de hóspedes. |
 
-Na rota de duelo, volte ao Hotel e use **Ler a ordem original com Vex**. Na alternativa pacifista, do canhoto siga para o **Teatro do Espelho** e use **Conferir o horário do arquivo com Bia** (25 min, 4 de energia). Volte ao **Hotel Espelho** e escolha **Apresentar a conferência testemunhada a Vex**. A leitura comprova a assinatura de Archon e rende **65 créditos** e **Auditora de Rede**. As duas rotas abrem a preparação da transição.
+Na rota de duelo, volte ao Hotel e use **Ler a ordem original com Vex**. Na alternativa pacifista, do canhoto siga para o **Teatro do Espelho** e use **Conferir o horário do arquivo com Bia** (25 min, 4 de energia). Nos bastidores, conheça Helena, a ex-auditora que Vex protegeu. Ela autentica o registro com Bia e entrega uma chave complementar. Volte ao **Hotel Espelho** e escolha **Apresentar a conferência testemunhada a Vex**. A leitura comprova a assinatura de Archon e rende **65 créditos**, **Auditora de Rede** e o acesso à prova de Helena. As duas rotas abrem a preparação da transição.
 
 ## 6. Tirar a cidade do desligamento
 
 | Passo | Local e ação | Resultado |
 | --- | --- | --- |
-| 1 | Subestação do Cais → **Reproduzir os dois comandos com Renan** | O teste mostra que a nova regra permite desligar endereços excluídos. Renan precisa de reserva de energia e um canal de confirmação. |
+| 1 | Subestação do Cais → **Reproduzir os dois comandos com Renan** | O teste mostra que a nova regra permite desligar os endereços excluídos. Renan compara o relatório entregue à Holding Meridiano aos registros de campo e identifica a adulteração que escondia as ruas mais pobres. Ele precisa de reserva de energia e um canal de confirmação. |
 | 2a | Clínica do Morro → **Preparar a reserva de energia da Clínica** | Custa 25 min e 4 de energia. Prepara a bateria e os horários de troca. |
 | 2b | Antena Comunitária → **Reservar o canal com Nina**, ou Praça do Centro → **Entregar a cópia de transição à Isa** | São alternativas para a mesma confirmação. A Antena não tem custo de cena. A Praça custa 20 min e 4 de energia. Faça 2a e uma rota de 2b em qualquer ordem. |
-| 3 | Balcão Cívico → **Pedir a Nalva o histórico do cadastro** | Guarda o protocolo que preserva o histórico original. |
-| 4 | Torre Vértice → **Confirmar preparação para a Torre** | O diário e o local avisam que o duelo é obrigatório e recomendam revisar o deck de 20 cartas e a energia. Registre a leitura para liberar a conversa. |
-| 5 | Torre Vértice → **Confrontar Archon com os documentos** | Kairo confronta quem autorizou a tomada de sua cópia. A conversa libera o dossiê. |
-| 6 | Torre Vértice → **Abrir dossiê** → vencer Archon | A vitória é exigida para liberar **Decidir como divulgar as provas**. |
+| 3 | Balcão Cívico → **Pedir a Nalva o histórico do cadastro** | Guarda o protocolo original, com a ordem de corte e a pressão da Holding Meridiano registradas. |
+| 4 | Torre Vértice → **Confirmar preparação para a Torre** | O diário e o local avisam que o duelo é obrigatório e recomendam revisar o deck de 20 cartas e a energia. Registre a leitura para liberar a conversa. Se Kira for aliada, ela desvia os drones pelo rádio e Kairo recupera até 10 de energia, uma vez por save. |
+| 5 | Torre Vértice → **Confrontar Archon com os documentos** | Kairo conecta o terminal e Archon aciona a IA de contenção. O dossiê identifica **ARCHON // Núcleo Eclipse**. |
+| 6 | Torre Vértice → **Abrir dossiê** → vencer Archon | O Eclipse começa com 20 HP, ou 18 HP se Cipher desativou a defesa primária. A vitória libera **Decidir como divulgar as provas**. |
 | 7 | Torre Vértice → **Decidir como divulgar as provas** | Escolha um dos três finais. Todos liberam o epílogo. |
 
 ### Os três finais
@@ -88,7 +94,7 @@ Na rota de duelo, volte ao Hotel e use **Ler a ordem original com Vex**. Na alte
 | **Entregar as provas ao conselho dos bairros** | Os bairros guardam os depoimentos enquanto organizam a transição. Isa fixa um prazo público para a resposta do conselho. A Clínica permanece ativa. |
 | **Aceitar a regularização limitada** | O endereço de Kairo é regularizado. Nair guarda os pedidos restantes e Isa acompanha os endereços ainda excluídos. Ada mantém a bateria de reserva para os casos pendentes. |
 
-O final altera falas no epílogo, na Praça, na Clínica e na Antena. A conclusão não concede um prêmio próprio de créditos ou de cartas. Os prêmios pelo duelo são computados na vitória sobre Archon.
+O final altera falas no epílogo, na Praça, na Clínica e na Antena. A prova de Helena fortalece a posição de Isa na Praça e acrescenta um desdobramento contra a Holding Meridiano em cada um dos três finais. A conclusão não concede um prêmio próprio de créditos ou de cartas. Os prêmios pelo duelo são computados na vitória sobre Archon.
 
 ## 7. De volta ao Viaduto
 
@@ -115,11 +121,11 @@ Cada item numerado corresponde a uma página. As provas e as reações são exib
 
 #### As casas que ficaram acesas
 
-Kairo cresceu no Viaduto. Durante as enchentes, ela instalou baterias para manter geladeiras de remédios e rádios ligados. A Vértice contratou sua equipe depois que a água baixou. Com salário e peças novas, dava para atender mais casas.
+Kairo cresceu no Viaduto. Durante as enchentes, ela instalou baterias para manter geladeiras de remédios e rádios ligados. A Vértice contratou sua equipe e entregou Terminais Portáteis de Diagnóstico de Malha. Os técnicos chamavam esses aparelhos de decks e usavam suas simulações de carga e intrusão para testar os medidores.
 
 #### A noite em que o rádio calou
 
-Meses depois, Kairo descobriu que medidores que ela tinha assinado pararam de pedir manutenção. Ela marcou um encontro na Estação Fantasma para comparar os registros. Homens com lanternas chegaram antes do contato. Nina chamou pelo rádio até Kairo perder o sinal.
+O Ringue e hackers de rua desbloquearam os decks e chamaram a adaptação de NeonClash. Os protocolos apareciam como cartas: Pulso sobrecarregava, Malha continha e Sombra abria brechas silenciosas. Meses depois, Kairo descobriu que medidores que ela tinha assinado pararam de pedir manutenção. Ela marcou um encontro na Estação Fantasma para comparar os registros. Homens com lanternas chegaram antes do contato. Nina chamou pelo rádio até Kairo perder o sinal.
 
 #### A chave ainda serve
 
@@ -190,7 +196,8 @@ Dois dias depois, seu cartão já não abre a própria casa. A chave antiga abre
 
 1. Severino abre o livro do pátio. Duas entradas estão abaixo do número do lote da Feira.
 2. Severino — Trouxeram o bilhete corrigido para justificar a entrada. Eu anotei a placa antes de abrir o portão.
-3. Kairo confere o horário. A equipe já estava no pátio quando o ônibus fez o desvio.
+3. Severino — Lembra dos Terminais Portáteis de Diagnóstico de Malha? A equipe da Vértice usava esses decks para simular carga e intrusão nos medidores. Agora até o portão registra a assinatura deles.
+4. Kairo confere o horário. A equipe já estava no pátio quando o ônibus fez o desvio.
 
 **Prova registrada** — O livro de Severino confirma a entrada pelo pátio antes da chegada de Kairo. A equipe mostrou o itinerário corrigido.
 
@@ -198,13 +205,15 @@ Dois dias depois, seu cartão já não abre a própria casa. A chave antiga abre
 
 **Local** · Estação Fantasma
 
-1. Kairo — A linha virou duas quadras antes. Quem tinha o itinerário velho teria esperado no lugar errado.
-2. Kira — A Mara anotou a virada no meu bilhete. Comprei passagem nela quase toda noite. Quando me ofereceram para pagar minha dívida por um trajeto que eu já fazia, achei que queriam saber por onde chegavam as peças.
-3. Kairo — No papel só tem o número do lote. Onde está meu nome?
-4. Kira abre a câmera, avança duas imagens e volta uma. No portão da estação, a equipe usa uma foto de Kairo impressa com a mesma referência do lote.
-5. Kira — Vi isso depois de receber. Deu tempo de apagar meu anúncio. Deu tempo de sair do pátio. Eu não voltei para te procurar.
-6. Kairo — A Nina voltou. Tenho ouvido o áudio dela há dois dias tentando descobrir o que aconteceu antes de eu ouvir a voz dela.
-7. Kira — Eu te dou a parte do recibo que mostra quem pagou. Os nomes das pessoas que vieram comigo ficam no meu terminal. Quer levar a cópia inteira, a gente combina o que você vai fazer com ela primeiro.
+1. Kira — Aqui na Estação, um duelo disputa o controle administrativo de um nó em tempo real. O Ringue deu o nome NeonClash para o que os técnicos já carregavam no bolso.
+2. Kairo — Pulso força a carga, Malha contém o impacto e Sombra procura a brecha. Quem segura o nó decide qual protocolo fica de pé.
+3. Kairo — A linha virou duas quadras antes. Quem tinha o itinerário velho teria esperado no lugar errado.
+4. Kira — A Mara anotou a virada no meu bilhete. Comprei passagem nela quase toda noite. Quando me ofereceram para pagar minha dívida por um trajeto que eu já fazia, achei que queriam saber por onde chegavam as peças.
+5. Kairo — No papel só tem o número do lote. Onde está meu nome?
+6. Kira abre a câmera, avança duas imagens e volta uma. No portão da estação, a equipe usa uma foto de Kairo impressa com a mesma referência do lote.
+7. Kira — Vi isso depois de receber. Deu tempo de apagar meu anúncio. Deu tempo de sair do pátio. Eu não voltei para te procurar.
+8. Kairo — A Nina voltou. Tenho ouvido o áudio dela há dois dias tentando descobrir o que aconteceu antes de eu ouvir a voz dela.
+9. Kira — Eu te dou a parte do recibo que mostra quem pagou. Os nomes das pessoas que vieram comigo ficam no meu terminal. Quer levar a cópia inteira, a gente combina o que você vai fazer com ela primeiro.
 
 Escolhas exibidas
 
@@ -218,20 +227,21 @@ Escolhas exibidas
 1. Beto compara o valor e a data com a via da banca. O nome dos passageiros está coberto nas duas cópias.
 2. Beto — A dívida entrou quitada e reapareceu num recibo novo. Quem fez isso usou o código do equipamento da Estação.
 3. No verso, Beto encontra o carimbo de um terminal antigo do Ringue. Kairo guarda o código para conferir com Leila.
+4. Beto — O irmão da Kira precisava de tratamento na Clínica do Morro. Ela estava vendendo qualquer rota que pagasse pelo próximo atendimento.
 
 #### Cruzar o código do terminal com Leila
 
 **Local** · Arquivo do Ringue
 
 1. Leila compara o carimbo com o livro de apostas. O código pertence a um terminal desativado.
-2. Leila — Quem reabriu essa dívida usou o número antigo. O dinheiro entrou por fora do caixa. Aqui está a cópia sem os nomes dos apostadores.
+2. Leila — A dívida do irmão já estava quitada. Quem cobrou de novo usou o número antigo e lançou o dinheiro por fora do caixa. Aqui está a cópia sem os nomes dos apostadores.
 
 #### Entregar o dossiê auditado a Kira
 
 **Local** · Estação Fantasma
 
-1. Kairo entrega a via de Beto com a conferência de Leila. Kira compara o carimbo com o recibo da rota.
-2. Kira — O projeto de recuperação da Vértice pagou a rota por fora do Ringue. Pode guardar a prova. Vou te passar um rastreador que separa esses números sem abrir a lista de passageiros.
+1. Kairo entrega a via de Beto com a conferência de Leila. Kira compara o carimbo com o recibo da rota e reconhece a quitação do tratamento do irmão.
+2. Kira — O projeto da Vértice pagou a rota por fora do Ringue. Me fizeram vender teu trajeto por uma conta que já estava paga. Guarda a prova e leva meu rastreador. Se a Torre fechar em volta de você, chama no rádio.
 
 **Prova registrada** — O dossiê auditado comprova que o pagamento da rota saiu da verba da Vértice e entrou por fora do caixa do Ringue.
 
@@ -289,8 +299,8 @@ Escolhas exibidas
 
 Escolhas exibidas
 
-- **Explicar agora o que assinei** — Nair puxa uma cadeira. Ela anota o ponto que ainda falta provar e pede uma cópia para a reunião dos moradores.
-- **Combinar voltar depois da conferência** — Nair empresta os recibos até a visita ao Cais. Ela reserva um espaço em branco para a resposta de Kairo.
+- **Explicar agora o que assinei** — Nair puxa uma cadeira. Ela anota o que falta provar e reúne os vizinhos. A Feira e o Quiosque dão 20% de desconto nos consumíveis para ajudar Kairo a continuar.
+- **Combinar voltar depois da conferência** — Nair empresta os recibos até a visita ao Cais. Ela deixa o espaço em branco. Vai guardar os comprovantes, mas quer ouvir de Kairo o que aconteceu.
 
 ### 4. O guarda do funcionamento
 
@@ -331,14 +341,14 @@ Escolhas exibidas
 **Local** · Garagem da Íris
 
 1. Íris testa o filtro em uma ficha antiga. O número da ordem atravessa o leitor. Os nomes ficam do outro lado.
-2. Íris — Agora leva o token para a Muralha. Raquel já sabe quais colunas precisa preservar.
+2. Íris — Agora leva o token para a Muralha. Foram esses técnicos que mantiveram as bombas e a Clínica ligadas durante as enchentes. O nome deles fica no cofre.
 
 #### Executar a extração isolada
 
 **Local** · Muralha Setorial
 
 1. Raquel conecta o token. Cipher passa as duas versões pela janela isolada. As credenciais ficam no cofre.
-2. Cipher — A primeira suspende seu acesso. A segunda inclui um recolhimento. O anexo que sumiu estava ligado a uma reserva no Hotel Espelho. Leva o número a Cris.
+2. Cipher — A primeira suspende seu acesso. A segunda inclui um recolhimento. O anexo que sumiu estava ligado a uma reserva no Hotel Espelho. Leva o número a Cris. Quando chegar à Torre, eu ainda tenho acesso à primeira camada de defesa do Eclipse.
 
 **Prova registrada** — A cópia isolada preserva as duas versões da ordem sem divulgar as credenciais. O anexo ausente aponta para o Hotel Espelho.
 
@@ -350,6 +360,17 @@ Escolhas exibidas
 2. Cipher — Esse recibo de reserva foi anexado quando passaram a ordem para outra equipe. Leva o número para Cris antes de tentar abrir o registro todo.
 
 **Prova registrada** — O cofre contém versões diferentes da mesma ordem. O anexo que falta aponta para uma reserva no Hotel Espelho.
+
+#### Interceptação de Rádio
+
+**Local** · Muralha Setorial
+
+1. A frequência privada de Kairo acorda com três estalos. Era o sinal da equipe de manutenção durante as enchentes.
+2. Archon — Lembra da bateria que mandamos para a rua da Nair? A Holding Meridiano, nossa diretoria externa, me deu até sexta para cortar os endereços deficitários. Se eu não entregasse os números, cancelariam a concessão. Toda Baixa Luz ficaria no escuro.
+3. Kairo — Você tirou as casas da lista para o contrato fechar. Lá embaixo a gente continuou atendendo gente que, para a diretoria, tinha deixado de existir.
+4. Archon — Eu sabia o que custava perder a equipe inteira. Achei que podia escolher quais ruas manter. Segue o recibo da reserva, Kairo. Depois me diz quem mais assinou.
+
+**Prova registrada** — A Holding Meridiano exigiu cortes até sexta-feira sob pena de cancelar a concessão. Archon admitiu excluir endereços para manter o contrato.
 
 ### 5. O quarto que nunca foi ocupado
 
@@ -371,6 +392,8 @@ Escolhas exibidas
 2. Vex — Guardei a cópia original porque a hora da ordem me chamou atenção. Posso colocar a cópia na mesa em duelo. Celina também tem uma sala, se você levar o arquivo junto com Bia.
 3. Kairo pode escolher quem testemunha a entrega. A lista de hóspedes fica no hotel.
 
+**Resposta opcional ao adiar a conversa com Nair** — Perguntar quanto vale uma testemunha. Kairo — Você vendia silêncio por diária. Quanto vale uma testemunha hoje? Vex — Se ela voltar viva pra casa, hoje vale mais que qualquer contrato.
+
 Escolhas exibidas
 
 - **Disputar a entrega em duelo**
@@ -387,15 +410,15 @@ Escolhas exibidas
 
 **Local** · Teatro do Espelho
 
-1. Celina abre a sala neutra do Teatro. Bia confronta o hash do horário com o canhoto de Cris.
-2. Bia — O horário do anexo bate com a reserva. Eu assino como testemunha. Agora Vex pode abrir o original sem expor os hóspedes.
+1. Celina abre a sala neutra do Teatro. Vex escondeu Helena ali depois que a ex-auditora descobriu a fraude da Holding Meridiano. Bia compara o selo de horário do arquivo com o canhoto de Cris.
+2. Helena — Bia assina a conferência comigo. Leva esta chave complementar para Vex. Ela abre o anexo de horário sem expor os hóspedes.
 
 #### Apresentar a conferência testemunhada a Vex
 
 **Local** · Hotel Espelho
 
-1. Vex lê a conferência assinada por Bia e libera o original. O aviso de baixa já estava pronto antes de Kairo perder o sinal.
-2. Vex — A assinatura de Archon está aqui, na ordem de recolher sua cópia. A Auditora pode te ajudar a revisar o que ainda falta antes de subir a Torre.
+1. Vex lê a conferência assinada por Bia e Helena. A chave complementar autentica o anexo e ele libera o original. O aviso de baixa já estava pronto antes de Kairo perder o sinal.
+2. Vex — A assinatura de Archon está aqui, na ordem de recolher sua cópia. A Auditora pode te ajudar na Torre. Depois leva a via de Helena à Isa: os números alcançam gente acima do Archon.
 
 **Prova registrada** — O canhoto, a confirmação testemunhada e a ordem original mostram que a baixa precedeu a emboscada. Archon assinou o recolhimento.
 
@@ -420,8 +443,9 @@ Escolhas exibidas
 
 1. Renan carrega uma cópia isolada do painel. Kairo digita o número do medidor de Dona Nair.
 2. Na primeira versão, o endereço entra na fila de verificação. Na segunda, some da lista e o painel permite desligá-lo.
-3. Renan — Eu consigo transferir o controle. A clínica precisa de uma bateria carregada e a equipe precisa de um canal para confirmar cada linha.
-4. Kairo anota duas rotas para a comunicação: a Antena ou a entrega do arquivo à Isa na praça.
+3. Renan — Os anexos da Holding Meridiano mostram o que Archon fez para manter a concessão. Contou como estáveis os bairros ricos e apagou da amostra as ruas em que a gente mais precisou trocar bateria.
+4. Renan — Eu consigo transferir o controle. A clínica precisa de uma bateria carregada e a equipe precisa de um canal para confirmar cada linha.
+5. Kairo anota duas rotas para a comunicação: a Antena ou a entrega do arquivo à Isa na praça.
 
 **Prova registrada** — No painel isolado, a versão nova exclui o endereço e permite seu corte. O Cais confirmou como transferir o controle.
 
@@ -451,8 +475,9 @@ Escolhas exibidas
 **Local** · Balcão Cívico
 
 1. Nalva confere o recibo de Dona Nair e emite o histórico do endereço de Kairo com um número de pedido.
-2. Nalva — Esse número fica com você. Se alguém oferecer uma segunda via por fora, pergunta se o prédio inteiro voltou a constar.
-3. Kairo guarda o protocolo e segue para a Torre. A equipe já tem reserva e canal de confirmação.
+2. Nalva — A Holding Meridiano recebeu o relatório alterado. No arquivo original, a ordem manda cortar primeiro os endereços mais pobres. A pressão da diretoria está assinada no protocolo.
+3. Nalva — Esse número fica com você. Se alguém oferecer uma segunda via por fora, pergunta se o prédio inteiro voltou a constar.
+4. Kairo guarda o protocolo e segue para a Torre. A equipe já tem reserva e canal de confirmação.
 
 **Prova registrada** — O protocolo de Nalva preserva o histórico original do endereço e permite contestar a baixa com os documentos reunidos.
 
@@ -473,12 +498,17 @@ Escolhas exibidas
 5. Archon abre uma gaveta e tira o cartão que usavam para testar a entrada da primeira equipe. Ainda tem fita de isolamento no canto.
 6. Archon — Eu tinha certeza de que você ia publicar na hora e que eu ia ter de explicar por que não havia equipe suficiente para manter tudo ligado quando a diretoria recuasse. Escolhi tomar sua cópia. Hoje eu consigo devolver seu acesso em cinco minutos.
 7. Kairo — A Ada perguntou se eu consigo devolver o da casa onde a gente testou a primeira bateria. Eu vim com gente suficiente para fazer isso junto.
+8. Kairo conecta seu Terminal Portátil de Diagnóstico ao barramento central. Renan aguarda no Cais para receber o controle da rede elétrica.
+9. No console mestre da diretoria, Archon aciona o Núcleo Eclipse, a IA Autônoma de Contenção Corporativa. A máquina trava a transferência e assume a defesa do barramento.
+10. Archon — Você está usando o protocolo de campo que eu te ensinei contra a própria malha central, Kairo!
+
+**Resposta opcional ao adiar a conversa com Nair** — Perguntar quanto vale uma rua no balanço. Kairo — Qual era a cotação de uma rua no seu balanço? Archon — Menos que uma concessão na sexta. Mais do que consigo admitir olhando para você.
 
 #### Decidir como divulgar as provas
 
 **Local** · Torre Vértice
 
-1. O duelo terminou. Renan pede a confirmação para assumir a operação. Nina e Isa esperam para saber quais provas vão circular e quando.
+1. O Núcleo Eclipse perdeu o controle do barramento. Kairo confirma a transferência e Renan assume a rede elétrica. Nina e Isa esperam para saber quais provas vão circular e quando.
 2. Kairo separa os textos autorizados dos registros pessoais. A equipe pode divulgar agora com o plano de transição, entregar os arquivos a um conselho ou aceitar a regularização limitada oferecida por Archon.
 
 Escolhas exibidas
@@ -499,8 +529,20 @@ Escolhas exibidas
 4. Kira compartilhou os horários que pode divulgar. A Pensão continua aberta, com o registro de hóspedes sob guarda de Cris. Vex deixou uma via protegida para as testemunhas. A escala de Cipher foi devolvida à equipe que acompanha a transição.
 5. Nair coloca outra solicitação sobre a mesa. Desta vez, há lugar para anotar o que a cidade respondeu.
 
-- **Se explicou a assinatura antes** — Dona Nair abre a página em que Kairo explicou a assinatura e põe o protocolo novo ao lado.
-- **Se adiou a explicação** — Kairo volta ao espaço em branco no caderno de Dona Nair e termina a explicação que tinha prometido.
+- **Se explicou a assinatura antes** — Dona Nair põe o protocolo ao lado da assinatura. Os vizinhos trazem as próprias contas para ajudar a conferir as próximas casas. Nair — Você não veio prometer que ia dar conta sozinha. Você veio contar a verdade. Foi assim que deu pra gente chegar junto.
+- **Se adiou a explicação** — Dona Nair abre a página que deixou em branco. Nair — Nesse tempo todo eu fiquei imaginando que parte você achava que eu não aguentava ouvir. Fala agora. Ainda dá para começar a devolver a confiança.
+
+### Passagens dos aliados
+
+**Kira antes da Torre** — Kira — Os drones foram atrás do sinal da minha sub-rede. Fica onde está e respira. Quando eu abrir a passagem, você sobe. Kairo recupera até 10 de energia sem gastar tempo nem créditos.
+
+**Isa na Praça** — Isa compara a chave de Helena ao relatório. Já pode mostrar que a Holding Meridiano recebeu números adulterados e acompanhou a ordem de corte.
+
+**Publicação** — A edição inclui os horários certificados por Helena. A investigação alcança a Holding Meridiano, e a diretoria externa é chamada a explicar a ordem de corte.
+
+**Conselho** — O conselho protege o depoimento de Helena e usa a via certificada para convocar a Holding Meridiano. A auditoria passa dos escritórios de Archon à diretoria externa.
+
+**Regularização limitada** — Mesmo com o acordo limitado, Isa protocola a prova de Helena. Há uma investigação separada sobre a Holding Meridiano, com o relatório original anexado.
 
 ### Falas de Baixa Luz depois da decisão
 
@@ -555,7 +597,7 @@ Os dossiês usam estas falas na campanha original. A investigação ativa mostra
 
 #### ARCHON
 
-- **ARCHON** — Impressionante, Kairo. Ensinei você a ver a cidade como um circuito. A Operação Eclipse só fez a pergunta seguinte: quem pode ser desligado?
-- **KAIRO** — Você me traiu para enterrar os testes ilegais, Archon. Hoje eu derrubo seu núcleo e exponho tudo na rede aberta!
+- **ARCHON** — Você está usando o protocolo de campo que eu te ensinei contra a própria malha central, Kairo! Console mestre, acione o Núcleo Eclipse.
+- **KAIRO** — Meu terminal já está no barramento central. Vou tirar a rede elétrica da contenção do Eclipse e entregar o controle a Renan.
 
-**PISTA FINAL · OPERAÇÃO ECLIPSE EXPOSTA** — O núcleo central de ARCHON foi destruído e os arquivos da Operação Eclipse vazaram para toda a rede. Sua vingança foi concluída e seu nome limpo.
+**PISTA FINAL · OPERAÇÃO ECLIPSE EXPOSTA** — O Núcleo Eclipse perdeu o controle do barramento. Renan pode assumir a rede elétrica. Os documentos da Vértice estão preservados para a decisão de Kairo.
