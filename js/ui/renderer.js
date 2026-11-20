@@ -45,6 +45,7 @@
     }
 
     renderPhaseStripAndButtons(state);
+    renderDefensePreview(state);
     renderBoard(state, 'enemy');
     renderBoard(state, 'player');
     renderHand(state);
@@ -63,6 +64,29 @@
         NB.Physics.clearLasers();
       }
     }
+  }
+
+  function renderDefensePreview(state) {
+    const preview = document.getElementById('defense-preview');
+    preview.replaceChildren();
+    preview.hidden = true;
+    if (state.phase !== 'PLAYER_DEFENSE') return;
+    const overclock = state.enemyOverclock;
+    for (const [attackSlot, defenseSlot] of Object.entries(state.defenseMap)) {
+      const attacker = state.enemy.field[attackSlot];
+      const defender = state.player.field[defenseSlot];
+      if (!attacker || !defender) continue;
+      const partner = overclock && Number(attackSlot) === overclock.slots[0]
+        ? state.enemy.field[overclock.slots[1]] : null;
+      const attack = partner ? overclock.combinedAtk + NB.Combat.overclockSynergy(attacker, partner)
+        : NB.Combat.clashDamage(attacker, defender);
+      const counter = partner ? defender.atk : NB.Combat.clashDamage(defender, attacker);
+      const pierce = partner ? Math.max(0, attack - defender.def) : 0;
+      const clash = document.createElement('span');
+      clash.textContent = `Sua posição ${defenseSlot + 1} DEF ${defender.def}→${Math.max(0, defender.def - attack)} · Inimigo ${Number(attackSlot) + 1} DEF ${attacker.def}→${Math.max(0, attacker.def - counter)}${pierce ? ` · −${pierce} HP` : ''}`;
+      preview.appendChild(clash);
+    }
+    preview.hidden = preview.childElementCount === 0;
   }
 
   function renderPhaseStripAndButtons(state) {
@@ -548,6 +572,23 @@
       primaryBtn.textContent = 'VOLTAR À CIDADE';
       primaryBtn.dataset.action = 'netmap';
       secondaryBtn.textContent = 'REVANCHE';
+      secondaryBtn.dataset.action = 'rematch';
+    } else if (state.challenge) {
+      const won = winner === 'player';
+      panel.classList.add(won ? 'victory' : 'defeat');
+      kicker.textContent = state.challenge.name;
+      title.textContent = won ? 'DESAFIO CONCLUÍDO' : 'TENTE OUTRA ABORDAGEM';
+      title.style.color = won ? 'var(--ram)' : 'var(--magenta)';
+      kicker.style.color = title.style.color;
+      clueBox.style.display = 'flex';
+      const rewards = state.challengeRewards || [];
+      document.getElementById('go-clue-title').textContent = won ? 'RECOMPENSAS' : 'OBJETIVO DO DECK';
+      document.getElementById('go-clue-text').textContent = rewards.length
+        ? rewards.map(id => NB.Cards.CARD_DB[id].name).join(' + ')
+        : won ? 'Você já coletou as cartas deste desafio.' : state.challenge.goal;
+      primaryBtn.textContent = 'VOLTAR À CIDADE';
+      primaryBtn.dataset.action = 'netmap';
+      secondaryBtn.textContent = 'TENTAR DE NOVO';
       secondaryBtn.dataset.action = 'rematch';
     } else if (state.mode === 'arena') {
       const won = winner === 'player';

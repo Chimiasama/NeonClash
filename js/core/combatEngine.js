@@ -10,6 +10,10 @@
     return Number(Boolean(first.affinity && second.affinity && first.affinity !== second.affinity));
   }
 
+  function clashDamage(attacker, defender) {
+    return attacker.atk + affinityBonus(attacker, defender);
+  }
+
   /* Motor de Combate:
      - Choques simultâneos (ATK vs DEF), destruição com partículas
      - Palavras-chave [FIREWALL], [VÍRUS] (-2 ATK) e [DRENO] (rouba 1 RAM)
@@ -43,8 +47,8 @@
 
         const atkBonus = affinityBonus(attacker, defender);
         const defBonus = affinityBonus(defender, attacker);
-        const atkDmg = attacker.atk + atkBonus;
-        const defDmg = defender.atk + defBonus;
+        const atkDmg = clashDamage(attacker, defender);
+        const defDmg = clashDamage(defender, attacker);
         defender.def -= atkDmg;
         attacker.def -= defDmg;
 
@@ -428,6 +432,7 @@
 
   NB.Combat = {
     affinityBonus,
+    clashDamage,
     overclockSynergy,
     resolveCombatSequence,
     executeOverclockAttack,

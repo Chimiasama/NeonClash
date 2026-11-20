@@ -59,6 +59,11 @@ jobs:
           grep -Fx 'assets/js/data/music.js' <<< "$entries"
           grep -Fx 'assets/js/data/soundEffects.js' <<< "$entries"
           grep -Fx 'assets/cards/recompilar.webp' <<< "$entries"
+          grep -Fx 'assets/js/core/cardEffects.js' <<< "$entries"
+          grep -Fx 'assets/js/data/challenges.js' <<< "$entries"
+          for card in unit_{24..27} exploit_{08..11}; do
+            grep -Fx "assets/cards/$card.webp" <<< "$entries"
+          done
           for portrait in lume.png nina.png risco.webp kira.png cipher.png vex.png archon.png; do
             grep -Fx "assets/avatars/$portrait" <<< "$entries"
           done

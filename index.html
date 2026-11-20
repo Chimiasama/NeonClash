@@ -74,6 +74,8 @@
           <span id="phase-hint" class="phase-hint">Toque numa carta para inspecionar</span>
         </div>
 
+        <output id="defense-preview" class="defense-preview" aria-live="polite" hidden></output>
+
         <!-- Slots Jogador -->
         <div class="board-row" id="player-board">
           <div class="slot player-slot chamfer-sm" data-side="player" data-slot="0"></div>
@@ -154,7 +156,7 @@
         </div>
         <div id="title-progress-strip" class="title-progress-strip tabular">
           <span>NÓS INVADIDOS: 0/4</span>
-          <span>CARTAS: 12/24</span>
+          <span>CARTAS: 12/32</span>
           <span>PISTAS: 0/4</span>
         </div>
         <div class="story-box">
@@ -280,7 +282,7 @@
         </div>
         <div class="settings-row tabular">
           <span>CARTAS DESBLOQUEADAS</span>
-          <strong id="settings-cards" style="color:var(--cyan)">12/24</strong>
+          <strong id="settings-cards" style="color:var(--cyan)">12/32</strong>
         </div>
         <div class="settings-row tabular">
           <span>PISTAS COLETADAS</span>
@@ -361,7 +363,7 @@
       <div class="modal-panel deck-modal-panel chamfer-md">
         <div class="deck-header">
           <div>
-            <div id="deck-unlocked-sub" class="title-sub" style="color:var(--cyan)">BANCO DE DADOS · 12/24 DESBLOQUEADAS</div>
+            <div id="deck-unlocked-sub" class="title-sub" style="color:var(--cyan)">BANCO DE DADOS · 12/32 DESBLOQUEADAS</div>
             <div style="font-family:var(--font-mono);font-size:15px;font-weight:900;">MEU DECK</div>
           </div>
           <button id="btn-deck-close" class="hud-btn chamfer-sm" type="button">VOLTAR</button>
@@ -382,6 +384,14 @@
           </div>
         </div>
 
+        <div class="deck-library-tools">
+          <input id="deck-search" type="search" aria-label="Buscar cartas" placeholder="Buscar cartas">
+          <select id="deck-slot" aria-label="Deck ativo">
+            <option value="0">Deck 1</option>
+            <option value="1">Deck 2</option>
+            <option value="2">Deck 3</option>
+          </select>
+        </div>
         <div class="deck-tools-row">
           <div class="deck-filter-tabs">
             <button class="deck-filter-btn chamfer-sm active" type="button" data-filter="all">TODAS</button>
@@ -449,6 +459,7 @@
   <!-- Scripts Modulares (classic defer + namespace NB -> 100% compatível com file:///android_asset/) -->
   <script defer src="./js/data/cards.js"></script>
   <script defer src="./js/data/campaign.js"></script>
+  <script defer src="./js/data/challenges.js"></script>
   <script defer src="./js/data/dialogue.js"></script>
   <script defer src="./js/data/cityAtlas.js"></script>
   <script defer src="./js/data/city.js"></script>
@@ -461,6 +472,7 @@
   <script defer src="./js/data/soundEffects.js"></script>
   <script defer src="./js/audio/soundEngine.js"></script>
   <script defer src="./js/physics/fxEngine.js"></script>
+  <script defer src="./js/core/cardEffects.js"></script>
   <script defer src="./js/core/gameState.js"></script>
   <script defer src="./js/core/combatEngine.js"></script>
   <script defer src="./js/core/aiController.js"></script>

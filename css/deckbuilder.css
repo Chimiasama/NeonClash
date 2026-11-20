@@ -98,6 +98,26 @@
   transition: width 0.2s ease;
 }
 
+.deck-library-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.deck-library-tools input,
+.deck-library-tools select {
+  min-width: 0;
+  min-height: 34px;
+  padding: 4px 9px;
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  background: #101420;
+  border: 1px solid #334155;
+  border-radius: 4px;
+  color-scheme: dark;
+}
+
 .deck-tools-row {
   display: flex;
   align-items: center;

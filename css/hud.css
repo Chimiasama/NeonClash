@@ -192,6 +192,24 @@
   flex-shrink: 0;
   min-height: 26px;
 }
+.defense-preview {
+  display: flex;
+  gap: 6px;
+  max-width: 100%;
+  min-height: 20px;
+  overflow-x: auto;
+  color: var(--text-main, #e2e8f0);
+  font-size: 11px;
+}
+
+.defense-preview[hidden] { display: none; }
+
+.defense-preview span {
+  flex: none;
+  padding: 1px 6px;
+  background: #24182b;
+}
+
 .phase-strip.mode-attack {
   border-color: var(--amber);
   background: rgba(255, 184, 0, 0.12);

@@ -68,74 +68,24 @@
 
   function pickBestAiExploit() {
     const state = NB.State.get();
-    const CARD_DB = NB.Cards.CARD_DB;
-    const boss = state.boss;
-    const readyCount = state.enemy.field.filter(u => u && !u.booting && !u.attacked).length;
-
-    // Archon guarda 3 RAM se tiver 2 unidades prontas para usar Overclock!
-    const reserveRamForOverclock = Boolean(boss && boss.canOverclock && readyCount >= 2 && state.enemy.ram >= 3 && state.enemy.ram <= 4);
-
-    const handExploits = state.enemy.hand
-      .map(item => ({ item, def: CARD_DB[item.cardId] }))
-      .filter(x => x.def.kind === 'exploit' && state.enemy.ram >= x.def.cost);
-
-    if (handExploits.length === 0) return null;
-
-    const spike = handExploits.find(x => x.def.id === 'exploit_02');
-    if (spike && state.player.hp <= 3) {
-      return { uid: spike.item.uid, cardId: spike.def.id, targetSlot: null };
-    }
-    const siphon = handExploits.find(x => x.def.id === 'exploit_06');
-    if (siphon && state.player.hp <= 2) {
-      return { uid: siphon.item.uid, cardId: siphon.def.id, targetSlot: null };
-    }
-
-    if (reserveRamForOverclock) return null;
-
-    const emp = handExploits.find(x => x.def.id === 'exploit_05');
-    if (emp && state.player.field.filter(Boolean).length >= 2) {
-      return { uid: emp.item.uid, cardId: emp.def.id, targetSlot: null };
-    }
-
-    const kill = handExploits.find(x => x.def.id === 'exploit_03');
-    if (kill) {
-      let bestTarget = -1;
-      let bestVal = 0;
-      state.player.field.forEach((u, idx) => {
-        if (u) {
-          const v = u.atk + u.def + (NB.Cards.hasKeyword(u, 'FIREWALL') ? 3 : 0);
-          if (v > bestVal) { bestVal = v; bestTarget = idx; }
-        }
-      });
-      if (bestTarget !== -1 && bestVal >= 7) {
-        return { uid: kill.item.uid, cardId: kill.def.id, targetSlot: bestTarget };
+    const { enemy, boss } = state;
+    const readyCount = enemy.field.filter(unit => unit && !unit.booting && !unit.attacked).length;
+    const reserve = boss?.canOverclock && readyCount >= 2 && enemy.ram >= NB.Cards.OVERCLOCK_COST;
+    let best = null;
+    let bestScore = 0;
+    for (const item of enemy.hand) {
+      const card = NB.Cards.CARD_DB[item.cardId];
+      if (card.kind !== 'exploit' || !NB.State.canPlayHandCard('enemy', item).ok) continue;
+      for (const targetSlot of NB.CardEffects.legalSlots(state, card, 'enemy')) {
+        const score = NB.CardEffects.score(state, card, 'enemy', targetSlot);
+        if (reserve && score < 100 && enemy.ram - card.cost < NB.Cards.OVERCLOCK_COST) continue;
+        const net = score - card.cost * 0.65;
+        if (net <= bestScore) continue;
+        bestScore = net;
+        best = { uid: item.uid, cardId: card.id, targetSlot };
       }
     }
-
-    if (siphon) {
-      return { uid: siphon.item.uid, cardId: siphon.def.id, targetSlot: null };
-    }
-
-    const patch = handExploits.find(x => x.def.id === 'exploit_04');
-    if (patch && (state.enemy.hp <= state.enemy.maxHp - 5 || state.enemy.field.filter(Boolean).length >= 2)) {
-      return { uid: patch.item.uid, cardId: patch.def.id, targetSlot: null };
-    }
-
-    const oc = handExploits.find(x => x.def.id === 'exploit_01');
-    if (oc) {
-      const readyIdx = state.enemy.field.findIndex(u => u && !u.booting);
-      const anyIdx = state.enemy.field.findIndex(Boolean);
-      const target = readyIdx !== -1 ? readyIdx : anyIdx;
-      if (target !== -1) {
-        return { uid: oc.item.uid, cardId: oc.def.id, targetSlot: target };
-      }
-    }
-
-    if (spike) {
-      return { uid: spike.item.uid, cardId: spike.def.id, targetSlot: null };
-    }
-
-    return null;
+    return best;
   }
 
   async function startEnemyTurn() {

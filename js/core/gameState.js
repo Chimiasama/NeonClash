@@ -38,6 +38,7 @@
     return {
       mode,
       stake: options.stake || 0,
+      challenge: options.challenge || null,
       boss,
       turn: 1,
       phase: 'PLAYER_MAIN',
@@ -46,7 +47,7 @@
         hp: playerMaxHp,
         maxHp: playerMaxHp,
         ram: 0,
-        deck: buildPlayerDeck(),
+        deck: options.challenge ? shuffle(options.challenge.deck.map(cardId => ({ uid: uidCounter++, cardId }))) : buildPlayerDeck(),
         hand: [],
         discard: [],
         field: [null, null, null],
@@ -128,7 +129,7 @@
     return {
       uid,
       cardId,
-      affinity: side === 'player' ? NB.Save.getAffinity(cardId) : def.affinity || null,
+      affinity: side === 'player' && !state?.challenge ? NB.Save.getAffinity(cardId) : def.affinity || null,
       atk: def.atk,
       baseAtk: def.atk,
       def: def.def,
@@ -158,8 +159,8 @@
     if (card.targetType === 'enemy_unit' && !opp.field.some(Boolean)) {
       return { ok: false, reason: 'Não há nenhuma Unidade inimiga no campo.' };
     }
-    if (card.id === 'exploit_05' && !opp.field.some(Boolean)) {
-      return { ok: false, reason: 'Não há Unidades inimigas para atingir com a Bomba EMP.' };
+    if (!NB.CardEffects.legalSlots(state, card, side).length) {
+      return { ok: false, reason: 'Não há Unidades inimigas para atingir.' };
     }
     return { ok: true };
   }
@@ -239,6 +240,10 @@
       NB.Dialogue.setDialogue(NB.Dialogue.pickLine('summon'));
     }
 
+    if (card.onDeploy) {
+      NB.CardEffects.resolve(card, card.onDeploy, side, slot);
+      NB.UI.renderAll();
+    }
     unit.justEntered = false;
     checkWinCondition();
     return true;
@@ -246,20 +251,15 @@
 
   function executeExploit(side, handUid, targetSlot = null) {
     const actor = state[side];
-    const oppSide = side === 'player' ? 'enemy' : 'player';
-    const opp = state[oppSide];
-    const idx = actor.hand.findIndex(c => c.uid === handUid);
-    if (idx === -1) return false;
-    const item = actor.hand[idx];
+    const index = actor.hand.findIndex(item => item.uid === handUid);
+    if (index === -1) return false;
+    const item = actor.hand[index];
     const card = NB.Cards.CARD_DB[item.cardId];
-
-    if (actor.ram < card.cost || (card.id === 'exploit_07' && !actor.field[targetSlot])) return false;
+    if (card.kind !== 'exploit' || !canPlayHandCard(side, item).ok ||
+        !NB.CardEffects.legalSlots(state, card, side).includes(targetSlot)) return false;
     actor.ram -= card.cost;
-    actor.hand.splice(idx, 1);
+    actor.hand.splice(index, 1);
     actor.discard.push(item);
-
-    const casterEl = document.getElementById(side === 'player' ? 'player-hud' : 'enemy-panel');
-    const oppPanelEl = document.getElementById(oppSide === 'enemy' ? 'enemy-panel' : 'player-hud');
 
     if (side === 'player') {
       state.stats.exploitsUsed++;
@@ -268,70 +268,7 @@
     }
 
     NB.Audio.playLaser();
-
-    if (card.id === 'exploit_01') {
-      const u = actor.field[targetSlot];
-      if (u) {
-        u.atk += 3;
-        const slotEl = getSlotEl(side, targetSlot);
-        if (slotEl) {
-          NB.Physics.fireLaserBeam(casterEl, slotEl, '#FFB800', 6);
-          NB.Physics.spawnFloatText(slotEl, '+3 ATK', '#FFB800');
-        }
-      }
-    } else if (card.id === 'exploit_02') {
-      NB.Physics.fireLaserBeam(casterEl, oppPanelEl, '#FF0055', 7);
-      applyDirectDamage(oppSide, 3, side === 'player');
-    } else if (card.id === 'exploit_03') {
-      const target = opp.field[targetSlot];
-      if (target) {
-        const slotEl = getSlotEl(oppSide, targetSlot);
-        NB.Physics.fireLaserBeam(casterEl, slotEl, '#FF0055', 9);
-        NB.Physics.shakeScreen(true);
-        destroyUnit(oppSide, targetSlot, side === 'player');
-        if (slotEl) NB.Physics.spawnFloatText(slotEl, 'ELIMINADO!', '#FF0055');
-      }
-    } else if (card.id === 'exploit_04') {
-      const healed = Math.min(actor.maxHp - actor.hp, 4);
-      actor.hp = Math.min(actor.maxHp, actor.hp + 4);
-      const p = NB.Physics.getElCenterInShell(casterEl);
-      NB.Physics.spawnBurst(p.x, p.y, '#39FF14', 20);
-      NB.Physics.spawnShockwave(p.x, p.y, '#39FF14', 60);
-      NB.Physics.spawnFloatText(casterEl, `+${healed > 0 ? healed : 4} HP`, '#39FF14');
-      actor.field.forEach((u, sIdx) => {
-        if (u) {
-          u.def += 2;
-          u.maxDef += 2;
-          const slotEl = getSlotEl(side, sIdx);
-          if (slotEl) {
-            NB.Physics.fireLaserBeam(casterEl, slotEl, '#39FF14', 4);
-            NB.Physics.spawnFloatText(slotEl, '+2 DEF', '#00F0FF');
-          }
-        }
-      });
-    } else if (card.id === 'exploit_05') {
-      NB.Physics.shakeScreen(true);
-      opp.field.forEach((u, sIdx) => {
-        if (!u) return;
-        const slotEl = getSlotEl(oppSide, sIdx);
-        NB.Physics.fireLaserBeam(casterEl, slotEl, '#FFB800', 6);
-        u.def -= 2;
-        u.atk = Math.max(0, u.atk - 2);
-        if (slotEl) NB.Physics.spawnFloatText(slotEl, '-2 DEF / -2 ATK', '#FFB800');
-        if (u.def <= 0) destroyUnit(oppSide, sIdx, side === 'player');
-      });
-    } else if (card.id === 'exploit_07') {
-      const unit = actor.field[targetSlot];
-      unit.affinity = NB.Cards.AFFINITIES[unit.affinity]?.beats || 'pulso';
-      const slotEl = getSlotEl(side, targetSlot);
-      if (slotEl) NB.Physics.spawnFloatText(slotEl, NB.Cards.affinityLabel(unit.affinity), NB.Cards.AFFINITIES[unit.affinity].color);
-    } else if (card.id === 'exploit_06') {
-      NB.Physics.fireLaserBeam(casterEl, oppPanelEl, '#E879F9', 7);
-      applyDirectDamage(oppSide, 2, side === 'player');
-      applyRamDrain(side, 2);
-      drawCard(side, false);
-    }
-
+    NB.CardEffects.resolve(card, card.effects, side, targetSlot);
     NB.UI.renderAll();
     checkWinCondition();
     return true;
@@ -415,6 +352,8 @@
     if (winner === 'player') {
       if (state.mode === 'campaign' && state.boss) {
         campaignResult = NB.Save.recordBossVictory(state.boss);
+      } else if (state.challenge) {
+        state.challengeRewards = NB.Save.recordChallengeVictory(state.challenge.id);
       } else {
         NB.Save.recordQuickDuelWin();
       }

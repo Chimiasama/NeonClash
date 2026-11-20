@@ -671,3 +671,90 @@ test('opens ferry and bicycle shortcuts through local contacts', async ({ page }
   expect(result).toMatchObject({ before: false, helped: true, duplicate: false, ready: true, closed: false, credits: 51 });
   expect(result.shortcut).toBeLessThan(result.long);
 });
+
+test('searches collection without accents and keeps three deck slots separate across reloads', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 600 });
+  await page.goto('/');
+  await page.locator('#btn-title-deck').click();
+  const search = page.getByRole('searchbox', { name: 'Buscar cartas' });
+  const deckSlot = page.getByRole('combobox', { name: 'Deck ativo' });
+  await search.fill('ceramica reparo');
+  await expect(page.locator('#collection-grid button')).toHaveCount(1);
+  await expect(page.getByRole('button', { name: 'Cerâmica de Reparo · bloqueada' })).toBeVisible();
+  await page.getByRole('button', { name: 'UNID.', exact: true }).click();
+  await expect(page.locator('#collection-grid button')).toHaveCount(0);
+  const firstDeck = await page.evaluate(() => NB.Save.getActiveDeck());
+
+  await deckSlot.selectOption('1');
+  const secondDeck = await page.evaluate(() => {
+    const deck = NB.Save.getActiveDeck().reverse();
+    NB.Save.saveCustomDeck(deck);
+    return deck;
+  });
+  expect(secondDeck).not.toEqual(firstDeck);
+  await deckSlot.selectOption('2');
+  await deckSlot.selectOption('1');
+  await page.reload();
+  await page.locator('#btn-title-deck').click();
+  await expect(deckSlot).toHaveValue('1');
+  expect(await page.evaluate(() => NB.Save.getActiveDeck())).toEqual(secondDeck);
+  await deckSlot.selectOption('0');
+  expect(await page.evaluate(() => NB.Save.getActiveDeck())).toEqual(firstDeck);
+});
+
+test('loans an archetype deck and unlocks its reward cards once', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Entrar na cidade' }).click();
+  await walkTo(page, page.getByRole('button', { name: 'Ringue Baixa Tensão', exact: true }));
+  await page.getByText('Desafios de arquétipo', { exact: true }).click();
+  await page.getByRole('button', { name: 'Turno da Estação' }).click();
+
+  const result = await page.evaluate(() => {
+    const state = NB.State.get();
+    const activeDeck = NB.Save.getActiveDeck();
+    const loanDeck = [...state.player.hand, ...state.player.deck].map(item => item.cardId);
+    const quality = NB.Challenges.every(challenge => challenge.deck.length === 20 &&
+      new Set(challenge.deck).size === 10 && challenge.deck.every(id => NB.Cards.CARD_DB[id]));
+    state.enemy.hp = 0;
+    NB.State.checkWinCondition();
+    NB.State.checkWinCondition();
+    const progress = NB.Save.get();
+    return {
+      mode: state.mode, quality, matches: progress.matches,
+      loanCount: loanDeck.filter(id => id === 'unit_24').length,
+      activeDeckUnchanged: JSON.stringify(activeDeck) === JSON.stringify(NB.Save.getActiveDeck()),
+      wins: progress.challengeWins, rewards: state.challengeRewards,
+      unlocked: progress.unlockedCards.filter(id => ['unit_24', 'exploit_08'].includes(id))
+    };
+  });
+  expect(result).toEqual({
+    mode: 'challenge', quality: true, matches: 1, loanCount: 2, activeDeckUnchanged: true,
+    wins: ['infiltration'], rewards: ['unit_24', 'exploit_08'], unlocked: ['unit_24', 'exploit_08']
+  });
+});
+
+test('limits repair, protects RAM on invalid targets and previews affinity damage', async ({ page }) => {
+  await page.goto('/');
+  const repair = await page.evaluate(() => {
+    NB.Input.startMatch({ mode: 'quick' });
+    const state = NB.State.get();
+    const defender = NB.State.createFieldUnit('unit_03', 901);
+    const attacker = NB.State.createFieldUnit('unit_05', 902, 'enemy');
+    Object.assign(defender, { atk: 2, def: 4, maxDef: 5 });
+    Object.assign(attacker, { atk: 3, def: 5 });
+    state.player.field[0] = defender;
+    state.enemy.field[1] = attacker;
+    state.player.hand.push({ cardId: 'exploit_09', uid: 903 });
+    state.player.ram = 4;
+    const invalid = NB.State.executeExploit('player', 903, 2);
+    const unspent = state.player.ram;
+    const valid = NB.State.executeExploit('player', 903, 0);
+    state.phase = 'PLAYER_DEFENSE';
+    state.enemyAttackers = [1];
+    state.defenseMap = { 1: 0 };
+    NB.UI.renderAll();
+    return { invalid, unspent, valid, def: defender.def, ram: state.player.ram };
+  });
+  expect(repair).toEqual({ invalid: false, unspent: 4, valid: true, def: 5, ram: 3 });
+  await expect(page.locator('#defense-preview')).toHaveText('Sua posição 1 DEF 5→1 · Inimigo 2 DEF 5→3');
+});

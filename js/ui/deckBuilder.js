@@ -4,6 +4,7 @@
   /* Tela de Coleção e Editor de Baralho ("BANCO DE DADOS") + Inspetor em Tela Cheia */
   let draftDeck = [];
   let currentFilter = 'all';
+  let searchWords = [];
   let inspectedCardId = null;
   let inspectorOriginId = null;
   let returnTarget = 'title';
@@ -32,6 +33,8 @@
       }
     }
     if (NB.CityData.stock.some(item => item.id === cardId)) return 'Disponível na Feira do Viaduto.';
+    const challenge = NB.Challenges.find(entry => entry.cards.includes(cardId));
+    if (challenge) return `Vença ${challenge.name} no Ringue Baixa Tensão.`;
     return 'Avance na campanha para desbloquear esta carta.';
   }
 
@@ -51,6 +54,9 @@
     const { total, units, exploits } = getDeckBreakdown();
     const max = NB.Cards.DECK_SIZE;
     const isValid = total === max;
+    const slot = document.getElementById('deck-slot');
+    slot.value = NB.Save.get().deckSlot;
+    slot.disabled = !isValid;
 
     const countEl = document.getElementById('deck-count-badge');
     countEl.textContent = `${total}/${max} CARTAS`;
@@ -92,12 +98,19 @@
     });
   }
 
+  function normalizeSearch(value) {
+    return value.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLocaleLowerCase('pt-BR');
+  }
+
   function getFilteredCards() {
     return getAllCardDefs().filter(card => {
-      if (currentFilter === 'unit') return card.kind === 'unit';
-      if (currentFilter === 'exploit') return card.kind === 'exploit';
-      if (currentFilter === 'indeck') return countCopies(card.id) > 0;
-      return true;
+      if ((currentFilter === 'unit' || currentFilter === 'exploit') && card.kind !== currentFilter) return false;
+      if (currentFilter === 'indeck' && countCopies(card.id) === 0) return false;
+      if (searchWords.length === 0) return true;
+      const affinity = card.kind === 'unit' ? NB.Cards.affinityLabel(NB.Save.getAffinity(card.id)) : '';
+      const keywords = card.keywords.map(id => NB.Cards.KEYWORDS[id]?.tag);
+      const text = normalizeSearch([card.name, card.subtitle, card.desc, affinity, ...keywords].join(' '));
+      return searchWords.every(word => text.includes(word));
     });
   }
 
@@ -112,7 +125,8 @@
       empty.style.gridColumn = '1 / -1';
       empty.className = 'story-box';
       empty.style.textAlign = 'center';
-      empty.textContent = 'Nenhuma carta neste filtro. Toque em TODAS para adicionar cartas ao baralho.';
+      empty.textContent = searchWords.length ? 'Nenhuma carta corresponde à busca.'
+        : 'Nenhuma carta neste filtro.';
       grid.appendChild(empty);
       return;
     }
@@ -379,6 +393,8 @@
     returnTarget = origin;
     draftDeck = NB.Save.getActiveDeck();
     currentFilter = 'all';
+    searchWords = [];
+    document.getElementById('deck-search').value = '';
     inspectedCardId = null;
 
     ['title-modal', 'netmap-modal', 'dossier-modal', 'settings-modal'].forEach(id => {
@@ -407,6 +423,18 @@
   }
 
   function bindEvents() {
+    document.getElementById('deck-search').addEventListener('input', event => {
+      searchWords = normalizeSearch(event.target.value).trim().split(/\s+/).filter(Boolean);
+      renderGrid();
+    });
+
+    document.getElementById('deck-slot').addEventListener('change', event => {
+      if (NB.Save.selectDeckSlot(Number(event.target.value))) {
+        draftDeck = NB.Save.getActiveDeck();
+        renderAll();
+      }
+    });
+
     document.getElementById('btn-deck-close').addEventListener('click', () => {
       NB.Audio.playSelect();
       close();

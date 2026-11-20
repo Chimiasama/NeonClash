@@ -70,4 +70,6 @@ O lote de 80 cartas começa depois da campanha narrativa jogável. Os lotes segu
 | 4 · Rede de contatos | 395 | Expandir bairros, oficinas, rotas alternativas de aquisição e cadeias cruzadas. |
 | 5 · Baixa Luz completa | 495 | Completar as cinco cadeias exclusivas, o total de 100 NPCs e o catálogo de 500. Revisar rotas perdíveis, balanceamento e uso de memória no Android. |
 
+O primeiro pacote da etapa 1 amplia o catálogo de 24 para 32 cartas. O Ringue Baixa Tensão oferece os quatro decks emprestados e libera as oito cartas novas nas primeiras vitórias. A coleção já tem busca e três decks salvos, e o combate mostra a previsão de dano dos bloqueios escolhidos.
+
 Antes de lançar cada lote, testar IDs, referências de arte e condições de obtenção. Garantir que toda carta normal tenha pelo menos uma rota válida e que as secretas só tenham a rota da missão correspondente. Usar partidas reproduzíveis para comparar mão travada, duração, vantagem de jogar primeiro e frequência de Overclock. Carregar miniaturas conforme a necessidade quando o catálogo crescer.

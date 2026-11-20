@@ -395,6 +395,52 @@
     desc: 'Muda a afinidade de uma unidade aliada até o fim do duelo. Neutra vira Pulso; as demais avançam no ciclo Pulso → Malha → Sombra → Pulso.'
   };
 
+  const effects = {
+    exploit_01: [{ type: 'atk', target: 'selected', value: 3 }],
+    exploit_02: [{ type: 'direct', value: 3 }],
+    exploit_03: [{ type: 'destroy', target: 'selected' }],
+    exploit_04: [{ type: 'heal', value: 4 }, { type: 'def', target: 'allies', value: 2 }],
+    exploit_05: [{ type: 'atk', target: 'enemies', value: -2 }, { type: 'damage', target: 'enemies', value: 2 }],
+    exploit_06: [{ type: 'direct', value: 2 }, { type: 'drain', value: 2 }, { type: 'draw', value: 1 }],
+    exploit_07: [{ type: 'affinity', target: 'selected' }]
+  };
+  for (const [id, cardEffects] of Object.entries(effects)) CARD_DB[id].effects = cardEffects;
+  CARD_DB.exploit_05.requiresEnemy = true;
+
+  function addUnit(id, name, archetype, atk, def, affinity, keywords, desc, onDeploy) {
+    CARD_DB[id] = { id, kind: 'unit', subtitle: archetype, name, archetype, atk, def, affinity,
+      keywords, ramGain: 2, img: `./cards/${id}.webp`, accent: AFFINITIES[affinity].color, desc, onDeploy };
+  }
+
+  function addExploit(id, name, archetype, cost, targetType, desc, cardEffects) {
+    CARD_DB[id] = { id, kind: 'exploit', subtitle: archetype, name, archetype, cost, targetType,
+      keywords: [], img: `./cards/${id}.webp`, accent: '#d48afd', desc, effects: cardEffects };
+  }
+
+  addUnit('unit_24', 'Mensageira de Fase', 'Infiltração', 2, 2, 'sombra', ['ZERO_DAY'],
+    'Zero-Day. Ao entrar em campo, compre 1 carta.', [{ type: 'draw', value: 1 }]);
+  addUnit('unit_25', 'Sentinela do Canal', 'Blindagem', 1, 5, 'malha', ['FIREWALL'],
+    'Firewall. Ao entrar em campo, fortalece todas as unidades aliadas, inclusive ela, com +1 DEF.',
+    [{ type: 'def', target: 'allies', value: 1 }]);
+  addUnit('unit_26', 'Escuta do Cais', 'Sabotagem', 2, 3, 'sombra', ['VIRUS'],
+    'Vírus. Ao entrar em campo, drena 1 RAM do adversário.', [{ type: 'drain', value: 1 }]);
+  addUnit('unit_27', 'Condutor Bifásico', 'Overclock', 4, 3, 'pulso', [],
+    'Ao entrar em campo, gera +1 RAM adicional se outra unidade aliada tiver uma afinidade diferente e nenhuma das duas for neutra.',
+    [{ type: 'ram', value: 1, mixed: true }]);
+  addExploit('exploit_08', 'Passagem de Serviço', 'Infiltração', 2, 'none',
+    'Compre 2 cartas.', [{ type: 'draw', value: 2 }]);
+  addExploit('exploit_09', 'Cerâmica de Reparo', 'Blindagem', 1, 'ally_unit',
+    'Recupere até 3 DEF de uma unidade aliada, sem ultrapassar o máximo dela.', [{ type: 'repair', target: 'selected', value: 3 }]);
+  addExploit('exploit_10', 'Ferrugem Óptica', 'Sabotagem', 2, 'enemy_unit',
+    'Uma unidade inimiga perde 1 ATK e sofre 2 de dano.', [
+      { type: 'atk', target: 'selected', value: -1 }, { type: 'damage', target: 'selected', value: 2 }
+    ]);
+  addExploit('exploit_11', 'Ponte Dupla', 'Overclock', 2, 'ally_unit',
+    'Avance a afinidade de uma unidade aliada e conceda +1 ATK e +1 DEF a ela.', [
+      { type: 'affinity', target: 'selected' }, { type: 'atk', target: 'selected', value: 1 },
+      { type: 'def', target: 'selected', value: 1 }
+    ]);
+
   function hasKeyword(cardOrId, kw) {
     const def = typeof cardOrId === 'string' ? CARD_DB[cardOrId] : (cardOrId && cardOrId.cardId ? CARD_DB[cardOrId.cardId] : cardOrId);
     return Boolean(def && Array.isArray(def.keywords) && def.keywords.includes(kw));

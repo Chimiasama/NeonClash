@@ -41,7 +41,7 @@
     hideAllScreens();
     document.getElementById('game-ui').inert = false;
     NB.Audio.setScene(boss.id, true);
-    NB.State.reset({ mode, boss, stake: options.stake });
+    NB.State.reset({ mode, boss, stake: options.stake, challenge: options.challenge });
     NB.UI.closeVisor();
     NB.Physics.clearLasers();
     NB.UI.renderEnemyAvatar(boss);
@@ -463,7 +463,7 @@
       if (action === 'netmap') openNetMap();
       else if (action === 'title') openTitleScreen();
       else if (action === 'quick') startMatch({ mode: 'quick', boss: NB.Campaign.getRandomBoss(), autoSound: false });
-      else if (action === 'rematch') startMatch({ mode: state.mode, boss: state.boss, autoSound: false });
+      else if (action === 'rematch') startMatch({ mode: state.mode, boss: state.boss, challenge: state.challenge, autoSound: false });
     };
     document.getElementById('btn-go-primary').addEventListener('click', (e) => {
       NB.Audio.playSelect();
@@ -479,7 +479,7 @@
       NB.Audio.playSelect();
       const state = NB.State.get();
       if (state.mode === 'arena' && state.stake && !state.winner && !window.confirm(`Sair encerra o duelo e perde ${state.stake} créditos. Sair mesmo assim?`)) return;
-      if (state && (state.mode === 'campaign' || state.mode === 'arena')) openNetMap();
+      if (state && (state.mode === 'campaign' || state.mode === 'arena' || state.mode === 'challenge')) openNetMap();
       else openTitleScreen();
     });
 

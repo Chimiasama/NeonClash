@@ -542,6 +542,24 @@
   }
 
   function renderArena(content, save) {
+    const challenges = document.createElement('details');
+    challenges.className = 'city-residents';
+    const label = document.createElement('summary');
+    label.textContent = 'Desafios de arquétipo';
+    challenges.append(label);
+    for (const challenge of NB.Challenges) {
+      const row = document.createElement('div');
+      row.className = 'city-life-row';
+      addText(row, challenge.goal);
+      addText(row, save.challengeWins.includes(challenge.id) ? 'Recompensas coletadas.' :
+        `Primeira vitória · ${challenge.cards.map(id => NB.Cards.CARD_DB[id].name).join(' + ')}`);
+      addButton(row, challenge.name, () => {
+        NB.Input.startMatch({ mode: 'challenge', boss: NB.Campaign.getNodeById(challenge.opponent), challenge });
+      });
+      challenges.append(row);
+    }
+    addText(challenges, 'Decks emprestados de 20 cartas. Cada duelo consome tempo e energia da cidade.');
+    content.append(challenges);
     const stakeUnlocked = NB.Save.isNodeDefeated('kira');
     addButton(content, 'Desafio de rua · vitória paga 15', () => startArena(0));
     addButton(content, 'Apostar 25 · vitória paga 60', () => startArena(25), !stakeUnlocked || save.city.credits < 25);

@@ -80,6 +80,9 @@
       clues: [],
       unlockedCards: starter,
       customDeck: buildBalancedDeck(starter, []),
+      deckSlot: 0,
+      deckSlots: {},
+      challengeWins: [],
       city: { credits: 35, district: 'kira', traced: [], life: NB.CityLife.normalize() },
       affinities: {},
       story: NB.Story.normalize(),
@@ -111,6 +114,13 @@
           clues: Array.isArray(parsed.clues) ? parsed.clues : def.clues,
           unlockedCards,
           customDeck: finalDeck,
+          deckSlot: Number.isInteger(parsed.deckSlot) && parsed.deckSlot >= 0 && parsed.deckSlot < 3 ? parsed.deckSlot : 0,
+          deckSlots: Object.fromEntries([0, 1, 2].flatMap(slot => {
+            const cards = sanitizeDeck(parsed.deckSlots?.[slot], unlockedCards);
+            return cards.length === NB.Cards.DECK_SIZE ? [[slot, cards]] : [];
+          })),
+          challengeWins: [...new Set((Array.isArray(parsed.challengeWins) ? parsed.challengeWins : [])
+            .filter(id => NB.Challenges.some(challenge => challenge.id === id)))],
           city: {
             credits: Number.isSafeInteger(parsed.city?.credits) && parsed.city.credits >= 0 ? parsed.city.credits : def.city.credits,
             district: typeof parsed.city?.district === 'string' ? parsed.city.district : def.city.district,
@@ -172,6 +182,36 @@
     s.customDeck = buildBalancedDeck(s.unlockedCards, cleaned);
     save();
     return [...s.customDeck];
+  }
+
+  function selectDeckSlot(slot) {
+    if (!Number.isInteger(slot) || slot < 0 || slot >= 3) return false;
+    const progress = get();
+    if (progress.deckSlot === slot) return true;
+    progress.deckSlots[progress.deckSlot] = getActiveDeck();
+    progress.customDeck = progress.deckSlots[slot] || buildBalancedDeck(progress.unlockedCards, []);
+    progress.deckSlot = slot;
+    save();
+    return true;
+  }
+
+  function recordChallengeVictory(id) {
+    const progress = get();
+    const challenge = NB.Challenges.find(entry => entry.id === id);
+    if (!challenge) return [];
+    progress.matches++;
+    progress.wins++;
+    const rewards = [];
+    if (!progress.challengeWins.includes(id)) {
+      progress.challengeWins.push(id);
+      for (const cardId of challenge.cards) {
+        if (progress.unlockedCards.includes(cardId)) continue;
+        progress.unlockedCards.push(cardId);
+        rewards.push(cardId);
+      }
+    }
+    save();
+    return rewards;
   }
 
   function saveCustomDeck(deckIds) {
@@ -262,6 +302,8 @@
     recalibrate,
     recalibrationPrice,
     saveCustomDeck,
+    selectDeckSlot,
+    recordChallengeVictory,
     buildBalancedDeck,
     resetSave,
     isNodeDefeated,
