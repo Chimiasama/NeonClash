@@ -8,7 +8,11 @@ Pulso vence Malha, Malha vence Sombra e Sombra vence Pulso. A vantagem dá +1 de
 
 Na Feira do Viaduto, a oficina recalibra as unidades da coleção por 15 créditos e restaura gratuitamente a afinidade original. O Exploit Recompilar custa 1 RAM e muda a afinidade de uma unidade aliada durante o duelo.
 
-## Expansão planejada
+## Cidade e investigação
+
+Abra **Bairros** para consultar os dez bairros e viajar aos seus locais. Em **Investigação**, inicie a campanha narrativa e acompanhe os destinos, as provas e as decisões. As conversas voltam à última página lida. O fluxo original da campanha continua acessível enquanto a investigação estiver desativada.
+
+## Planos de expansão
 
 - [Elenco de 100 NPCs e dez bairros](docs/baixa-luz-cidade.md)
 - [Roteiro de campanha e ordem de construção](docs/baixa-luz-campanha.md)

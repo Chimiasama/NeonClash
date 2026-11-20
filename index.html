@@ -158,7 +158,7 @@
           <span>PISTAS: 0/4</span>
         </div>
         <div class="story-box">
-          A Vértice declarou Kairo morto. Na cidade que ainda guarda o rastro da emboscada, cada duelo aproxima você de quem deu a ordem.
+          A chave de Kairo ainda abre a porta. O cadastro diz que ali já não mora ninguém. Em Baixa Luz, abra Investigação para seguir os recibos que Dona Nair guardou.
         </div>
         <div class="title-cta-row">
           <button id="btn-start-campaign" class="btn-launch chamfer-sm" type="button">ENTRAR NA CIDADE</button>
@@ -179,6 +179,8 @@
             <label class="city-energy" for="city-energy"><span id="city-energy-label">Energia</span><progress id="city-energy" max="100" value="100"></progress></label><p id="city-awake"></p></div>
           <div class="city-nav">
             <button id="btn-netmap-deck" type="button">Meu Deck</button>
+            <button id="city-atlas" type="button" aria-pressed="false">Bairros</button>
+            <button id="city-story" type="button" aria-pressed="false">Investigação</button>
             <button id="city-bag" type="button" aria-pressed="false">Mochila</button>
             <button id="city-journal" type="button" aria-pressed="false">Pistas</button>
             <button id="btn-netmap-settings" type="button">Config.</button>
@@ -201,6 +203,23 @@
           <img id="city-scene" alt="" hidden />
           <div id="city-content"></div>
         </div>
+      </section>
+    </div>
+
+    <div id="story-modal" class="full-modal" role="dialog" aria-modal="true" aria-labelledby="story-title">
+      <section class="modal-panel story-panel chamfer-md">
+        <header class="story-header">
+          <div><p class="title-sub" id="story-chapter"></p><h2 id="story-title"></h2></div>
+          <button id="btn-story-close" class="hud-btn chamfer-sm" type="button">VOLTAR</button>
+        </header>
+        <div class="story-reading">
+          <img id="story-art" alt="" hidden />
+          <p id="story-line" aria-live="polite"></p>
+        </div>
+        <footer class="story-actions">
+          <p id="story-page"></p>
+          <div id="story-options"></div>
+        </footer>
       </section>
     </div>
 
@@ -431,7 +450,10 @@
   <script defer src="./js/data/cards.js"></script>
   <script defer src="./js/data/campaign.js"></script>
   <script defer src="./js/data/dialogue.js"></script>
+  <script defer src="./js/data/cityAtlas.js"></script>
   <script defer src="./js/data/city.js"></script>
+  <script defer src="./js/data/story.js"></script>
+  <script defer src="./js/core/story.js"></script>
   <script defer src="./js/core/cityLife.js"></script>
   <script defer src="./js/core/saveManager.js"></script>
   <script defer src="./js/sprites/proceduralArt.js"></script>
@@ -446,6 +468,7 @@
   <script defer src="./js/ui/deckBuilder.js"></script>
   <script defer src="./js/ui/inputController.js"></script>
   <script defer src="./js/ui/city.js"></script>
+  <script defer src="./js/ui/story.js"></script>
   <script defer src="./js/main.js"></script>
 </body>
 </html>

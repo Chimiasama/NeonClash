@@ -41,6 +41,7 @@
       implant,
       inventory,
       vehicles: ['bike', 'motorbike'].filter(id => Array.isArray(raw?.vehicles) && raw.vehicles.includes(id)),
+      favors: ['hillPath', 'pumpRelay'].filter(id => Array.isArray(raw?.favors) && raw.favors.includes(id)),
       lastShift: integer(raw?.lastShift, -2, -2, Number.MAX_SAFE_INTEGER),
       notice: typeof raw?.notice === 'string' ? raw.notice.slice(0, 350) : ''
     };
@@ -63,12 +64,27 @@
     const to = districts.find(place => place.id === destination);
     if (!to || from.id === to.id) return [];
     const distance = Math.max(2, Math.ceil(Math.hypot(to.x - from.x, to.y - from.y) / 10));
-    return Object.entries(transport).map(([id, mode]) => {
-      const minutes = distance * mode.minutes + (id === 'bus' ? 5 : 0);
-      const energy = distance * mode.effort;
+    const neighborhoods = NB.CityAtlas.neighborhoods;
+    const between = (first, second) => {
+      const pair = [from.id, to.id];
+      return pair.some(id => first.includes(id)) && pair.some(id => second.includes(id));
+    };
+    const shortcut = state.life.favors.includes('hillPath') &&
+      between(neighborhoods.find(area => area.id === 'oficinas').locations, neighborhoods.find(area => area.id === 'morro').locations);
+    const crossing = state.life.favors.includes('pumpRelay') && between(['pump', 'pension'], ['ferry', 'docks']);
+    const modes = Object.entries(transport);
+    if (crossing) modes.push(['ferry', { name: 'Balsa', minutes: 2, effort: 1, fare: 3 }]);
+    return modes.map(([id, mode]) => {
+      const usesShortcut = id === 'bike' && shortcut;
+      const length = usesShortcut ? Math.max(2, Math.ceil(distance * 0.55)) : distance;
+      const minutes = length * mode.minutes + (id === 'bus' ? 5 : 0);
+      const energy = length * mode.effort;
+      const dayMinute = state.life.minute % 1440;
+      const closed = id === 'ferry' && (dayMinute < 420 || dayMinute >= 1080);
       return {
         id, name: mode.name, minutes, energy, fare: mode.fare,
-        available: (!mode.price || state.life.vehicles.includes(id)) && state.credits >= mode.fare,
+        note: closed ? 'A balsa opera das 7h às 18h.' : usesShortcut ? 'Atalho da encosta ensinado por Aline.' : '',
+        available: !closed && (!mode.price || state.life.vehicles.includes(id)) && state.credits >= mode.fare,
         needsVehicle: Boolean(mode.price && !state.life.vehicles.includes(id)),
         willCollapse: state.life.energy <= energy || state.life.awake + minutes >= maxAwake(state.life)
       };
@@ -173,6 +189,23 @@
     return true;
   }
 
+  function helpContact(id) {
+    const state = city();
+    if (state.life.favors.includes(id)) return false;
+    if (id === 'hillPath' && state.district === 'garage') {
+      state.life.favors.push(id);
+      NB.Save.save();
+      return true;
+    }
+    if (id === 'pumpRelay' && state.district === 'pump') {
+      state.life.favors.push(id);
+      state.credits += 16;
+      advance(30, 5);
+      return true;
+    }
+    return false;
+  }
+
   function takeNotice() {
     const life = city().life;
     const notice = life.notice;
@@ -184,5 +217,5 @@
   }
 
   NB.CityLife = { items, transport, beds, bagLimit, implantPrice, normalize, clock, maxEnergy, maxAwake,
-    bagCount, routes, advance, travel, sleep, buy, use, nightShift, workNightShift, takeNotice };
+    bagCount, routes, advance, travel, sleep, buy, use, nightShift, workNightShift, helpContact, takeNotice };
 })(window.NB = window.NB || {});

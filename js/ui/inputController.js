@@ -4,7 +4,7 @@
   /* Controlador de Entrada Touch, Navegação entre Telas, Campanha, Overclock e Save */
   function hideAllScreens() {
     NB.City.cancelJob();
-    ['title-modal', 'netmap-modal', 'dossier-modal', 'gameover-modal', 'settings-modal', 'deck-modal', 'card-inspector-modal'].forEach(id => {
+    ['title-modal', 'netmap-modal', 'story-modal', 'dossier-modal', 'gameover-modal', 'settings-modal', 'deck-modal', 'card-inspector-modal'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.classList.remove('open');
     });
@@ -279,6 +279,7 @@
       ['card-inspector-modal', 'btn-insp-close'],
       ['png-modal', 'btn-png-close'],
       ['settings-modal', 'btn-settings-close'],
+      ['story-modal', 'btn-story-close'],
       ['dossier-modal', 'btn-dossier-back'],
       ['deck-modal', 'btn-deck-close']
     ];

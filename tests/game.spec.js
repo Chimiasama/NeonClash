@@ -533,6 +533,141 @@ test('adds the city clock and backpack to existing saves without losing progress
     defeatedBosses: ['kira'],
     clues: [{ bossId: 'kira', title: 'Pista salva' }],
     affinities: { unit_03: 'pulso' },
+    story: { started: false, chapter: 0 },
     city: { traced: ['kira'], life: { inventory: { coffee: 0, energyDrink: 0, synthetic: 0 } } }
   });
+});
+
+test('visits ten neighborhoods with residents and travel-backed locations', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Entrar na cidade' }).click();
+  await page.getByRole('button', { name: 'Bairros', exact: true }).click();
+  await expect(page.locator('#city-content > details')).toHaveCount(10);
+  await page.getByText('Morro das Casas', { exact: true }).click();
+  await walkTo(page, page.getByRole('button', { name: 'Clínica do Morro', exact: true }));
+  await expect(page.getByRole('heading', { name: 'Clínica do Morro' })).toBeVisible();
+  await page.locator('#city-scene').evaluate(image => image.decode());
+  await page.getByText('Pessoas neste local', { exact: true }).click();
+  await expect(page.locator('#city-content')).toContainText('Omar');
+  const roster = await page.evaluate(() => NB.CityAtlas.residents.reduce((counts, npc) => {
+    counts[npc.role] = (counts[npc.role] || 0) + 1;
+    return counts;
+  }, {}));
+  expect(roster).toEqual({ central: 12, contato: 28, morador: 60 });
+});
+
+test('resumes the prologue after reload and earns Kira’s proof by doing a favor', async ({ page }) => {
+  test.setTimeout(90000);
+  const investigation = () => page.getByRole('button', { name: 'Investigação', exact: true }).click();
+  const read = async (title, last = 'Registrar e sair') => {
+    await page.getByRole('button', { name: title, exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: title });
+    await expect(dialog).toBeVisible();
+    const next = dialog.getByRole('button', { name: 'Continuar', exact: true });
+    while (await next.isVisible()) await next.click();
+    await dialog.getByRole('button', { name: last, exact: true }).click();
+    await expect(dialog).toBeHidden();
+  };
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Entrar na cidade' }).click();
+  await investigation();
+  await page.getByRole('button', { name: 'Começar investigação' }).click();
+  await walkTo(page, page.getByRole('button', { name: 'Ir para Casa de Kairo' }));
+  await read('Testar o leitor e a chave');
+  const title = 'Ler as faturas com Dona Nair';
+  await page.getByRole('button', { name: title }).click();
+  const dialog = page.getByRole('dialog', { name: title });
+  await dialog.getByRole('button', { name: 'Continuar' }).click();
+  await expect(dialog.locator('#story-page')).toContainText('2 /');
+  await page.reload();
+  await page.getByRole('button', { name: 'Entrar na cidade' }).click();
+  await page.getByRole('button', { name: title }).click();
+  await expect(dialog.locator('#story-page')).toContainText('2 /');
+  await dialog.getByRole('button', { name: 'VOLTAR', exact: true }).click();
+  await read(title);
+
+  await walkTo(page, page.getByRole('button', { name: 'Antena Comunitária' }));
+  await read('Levar a cópia do recibo à Antena');
+  await walkTo(page, page.getByRole('button', { name: 'Feira do Viaduto' }));
+  await read('Conferir a nota do lote na Feira');
+  await walkTo(page, page.getByRole('button', { name: /Estação Fantasma/ }));
+  await expect(page.getByText('A investigação ainda não chegou a este duelo.', { exact: false })).toBeVisible();
+  await read('Conferir a entrada com Severino');
+  await read('Ouvir Kira sobre a rota vendida', 'Aceitar o favor de conferir o recibo na Feira');
+  await walkTo(page, page.getByRole('button', { name: 'Feira do Viaduto' }));
+  await read('Conferir o recibo anonimizado com Beto');
+  await walkTo(page, page.getByRole('button', { name: 'Estação Fantasma', exact: true }));
+  await read('Registrar a prova da Estação');
+  await investigation();
+  await expect(page.locator('#city-content')).toContainText('Quem pagou duas vezes');
+  await expect(page.locator('#city-content')).toContainText('O pagamento da rota saiu');
+  expect(await page.evaluate(() => NB.Save.isNodeDefeated('kira'))).toBe(false);
+});
+
+test('unwinds the complete investigation with alternative routes and a recorded final choice', async ({ page }) => {
+  await page.goto('/');
+  const result = await page.evaluate(() => {
+    NB.Story.start();
+    function finish(id, choice) {
+      const scene = NB.Story.sceneById[id];
+      NB.Story.remember(id, NB.Story.getLines(scene).length - 1);
+      if (!NB.Story.finish(id, choice)) throw new Error(`Blocked at ${id}`);
+    }
+    finish('keys');
+    finish('nair');
+    finish('firstSignal');
+    finish('invoice');
+    finish('mara');
+    finish('kiraDeal', 'duel');
+    NB.Save.recordBossVictory(NB.Campaign.getNodeById('kira'));
+    finish('kiraProof');
+    finish('ringLedger');
+    finish('iris');
+    finish('ada');
+    finish('tellingNair', 'tell');
+    finish('pass');
+    finish('cipherDeal', 'supervised');
+    finish('cipherAlt');
+    finish('cipherProof');
+    finish('cris');
+    finish('vexDeal', 'witness');
+    finish('vexAlt');
+    finish('vexProof');
+    finish('renan');
+    finish('reserve');
+    finish('press');
+    finish('registry');
+    finish('archonDeal');
+    if (NB.Story.available(NB.Story.sceneById.ending)) throw new Error('Ending open before Archon duel');
+    NB.Save.recordBossVictory(NB.Campaign.getNodeById('archon'));
+    finish('ending', 'council');
+    finish('epilogue');
+    return { complete: NB.Story.has('epilogue'), evidence: NB.Story.get().evidence.length,
+      aftermath: NB.Story.aftermath('square'), choice: NB.Story.choice('ending'),
+      repeat: NB.Story.finish('epilogue') };
+  });
+  expect(result).toMatchObject({ complete: true, evidence: 15, choice: 'council', repeat: false });
+  expect(result.aftermath).toContain('conselho');
+});
+
+test('opens ferry and bicycle shortcuts through local contacts', async ({ page }) => {
+  await page.goto('/');
+  const result = await page.evaluate(() => {
+    const city = NB.Save.get().city;
+    city.district = 'pump';
+    const before = NB.CityLife.routes('ferry').some(route => route.id === 'ferry');
+    const helped = NB.CityLife.helpContact('pumpRelay');
+    const duplicate = NB.CityLife.helpContact('pumpRelay');
+    const ready = NB.CityLife.routes('ferry').find(route => route.id === 'ferry').available;
+    city.life.minute = 1200;
+    const closed = NB.CityLife.routes('ferry').find(route => route.id === 'ferry').available;
+    city.district = 'garage';
+    city.life.vehicles.push('bike');
+    const long = NB.CityLife.routes('clinic').find(route => route.id === 'bike').minutes;
+    NB.CityLife.helpContact('hillPath');
+    const shortcut = NB.CityLife.routes('clinic').find(route => route.id === 'bike').minutes;
+    return { before, helped, duplicate, ready, closed, long, shortcut, credits: city.credits };
+  });
+  expect(result).toMatchObject({ before: false, helped: true, duplicate: false, ready: true, closed: false, credits: 51 });
+  expect(result.shortcut).toBeLessThan(result.long);
 });

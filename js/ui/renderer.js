@@ -448,7 +448,10 @@
 
     const dlgBox = document.getElementById('dossier-dialogue');
     dlgBox.innerHTML = '';
-    boss.dossierDialogue.forEach(line => {
+    const dialogue = NB.Story.active()
+      ? [{ speaker: 'KAIRO', text: 'O diário registra o que trouxe até aqui. Disputar este duelo libera o próximo passo da investigação.' }]
+      : boss.dossierDialogue;
+    dialogue.forEach(line => {
       const div = document.createElement('div');
       div.className = 'dialogue-turn';
       const isKairo = line.speaker === 'KAIRO';
@@ -504,8 +507,10 @@
       title.style.color = 'var(--ram)';
 
       clueBox.style.display = 'flex';
-      document.getElementById('go-clue-title').textContent = boss.clueTitle;
-      document.getElementById('go-clue-text').textContent = boss.clueText;
+      document.getElementById('go-clue-title').textContent = NB.Story.active() ? 'INVESTIGAÇÃO' : boss.clueTitle;
+      document.getElementById('go-clue-text').textContent = NB.Story.active()
+        ? 'Volte à cidade e confira o diário para registrar a prova ou tomar a próxima decisão.'
+        : boss.clueText;
 
       // Exibe as 2 cartas de recompensa desbloqueadas
       rewardWrap.style.display = 'flex';
@@ -532,10 +537,10 @@
         rewardGrid.appendChild(tile);
       });
 
-      if (campaignResult && campaignResult.nextNodeUnlocked) {
+      if (!NB.Story.active() && campaignResult && campaignResult.nextNodeUnlocked) {
         nextNodeBanner.style.display = 'block';
         nextNodeBanner.textContent = `PISTA RECEBIDA · RASTREIE NA ANTENA COMUNITÁRIA`;
-      } else if (boss.id === 'archon') {
+      } else if (!NB.Story.active() && boss.id === 'archon') {
         nextNodeBanner.style.display = 'block';
         nextNodeBanner.textContent = 'CAMPANHA CONCLUÍDA · TODOS OS 4 NÓS DOMINADOS!';
       }

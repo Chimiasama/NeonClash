@@ -82,6 +82,7 @@
       customDeck: buildBalancedDeck(starter, []),
       city: { credits: 35, district: 'kira', traced: [], life: NB.CityLife.normalize() },
       affinities: {},
+      story: NB.Story.normalize(),
       wins: 0,
       matches: 0
     };
@@ -116,6 +117,7 @@
             traced: Array.isArray(parsed.city?.traced) ? parsed.city.traced.filter(id => typeof id === 'string') : [],
             life: NB.CityLife.normalize(parsed.city?.life)
           },
+          story: NB.Story.normalize(parsed.story),
           affinities: Object.fromEntries(Object.entries(parsed.affinities || {}).filter(([id, type]) =>
             NB.Cards.CARD_DB[id]?.kind === 'unit' && Object.hasOwn(NB.Cards.AFFINITIES, type))),
           wins: Number(parsed.wins) || 0,

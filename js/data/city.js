@@ -2,6 +2,7 @@
   'use strict';
 
   const districts = [
+    ...NB.CityAtlas.places,
     { id: 'market', portrait: './avatars/lume.png', name: 'Feira do Viaduto', short: 'Feira', icon: '▦', x: 19, y: 70, npc: 'Lume · comerciante', line: 'A corp vende o futuro em parcelas. Aqui você paga uma vez e a carta é sua.' },
     { id: 'relay', portrait: './avatars/nina.png', name: 'Antena Comunitária', short: 'Antena', icon: '⌁', x: 22, y: 30, npc: 'Nina Fase · operadora', line: 'A Vértice quer cortar nossa rede comunitária. Remende os pacotes e eu pago pelo turno.' },
     { id: 'arena', music: 'risco', portrait: './avatars/risco.webp', name: 'Ringue Baixa Tensão', short: 'Ringue', icon: '◇', x: 58, y: 79, npc: 'Risco · anfitrião', line: 'Pode lutar pela bolsa ou pôr seus créditos na mesa. Minha regra é simples: acabou o duelo, acabou a dívida.' },

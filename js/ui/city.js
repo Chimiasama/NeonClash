@@ -14,6 +14,7 @@
   let destination = null;
 
   function access(district) {
+    if (NB.Story.active()) return NB.Story.matchAccess(district?.id);
     const boss = NB.Campaign.NODES.find(node => node.id === district?.id);
     if (!boss || boss.index === 0 || NB.Save.isNodeDefeated(boss.id)) return null;
     const previous = NB.Campaign.NODES[boss.index - 1];
@@ -23,7 +24,7 @@
   }
 
   function districtAtPosition() {
-    return districts.find(district => district.id === NB.Save.get().city.district) || districts[3];
+    return districts.find(district => district.id === NB.Save.get().city.district) || districts.find(district => district.id === 'kira');
   }
 
   function selectDestination(id) {
@@ -63,13 +64,15 @@
     $('city-energy-label').textContent = `Energia ${life.energy}/${maxEnergy}`;
     $('city-awake').textContent = `Limite de vigília em ${duration(Math.max(0, NB.CityLife.maxAwake(life) - life.awake))}`;
     $('city-bag').setAttribute('aria-pressed', view === 'bag');
+    $('city-story').setAttribute('aria-pressed', view === 'story');
+    $('city-atlas').setAttribute('aria-pressed', view === 'atlas');
     $('city-name').textContent = district.name;
     const portrait = $('city-portrait');
     portrait.hidden = view !== 'district' || !district.portrait;
     const scene = $('city-scene');
     scene.hidden = view !== 'district' || !district.scene;
     if (!scene.hidden && scene.getAttribute('src') !== district.scene) scene.src = district.scene;
-    document.querySelector('.city-dialogue').hidden = view === 'bag' || view === 'travel';
+    document.querySelector('.city-dialogue').hidden = !['district', 'journal'].includes(view);
     if (!portrait.hidden && portrait.getAttribute('src') !== district.portrait) portrait.src = district.portrait;
     $('city-npc').textContent = view === 'journal' ? 'Arquivo de Kairo' : district.npc;
     const cleared = NB.Save.isNodeDefeated(district.id);
@@ -96,12 +99,19 @@
 
     const content = $('city-content');
     content.replaceChildren();
-    if (view === 'travel') {
+    if (view === 'story') {
+      $('city-name').textContent = 'Investigação';
+      NB.StoryUI.journal(content, district, selectDestination);
+    } else if (view === 'atlas') {
+      $('city-name').textContent = 'Bairros de Baixa Luz';
+      renderAtlas(content, district);
+    } else if (view === 'travel') {
       renderTravel(content, save);
     } else if (view === 'bag') {
       renderBag(content, save.city.life);
     } else if (view === 'journal') {
-      renderJournal(content, save);
+      if (NB.Story.active()) NB.StoryUI.journal(content, district, selectDestination);
+      else renderJournal(content, save);
     } else if (district.id === 'home' || district.id === 'pension') {
       renderRest(content, save.city, district.rest);
     } else if (district.id === 'kiosk' || district.id === 'garage') {
@@ -112,7 +122,7 @@
       renderRelay(content, save);
     } else if (district.id === 'arena') {
       renderArena(content, save);
-    } else {
+    } else if (!district.atlasOnly) {
       if (district.rest) renderRest(content, save.city, district.rest);
       const requirement = access(district);
       if (requirement) {
@@ -121,6 +131,60 @@
         addButton(content, cleared ? 'Abrir dossiê · revanche' : 'Abrir dossiê', () => NB.UI.openDossier(district.id), false, 'city-primary');
       }
     }
+    if (view === 'district') {
+      NB.StoryUI.local(content, district);
+      renderContactServices(content, district.id);
+      renderResidents(content, district.id);
+    }
+  }
+
+  function renderAtlas(content, district) {
+    for (const area of NB.CityAtlas.neighborhoods) {
+      const group = document.createElement('details');
+      group.className = 'city-residents';
+      group.open = area.locations.includes(district.id);
+      const heading = document.createElement('summary');
+      heading.textContent = area.name;
+      group.append(heading);
+      for (const id of area.locations) {
+        const place = districts.find(item => item.id === id);
+        addButton(group, place.name, () => selectDestination(id));
+      }
+      content.append(group);
+    }
+  }
+
+  function renderContactServices(content, location) {
+    const favors = NB.Save.get().city.life.favors;
+    if (location === 'garage' && !favors.includes('hillPath')) {
+      addButton(content, 'Aprender com Aline o atalho de bicicleta', () => {
+        if (!NB.CityLife.helpContact('hillPath')) return;
+        refreshStory('Aline mostrou o atalho entre as Oficinas e o Morro.');
+      });
+    }
+    if (location === 'pump' && !favors.includes('pumpRelay')) {
+      addButton(content, 'Ajudar Maíra na bomba · 30 min · +16 créditos', () => {
+        if (!NB.CityLife.helpContact('pumpRelay')) return;
+        refreshStory('A bomba voltou a funcionar. A travessia para o Cais reabriu.');
+      });
+    } else if (location === 'pump') {
+      addText(content, 'A balsa para o Cais está aberta das 7h às 18h.');
+    }
+  }
+
+  function renderResidents(content, location) {
+    const people = NB.CityAtlas.residents.filter(person => person.location === location);
+    if (!people.length) return;
+    const group = document.createElement('details');
+    group.className = 'city-residents';
+    const heading = document.createElement('summary');
+    heading.textContent = 'Pessoas neste local';
+    group.append(heading);
+    for (const person of people) {
+      addText(group, person.name, 'city-clue-title');
+      addText(group, person.line);
+    }
+    content.append(group);
   }
 
   function addText(parent, text, className = '') {
@@ -166,6 +230,7 @@
       } else {
         addText(row, `${duration(route.minutes)} · ${route.fare ? `${route.fare} créditos` : 'Grátis'} · −${route.energy} energia`);
         addText(row, `Chegada: ${NB.CityLife.clock(life.minute + route.minutes)}`);
+        if (route.note) addText(row, route.note);
         if (route.willCollapse) addText(row, place.id === 'home'
           ? 'Você vai dormir em casa ao chegar.'
           : 'Você vai precisar dormir ao chegar. Risco de assalto na rua.', 'city-notice');
@@ -518,7 +583,7 @@
   }
 
   function bindEvents() {
-    for (const district of districts) {
+    for (const district of districts.filter(place => !place.atlasOnly)) {
       const pin = addButton($('city-map'), '', () => selectDestination(district.id), false, 'city-pin');
       pin.dataset.district = district.id;
       pin.style.left = `${district.x}%`;
@@ -531,13 +596,16 @@
       pin.append(icon, label);
     }
     $('city-journal').addEventListener('click', toggleJournal);
-    $('city-bag').addEventListener('click', () => {
-      view = view === 'bag' ? 'district' : 'bag';
-      destination = null;
-      cancelJob();
-      announce('');
-      render();
-    });
+    for (const [id, target] of [['city-bag', 'bag'], ['city-atlas', 'atlas'], ['city-story', 'story']]) {
+      $(id).addEventListener('click', () => {
+        view = view === target ? 'district' : target;
+        destination = null;
+        cancelJob();
+        announce('');
+        render();
+        if (view !== 'district') $('city-name').scrollIntoView({ block: 'start' });
+      });
+    }
   }
 
   function toggleJournal() {
@@ -555,11 +623,17 @@
       $('city-journal').focus();
       return true;
     }
-    if (!job && view !== 'bag' && view !== 'travel') return false;
+    if (!job && view === 'district') return false;
     resetView();
     $('city-content').querySelector('button')?.focus();
     return true;
   }
 
-  NB.City = { open, resetView, bindEvents, finishArena, access, cancelJob, handleBack };
+  function refreshStory(message) {
+    render();
+    announce([message, NB.CityLife.takeNotice()].filter(Boolean).join(' '));
+    $('city-content').querySelector('button')?.focus();
+  }
+
+  NB.City = { refreshStory, open, resetView, bindEvents, finishArena, access, cancelJob, handleBack };
 })(window.NB = window.NB || {});

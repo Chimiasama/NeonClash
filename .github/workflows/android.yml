@@ -50,6 +50,9 @@ jobs:
           grep -Fx 'assets/index.html' <<< "$entries"
           grep -Fx 'assets/js/ui/city.js' <<< "$entries"
           grep -Fx 'assets/js/core/cityLife.js' <<< "$entries"
+          grep -Fx 'assets/js/data/story.js' <<< "$entries"
+          grep -Fx 'assets/js/data/cityAtlas.js' <<< "$entries"
+          grep -Fx 'assets/src/assets/bairros/clinic.webp' <<< "$entries"
           for scene in quarto-kairo pensao-canal quiosque-24h garagem-iris; do
             grep -Fx "assets/src/assets/$scene.webp" <<< "$entries"
           done
