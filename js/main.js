@@ -14,6 +14,7 @@
     NB.UI.renderTitleStats();
     NB.UI.renderAll();
     document.getElementById('game-ui').inert = true;
+    NB.Gallery.bindEvents();
     NB.Audio.restorePreference();
     if (new URLSearchParams(window.location.search).get('android') === '1') {
       NB.Audio.activateOnEntry();

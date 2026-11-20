@@ -828,3 +828,53 @@ test('talks to residents and earns a card from a neighborhood duel', async ({ pa
   expect(await page.evaluate(() => NB.Save.get().city.residentWins)).toEqual([33]);
   expect(await page.evaluate(() => NB.Save.get().unlockedCards)).toContain('unit_21');
 });
+
+test('archives only displayed artwork and reopens full art with its description after reload', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 600 });
+  await page.goto('/');
+  const before = () => page.evaluate(() => NB.Save.get().seenArt);
+  await expect.poll(before).toContain('./src/assets/prologo-oficina.webp');
+  expect(await before()).not.toContain('./src/assets/prologo-estacao.webp');
+  expect(await before()).not.toContain('./avatars/kira.png');
+  await page.getByRole('button', { name: 'Próximo quadro' }).click();
+  await expect.poll(before).toContain('./src/assets/prologo-estacao.webp');
+
+  await page.reload();
+  await page.locator('#btn-title-gallery').click();
+  const gallery = page.getByRole('dialog', { name: 'Galeria' });
+  await expect(gallery.getByRole('button', { name: 'A chave ainda serve' })).toHaveCount(0);
+  await gallery.getByRole('button', { name: 'A noite em que o rádio calou' }).click();
+  await expect(gallery.locator('#gallery-description')).toContainText('Nina chamou pelo rádio');
+  const full = gallery.locator('#gallery-full-art img');
+  await expect(full).toHaveAttribute('src', './src/assets/prologo-estacao.webp');
+  await expect(full).toHaveCSS('object-fit', 'contain');
+
+  expect(await page.evaluate(() => NB.Input.handleBack())).toBe(true);
+  await expect(gallery.locator('#gallery-grid')).toBeVisible();
+  await expect(gallery.getByRole('button', { name: 'A noite em que o rádio calou' })).toBeFocused();
+  expect(await page.evaluate(() => NB.Input.handleBack())).toBe(true);
+  await expect(gallery).toBeHidden();
+  await expect(page.locator('#btn-title-gallery')).toBeFocused();
+  await page.getByRole('button', { name: 'Entrar na cidade' }).click();
+  await expect.poll(before).toContain('./src/assets/baixa-luz-map.webp');
+  await page.locator('#btn-city-gallery').click();
+  await gallery.getByLabel('Categoria').selectOption('scenes');
+  await expect(gallery.getByRole('button', { name: 'Mapa de Baixa Luz' })).toBeVisible();
+  await expect(gallery.getByRole('button', { name: /Kira · contrabandista/ })).toHaveCount(0);
+  await gallery.getByLabel('Categoria').selectOption('cards');
+  await expect(gallery.locator('#gallery-empty')).toHaveText('Nenhuma arte vista nesta categoria.');
+});
+
+test('counts card images in view without archiving offscreen or locked collection previews', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 600 });
+  await page.goto('/');
+  await page.locator('#btn-title-deck').click();
+  const seen = source => page.evaluate(file => NB.Save.get().seenArt.includes(file), source);
+  await expect.poll(() => seen('./cards/unit_01.webp')).toBe(true);
+  expect(await seen('./cards/exploit_11.webp')).toBe(false);
+  await page.getByRole('searchbox', { name: 'Buscar cartas' }).fill('Ponte Dupla');
+  await expect(page.getByRole('button', { name: 'Ponte Dupla · bloqueada' })).toBeVisible();
+  expect(await seen('./cards/exploit_11.webp')).toBe(false);
+  await page.getByRole('button', { name: 'Ponte Dupla · bloqueada' }).click();
+  await expect.poll(() => seen('./cards/exploit_11.webp')).toBe(true);
+});

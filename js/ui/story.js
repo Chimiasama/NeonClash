@@ -178,5 +178,5 @@
     });
   }
 
-  NB.StoryUI = { local, journal, bindEvents };
+  NB.StoryUI = { local, journal, bindEvents, prologue };
 })(window.NB = window.NB || {});

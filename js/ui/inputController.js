@@ -274,6 +274,7 @@
 
   // True tells the Android activity that the game handled Back.
   function handleBack() {
+    if (NB.Gallery.handleBack()) return true;
     const isOpen = id => document.getElementById(id).classList.contains('open');
     const closeButtons = [
       ['card-inspector-modal', 'btn-insp-close'],

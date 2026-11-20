@@ -792,16 +792,17 @@
   function createArtMarkup(id, imgPath, altText, fallbackId = NB.Cards.CARD_DB[id]?.fallbackArt || id) {
     const wrap = document.createDocumentFragment();
     const status = assetStatus[id];
-    function fallbackImage(alt) {
+    function fallbackImage(alt, final = false) {
       const img = document.createElement('img');
       img.className = 'art-fallback';
+      if (final && imgPath) img.dataset.galleryArt = imgPath;
       img.src = generateProceduralArt(fallbackId);
       img.alt = alt;
       return img;
     }
 
     if (status === 'fallback') {
-      wrap.appendChild(fallbackImage(altText));
+      wrap.appendChild(fallbackImage(altText, true));
     } else {
       const fallback = status === 'loaded' ? null : fallbackImage('');
       if (fallback) wrap.appendChild(fallback);
@@ -816,9 +817,10 @@
         assetStatus[id] = 'fallback';
         if (fallback) {
           fallback.alt = altText;
+          fallback.dataset.galleryArt = imgPath;
           real.remove();
         } else {
-          real.replaceWith(fallbackImage(altText));
+          real.replaceWith(fallbackImage(altText, true));
         }
         NB.UI?.refreshPngModalIfOpen();
       };

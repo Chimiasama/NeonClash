@@ -148,7 +148,7 @@
     <div id="toast-banner" class="chamfer-sm"></div>
 
     <!-- Modal 1: Tela Inicial (NEON BREACH // CLASH) -->
-    <div id="title-modal" class="full-modal title-screen open">
+    <div id="title-modal" data-gallery-art="./src/assets/baixa-luz-cover.webp" class="full-modal title-screen open">
       <div class="modal-panel chamfer-md">
         <div class="title-hero">
           <div class="title-sub">UMA NOITE EM BAIXA LUZ</div>
@@ -178,6 +178,7 @@
           <button id="btn-quick-duel" class="btn-quick-duel chamfer-sm" type="button">DUELO RÁPIDO</button>
           <button id="btn-title-deck" class="btn-my-deck chamfer-sm" type="button">MEU DECK · BANCO DE DADOS</button>
           <div class="title-secondary-row">
+            <button id="btn-title-gallery" class="hud-btn chamfer-sm" type="button">GALERIA</button>
             <button id="btn-title-sound" class="hud-btn chamfer-sm" type="button" style="padding:9px">SOM: OFF</button>
             <button id="btn-title-settings" class="hud-btn chamfer-sm" type="button" style="padding:9px">CONFIG / SAVE</button>
           </div>
@@ -196,12 +197,13 @@
             <button id="city-story" type="button" aria-pressed="false">Investigação</button>
             <button id="city-bag" type="button" aria-pressed="false">Mochila</button>
             <button id="city-journal" type="button" aria-pressed="false">Pistas</button>
+            <button id="btn-city-gallery" type="button">Galeria</button>
             <button id="btn-netmap-settings" type="button">Config.</button>
             <button id="btn-netmap-back" type="button">Início</button>
           </div>
         </header>
-        <div id="city-map" aria-label="Mapa interativo de Baixa Luz">
-          <span id="city-marker" aria-hidden="true"></span>
+        <div id="city-map" data-gallery-art="./src/assets/baixa-luz-map.webp" aria-label="Mapa interativo de Baixa Luz">
+          <span id="city-marker" data-gallery-art="./src/assets/kairo-token.webp" aria-hidden="true"></span>
         </div>
         <div class="city-detail">
           <h3 id="city-name"></h3>
@@ -216,6 +218,32 @@
           <img id="city-scene" alt="" hidden />
           <div id="city-content"></div>
         </div>
+      </section>
+    </div>
+
+    <div id="gallery-modal" class="full-modal" role="dialog" aria-modal="true" aria-labelledby="gallery-title">
+      <section class="modal-panel gallery-panel">
+        <header class="gallery-header">
+          <h2 id="gallery-title">Galeria</h2>
+          <button id="gallery-close" type="button">Fechar</button>
+        </header>
+        <section id="gallery-library">
+          <label for="gallery-filter">Categoria</label>
+          <select id="gallery-filter">
+            <option value="all">Todas</option>
+            <option value="scenes">Cenas e locais</option>
+            <option value="people">Personagens</option>
+            <option value="cards">Cartas</option>
+          </select>
+          <p id="gallery-empty" hidden></p>
+          <div id="gallery-grid"></div>
+        </section>
+        <section id="gallery-detail" aria-labelledby="gallery-art-title" hidden>
+          <button id="gallery-back" type="button">Voltar à galeria</button>
+          <h3 id="gallery-art-title"></h3>
+          <div id="gallery-full-art"></div>
+          <p id="gallery-description"></p>
+        </section>
       </section>
     </div>
 
@@ -492,6 +520,7 @@
   <script defer src="./js/ui/inputController.js"></script>
   <script defer src="./js/ui/city.js"></script>
   <script defer src="./js/ui/story.js"></script>
+  <script defer src="./js/ui/gallery.js"></script>
   <script defer src="./js/main.js"></script>
 </body>
 </html>

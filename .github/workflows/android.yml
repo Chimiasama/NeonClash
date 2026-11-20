@@ -49,6 +49,7 @@ jobs:
           entries=$(unzip -Z -1 "$apk")
           grep -Fx 'assets/index.html' <<< "$entries"
           grep -Fx 'assets/js/ui/city.js' <<< "$entries"
+          grep -Fx 'assets/js/ui/gallery.js' <<< "$entries"
           grep -Fx 'assets/js/core/cityLife.js' <<< "$entries"
           grep -Fx 'assets/js/data/story.js' <<< "$entries"
           grep -Fx 'assets/js/data/cityAtlas.js' <<< "$entries"
