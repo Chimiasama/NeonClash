@@ -326,8 +326,7 @@ test('renders the redesigned effects through the effects bus only', async ({ pag
   await page.goto('/');
   await page.locator('#btn-title-sound').click();
   const results = await page.evaluate(async () => {
-    const audio = NB.Audio;
-    audio.stopMusic();
+    const audio = Object.create(NB.Audio);
     const patches = Object.entries(NB.SoundEffects);
     const ctx = new OfflineAudioContext(2, 48000 * patches.length, 48000);
     audio.ctx = ctx;

@@ -46,8 +46,10 @@
       limiter.attack.value = 0.001;
       this.masterGain.connect(limiter);
       limiter.connect(this.ctx.destination);
-      this.ctx.addEventListener('statechange', () => {
-        if (this.enabled && this.ctx.state === 'running') this.startMusic();
+      const context = this.ctx;
+      context.addEventListener('statechange', () => {
+        if (context !== this.ctx) return;
+        if (this.enabled && context.state === 'running') this.startMusic();
         NB.UI.updateSoundButtons();
       });
 
@@ -120,10 +122,12 @@
       if (this.ctx.state === 'running') {
         this.startMusic();
       } else if ((!this.resumePending || onGesture) && this.ctx.state !== 'closed') {
+        const context = this.ctx;
         this.resumePending = true;
-        this.ctx.resume().catch(() => {}).finally(() => {
+        context.resume().catch(() => {}).finally(() => {
+          if (context !== this.ctx) return;
           this.resumePending = false;
-          if (this.enabled && this.ctx.state === 'running') this.startMusic();
+          if (this.enabled && context.state === 'running') this.startMusic();
         });
       }
     },
