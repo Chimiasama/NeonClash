@@ -156,7 +156,7 @@
           if (!panel.classList.contains('comic-panel--locked')) return;
           panel.classList.remove('comic-panel--locked');
           panel.querySelector('.comic-interaction')?.remove();
-          NB.Audio.playComicCue(frames[index].sfxVisual?.sound || 'beep');
+          if (frames[index].sfxVisual?.sound) NB.Audio.playComicCue(frames[index].sfxVisual.sound);
           panel.dataset.interactedAt = performance.now();
           options.unlock();
         });
@@ -203,7 +203,7 @@
     const lines = NB.Story.getLines(scene);
     const cursor = replay ? 0 : Math.min(NB.Story.get().read[id] ?? 0, lines.length - 1);
     const location = NB.CityData.districts.find(item => item.id === scene.location);
-    const art = location.scene || location.portrait;
+    const art = scene.comicArt?.art || location.scene || location.portrait;
     const frames = lines.map((line, index) => {
       const baseline = { line, art: index === 0 ? art : null };
       const beat = scene.beats?.[index];

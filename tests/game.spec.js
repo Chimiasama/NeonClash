@@ -1304,6 +1304,7 @@ test('reveals and saves comic beats with tactile key, wipe and radio controls', 
   await page.locator('#prologue-comic .comic-panel--active').click();
   await expect(page.locator('#prologue-page')).toHaveText('2 / 3');
   await expect(page.locator('#prologue-comic .comic-panel--past')).toHaveCount(1);
+  await expect(page.locator('#prologue-comic .comic-sfx')).toHaveCount(0);
   await page.reload();
   await page.locator('#btn-start-campaign').click();
   await expect(page.locator('#prologue-page')).toHaveText('2 / 3');
@@ -1312,7 +1313,10 @@ test('reveals and saves comic beats with tactile key, wipe and radio controls', 
   await page.getByRole('button', { name: 'Testar o leitor e a chave' }).click();
   const next = page.getByRole('button', { name: 'Continuar', exact: true });
   await expect(next).toBeDisabled();
+  await expect(page.locator('#story-art')).toHaveAttribute('src', './src/assets/comic/leitor-da-porta.webp');
+  await expect.poll(() => page.evaluate(() => NB.Save.get().seenArt)).toContain('./src/assets/comic/leitor-da-porta.webp');
   await page.getByRole('button', { name: 'Testar a chave no leitor' }).tap();
+  await expect(page.locator('.comic-panel--active .comic-sfx')).toHaveText('BIP-BIP');
   await expect(next).toBeEnabled();
   await expect(page.locator('#story-line')).toBeVisible();
   await next.click();
@@ -1324,6 +1328,7 @@ test('reveals and saves comic beats with tactile key, wipe and radio controls', 
   await expect(page.locator('#story-comic .comic-panel--past')).toHaveCount(3);
   await expect(next).toBeDisabled();
   const receipt = page.locator('#story-comic .comic-panel--active .comic-art');
+  await expect(page.locator('#story-art')).toHaveAttribute('src', './src/assets/comic/recibo-molhado.webp');
   await receipt.scrollIntoViewIfNeeded();
   const box = await receipt.boundingBox();
   await page.mouse.move(box.x + 20, box.y + 24);
@@ -1342,6 +1347,7 @@ test('reveals and saves comic beats with tactile key, wipe and radio controls', 
   await walkTo(page, page.locator('[data-district="relay"]'));
   await page.getByRole('button', { name: 'Levar a cópia do recibo à Antena' }).click();
   await expect(next).toBeDisabled();
+  await expect(page.locator('#story-art')).toHaveAttribute('src', './src/assets/comic/radio-da-antena.webp');
   await page.getByRole('slider', { name: 'Sintonizar o rádio de Nina' }).fill('64');
   await expect(next).toBeEnabled();
 });

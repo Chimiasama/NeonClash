@@ -263,10 +263,10 @@
 
   const comicPortraits = {
     kairo: { name: 'Kairo', art: './src/assets/kairo-token.webp' },
-    nair: { name: 'Dona Nair' },
+    nair: { name: 'Dona Nair', art: './avatars/nair.webp' },
     nina: { name: 'Nina', art: './avatars/nina.png' },
     lume: { name: 'Lume', art: './avatars/lume.png' },
-    beto: { name: 'Beto' },
+    beto: { name: 'Beto', art: './avatars/beto.webp' },
     mara: { name: 'Mara' },
     severino: { name: 'Severino' },
     leila: { name: 'Leila' },
@@ -275,30 +275,31 @@
   };
   const prologueBeats = [
     { camera: 'wide', mood: 'memory' },
-    { camera: 'pan-left', mood: 'tense', sfxVisual: { text: 'BZZT!', style: 'electric', pos: 'top-right', sound: 'glitch' } },
-    { camera: 'zoom-in', mood: 'revelation', sfxVisual: { text: 'CLACK!', style: 'impact', pos: 'bottom-left', sound: 'clack' } }
+    { camera: 'pan-left', mood: 'tense' },
+    { camera: 'zoom-in', mood: 'revelation' }
   ];
 
   const beats = {
     keys: [
-      { camera: 'focus-detail', focus: 'bottom-right', mood: 'tense', bubbleType: 'thought',
+      { camera: 'wide', mood: 'tense', bubbleType: 'thought',
+        art: './src/assets/comic/leitor-da-porta.webp', artTitle: 'O leitor da porta de Kairo',
         interact: { type: 'tap-device', label: 'Testar a chave no leitor', pos: 'bottom-right' },
         sfxVisual: { text: 'BIP-BIP', style: 'electric', pos: 'top-right', sound: 'beep' } },
-      { camera: 'pan-right', mood: 'memory', sfxVisual: { text: 'CREAK…', style: 'impact', pos: 'bottom-left', sound: 'clack' } }
+      { camera: 'pan-right', mood: 'memory' }
     ],
     nair: [
       { camera: 'wide', speaker: 'nair', bubbleType: 'speech' },
       { camera: 'zoom-in', speaker: 'kairo', bubbleType: 'speech', mood: 'tense' },
       { camera: 'pan-left', speaker: 'nair', bubbleType: 'speech', expression: 'whisper' },
-      { camera: 'focus-detail', focus: 'bottom-right', mood: 'revelation', bubbleType: 'evidence',
-        interact: { type: 'wipe', label: 'Limpar o recibo molhado' },
-        sfxVisual: { text: 'CLACK!', style: 'impact', pos: 'top-right', sound: 'clack' } },
+      { camera: 'wide', mood: 'revelation', bubbleType: 'evidence',
+        art: './src/assets/comic/recibo-molhado.webp', artTitle: 'O recibo molhado de Dona Nair',
+        interact: { type: 'wipe', label: 'Limpar o recibo molhado' } },
       { camera: 'zoom-in', speaker: 'kairo', expression: 'shock', bubbleType: 'speech', mood: 'revelation' },
       { camera: 'wide', speaker: 'nair', bubbleType: 'speech' }
     ],
     firstSignal: [
       { camera: 'focus-detail', focus: 'top-left', mood: 'radio', speaker: 'nina', expression: 'radio', bubbleType: 'radio',
-        art: './src/assets/baixa-luz-map.webp', interact: { type: 'tune', label: 'Sintonizar o rádio de Nina', target: 64 },
+        art: './src/assets/comic/radio-da-antena.webp', artTitle: 'O rádio da Antena Comunitária', interact: { type: 'tune', label: 'Sintonizar o rádio de Nina', target: 64 },
         sfxVisual: { text: 'BZZT!', style: 'electric', pos: 'top-right', sound: 'glitch' } },
       { camera: 'pan-right', mood: 'radio', speaker: 'nina', expression: 'radio', bubbleType: 'radio' },
       { camera: 'zoom-in', speaker: 'kairo', bubbleType: 'speech' },
@@ -313,8 +314,7 @@
     delivery: [
       { camera: 'wide', mood: 'memory' },
       { camera: 'zoom-in', speaker: 'beto', expression: 'whisper', bubbleType: 'speech' },
-      { camera: 'focus-detail', focus: 'center', mood: 'revelation', bubbleType: 'evidence',
-        sfxVisual: { text: 'CLACK!', style: 'impact', pos: 'top-right', sound: 'clack' } },
+      { camera: 'focus-detail', focus: 'center', mood: 'revelation', bubbleType: 'evidence' },
       { camera: 'pan-right', speaker: 'beto', bubbleType: 'speech', mood: 'tense' }
     ],
     guard: [{ camera: 'wide' }, { camera: 'pan-right', mood: 'tense' }, { camera: 'focus-detail', focus: 'center' }],
@@ -325,11 +325,17 @@
       { camera: 'focus-detail', focus: 'center', speaker: 'kira', expression: 'alert', bubbleType: 'speech' }
     ],
     meridianoRadio: [
-      { camera: 'wide', mood: 'radio', sfxVisual: { text: 'BZZT!', style: 'electric', pos: 'top-right', sound: 'glitch' } },
+      { camera: 'wide', mood: 'radio', sfxVisual: { text: 'TRRRIM…', style: 'electric', pos: 'top-right', sound: 'glitch' } },
       { camera: 'zoom-in', mood: 'radio', speaker: 'archon', expression: 'radio', bubbleType: 'radio' }
     ]
   };
+  const comicLocations = {
+    relay: { art: './src/assets/comic/radio-da-antena.webp', artTitle: 'O rádio da Antena Comunitária' },
+    market: { art: './src/assets/comic/feira-de-lume.webp', artTitle: 'A banca de Lume na Feira' },
+    kira: { art: './src/assets/comic/estacao-fantasma.webp', artTitle: 'O portão da Estação Fantasma' }
+  };
   for (const scene of scenes) {
+    scene.comicArt = comicLocations[scene.location];
     if (beats[scene.id]) scene.beats = beats[scene.id];
     else if (scene.chapter < 2) scene.beats = [
       { camera: 'wide' }, { camera: 'zoom-in', mood: 'tense' },

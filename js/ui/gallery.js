@@ -44,11 +44,12 @@
       add(district.portrait, district.npc, `Retrato de personagem em ${district.name}.`, 'people');
     }
     for (const scene of NB.StoryData.scenes) {
-      for (const beat of scene.beats || []) {
+      for (const beat of [scene.comicArt, ...(scene.beats || [])].filter(Boolean)) {
         if (beat.art && !catalog.has(beat.art)) add(beat.art, beat.artTitle || scene.title, 'Quadro da investigação de Kairo.', 'scenes');
       }
     }
     for (const person of Object.values(NB.StoryData.comicPortraits)) {
+      if (person.art && !catalog.has(person.art)) add(person.art, person.name, 'Retrato usado na webcomic de Baixa Luz.', 'people');
       for (const source of Object.values(person.variants || {})) {
         add(source, person.name, 'Retrato usado na webcomic de Baixa Luz.', 'people');
       }
