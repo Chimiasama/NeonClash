@@ -53,7 +53,7 @@ A primeira entrega acrescenta quatro locais e quatro NPCs. A Casa de Kairo com D
 - Casa grátis, pensão intermediária e hotel mais caro e rápido. Esgotar a energia ou a vigília fora de casa causa sono de rua. Nesta versão, o risco de assalto é de 30% e a perda é de 60% dos créditos, arredondada para cima. Cartas, itens e pistas ficam protegidos.
 - O turno noturno do Quiosque é o primeiro trabalho com horário. Missões posteriores usam regras de disponibilidade recorrente ou prazo narrativo. Toda pista necessária à campanha deve ter uma janela alternativa ou outro contato.
 
-Na expansão, separar **distrito**, **local**, **NPC**, **horário** e **atividade**. A meta de 100 NPCs começa com 12 personagens centrais, 28 contatos recorrentes e 60 moradores com encontros pontuais. A cidade pode chegar a cerca de dez bairros de modo incremental. Cada bairro deve sustentar uma rota útil, uma variação de duelo e histórias que cruzam contatos de outros bairros.
+Na expansão, separar **distrito**, **local**, **NPC**, **horário** e **atividade**. O elenco cresce conforme surgem novos papéis em cenas, serviços, trabalhos ou duelos. A cidade pode chegar a cerca de dez bairros de modo incremental. Cada bairro deve sustentar uma rota útil, uma variação de duelo e histórias que cruzam contatos de outros bairros.
 
 Cyberdecks de campanha entram depois do primeiro ciclo da cidade. Testar modelos de 0, +1 e +2 RAM inicial e alternativas situacionais. Modificações de carta devem ter custos ou trocas de atributos perceptíveis. Versões de uma carta compartilham o limite de cópias.
 
@@ -68,7 +68,7 @@ O lote de 80 cartas começa depois da campanha narrativa jogável. Os lotes segu
 | 2 · Os primeiros bairros | 175 | Condições de horário e reputação, cadeias de NPC reutilizáveis, comércio temático e primeiro pacote de equipamentos. |
 | 3 · Circuito do Ringue | 285 | Torneios, desafios com decks emprestados e a primeira janela para cartas secretas com cadeias completas. |
 | 4 · Rede de contatos | 395 | Expandir bairros, oficinas, rotas alternativas de aquisição e cadeias cruzadas. |
-| 5 · Baixa Luz completa | 495 | Completar as cinco cadeias exclusivas, o total de 100 NPCs e o catálogo de 500. Revisar rotas perdíveis, balanceamento e uso de memória no Android. |
+| 5 · Baixa Luz completa | 495 | Completar as cinco cadeias exclusivas e o catálogo de 500. Revisar rotas perdíveis, balanceamento e uso de memória no Android. |
 
 O primeiro pacote da etapa 1 amplia o catálogo de 24 para 32 cartas. O Ringue Baixa Tensão oferece os quatro decks emprestados e libera as oito cartas novas nas primeiras vitórias. A coleção já tem busca e três decks salvos, e o combate mostra a previsão de dano dos bloqueios escolhidos.
 

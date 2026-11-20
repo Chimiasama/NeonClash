@@ -85,7 +85,7 @@
       challengeWins: [],
       seenArt: [],
       prologueSeen: false,
-      city: { credits: 35, district: 'kira', traced: [], residentWins: [], discoveredResidents: [], encounterWins: [], life: NB.CityLife.normalize() },
+      city: { credits: 35, district: 'kira', traced: [], residentWins: [], encounterWins: [], life: NB.CityLife.normalize() },
       affinities: {},
       story: NB.Story.normalize(),
       wins: 0,
@@ -131,8 +131,6 @@
             traced: Array.isArray(parsed.city?.traced) ? parsed.city.traced.filter(id => typeof id === 'string') : [],
             residentWins: [...new Set((Array.isArray(parsed.city?.residentWins) ? parsed.city.residentWins : [])
               .filter(Number.isSafeInteger))],
-            discoveredResidents: [...new Set((Array.isArray(parsed.city?.discoveredResidents) ? parsed.city.discoveredResidents : [])
-              .filter(id => NB.CityAtlas.residents.some(person => person.id === id)))],
             encounterWins: (Array.isArray(parsed.city?.encounterWins) ? parsed.city.encounterWins : [])
               .filter(key => typeof key === 'string' && /^(day|night):-?\d+$/.test(key)).slice(-4),
             life: NB.CityLife.normalize(parsed.city?.life)

@@ -37,7 +37,7 @@ Os controles consultam o estado corrente antes de realizar ações. Um duelo tem
 | --- | --- |
 | `localStorage.neon_breach_save_v1` | Documento JSON do progresso. O carregamento completa campos ausentes, valida IDs de cartas, ajusta limites e reconstrói decks inválidos. |
 | Coleção e decks | `unlockedCards`, `customDeck`, `deckSlot` ativo e `deckSlots` para guardar as demais configurações. Os 12 IDs iniciais são preservados. |
-| Histórico | `defeatedBosses`, `clues`, `challengeWins`, `wins`, `matches` e `city.residentWins`. `city.discoveredResidents` registra os moradores ouvidos. `city.encounterWins` guarda as últimas vitórias dos encontros por período. As primeiras vitórias liberam os prêmios próprios. |
+| Histórico | `defeatedBosses`, `clues`, `challengeWins`, `wins`, `matches` e `city.residentWins`. `city.encounterWins` guarda as últimas vitórias dos encontros por período. As primeiras vitórias liberam os prêmios próprios. |
 | Cidade | `city.credits`, `city.district`, `city.traced` e `city.life`. Vida urbana guarda minutos absolutos, vigília, energia, implante, veículos, estoque, favores, turno do quiosque, contagem diária de trabalhos, entrega ativa e aviso da última ação. |
 | Investigação | `prologueSeen` controla a apresentação. `story` guarda ativação, capítulo, flags de passos, escolhas, páginas lidas, cenas de evidência, `allies`, `nairTruthEarly` e a aplicação única de `kiraSupportUsed`. |
 | Personalização | `affinities` guarda recalibrações por ID. `seenArt` guarda caminhos dos recursos já visualizados, com deduplicação. |
@@ -47,7 +47,7 @@ Uma partida nova começa na Estação Fantasma às 08:00 do dia 1, com 35 crédi
 
 ## Cidade, tempo e economia
 
-O atlas contém 10 bairros, 23 locais e 100 registros de NPC. O mapa oferece pinos dos locais principais. **Bairros** oferece também locais do atlas. Uma viagem tem cotação e execução. Abrir a cotação não cobra nem avança o relógio. Ao escolher transporte, o motor verifica disponibilidade, cobra a tarifa, salva a posição de destino e aplica tempo e energia.
+O atlas contém 10 bairros, 23 locais e um elenco ligado a cenas, serviços e duelos. O mapa oferece os 23 locais em posições ilustrativas, com ícones de tipos de lugar. **Bairros** filtra o próprio mapa. Uma viagem tem cotação e execução. Abrir a cotação não cobra nem avança o relógio. Ao escolher transporte, o motor verifica disponibilidade, cobra a tarifa, salva a posição de destino e aplica tempo e energia.
 
 A distância é `max(2, ceil(hypot(Δx, Δy) / 10))` com as coordenadas do mapa. Na tabela, `d` representa essa distância.
 
@@ -65,12 +65,12 @@ A distância é `max(2, ceil(hypot(Δx, Δy) / 10))` com as coordenadas do mapa.
 - A mochila comporta 12 consumíveis no total. A Feira e o Quiosque vendem os mesmos consumíveis. Contar cedo a verdade a Dona Nair reduz o preço em 20%, arredondado ao crédito mais próximo. A decisão adiada abre falas opcionais com Vex e Archon. Café custa 4 e dá +15, energético custa 9 e dá +28, estímulo sintético custa 16 e dá +45. O consumo respeita o teto de energia e não reinicia a vigília.
 - No fluxo original, rastrear pista usa quatro símbolos visíveis, dispensa cronômetro e avança 45 min e 8 de energia quando concluído. O rastreamento é uma etapa de progressão à parte dos trabalhos pagos.
 - Ajudar Maíra rende 16 créditos e custa 30 min e 5 de energia.
-- Cada morador listado permite conversar. Repetir a conversa na mesma sessão muda a resposta quando aplicável. Damião tem 10 HP e paga 5 por vitória. Tuca tem 14 HP e paga 7, com carta na primeira vitória. Dora tem 22 HP, usa Overclock e paga 12, com carta na primeira vitória. O estoque da Feira e essas vitórias oferecem rotas que podem coincidir.
+- Os duelistas locais aparecem com acesso direto ao desafio. Os demais personagens aparecem nas ações e cenas em que têm função. Damião tem 10 HP e paga 5 por vitória. Tuca tem 14 HP e paga 7, com carta na primeira vitória. Dora tem 22 HP, usa Overclock e paga 12, com carta na primeira vitória. O estoque da Feira e essas vitórias oferecem rotas que podem coincidir.
 - A Feira vende `unit_21` por 45, `unit_22` por 65, `unit_23` por 85, `exploit_07` por 30, `unit_28` por 48, `exploit_12` por 36 e `exploit_13` por 40. A oficina muda a afinidade por 15 créditos e restaura a original gratuitamente. Suas mudanças são de afinidade e convivem com ATK e DEF base.
 
 ### Mapa e navegação narrativa
 
-A legenda combina ◆ pistas ativas (ciano/âmbar), ⚔ duelos (magenta) e ✦ segredos ou moradores inéditos (verde). **Todos**, **Pistas**, **Duelos** e **Segredos** filtram o mapa e a lista de bairros. Os 23 pinos usam uma distribuição visual compacta. O cálculo de distâncias mantém as coordenadas próprias de viagem. Os destinos ativos vêm das cenas válidas e do duelo narrativo pendente. A cotação antecipa a ação em destaque. Depois da viagem, a ação aparece no topo das tarefas do local.
+A legenda combina ◆ pistas ativas (ciano/âmbar), ⚔ duelos (magenta) e ✦ atalhos e favores disponíveis (verde). **Todos**, **Pistas**, **Duelos** e **Segredos** filtram os pinos. O seletor de bairros combina seu recorte com o filtro atual. Ícones como a xícara do Quiosque, a chave de ferramenta da Garagem e a cruz da Clínica identificam suas funções. O cálculo de distâncias mantém as coordenadas próprias de viagem. Os destinos ativos vêm das cenas válidas e do duelo narrativo pendente. A cotação antecipa a ação em destaque. Depois da viagem, a ação aparece no topo das tarefas do local.
 
 Os encontros urbanos são escolhidos de forma pseudoaleatória e estável por dia e período. O mapa muda a posição entre o período diurno (06h até antes das 19h) e noturno (19h até antes das 06h). Ao vencer o encontro, o indicador correspondente some até outro período. Cada vitória paga de 8 a 12 créditos conforme o oponente.
 
@@ -180,7 +180,7 @@ Unidades são instâncias de campo com UID, ATK e DEF atuais, DEF máxima, afini
 
 ## Conteúdo atual e metas
 
-O jogo disponível tem 41 cartas, 10 bairros, 23 locais, 100 moradores cadastrados, quatro chefes, quatro desafios de arquétipo e 37 cenas da investigação. O [plano de expansão](plano-expansao.md) descreve a meta de 500 cartas, sendo 495 encontráveis e cinco secretas de missão. Os roteiros de construção e descrições de moradores nos demais arquivos de `docs/` registram escopo planejado além dos recursos já descritos aqui.
+O jogo disponível tem 41 cartas, 10 bairros, 23 locais, 34 personagens com função no jogo, quatro chefes, quatro desafios de arquétipo e 37 cenas da investigação. O [plano de expansão](plano-expansao.md) descreve a meta de 500 cartas, sendo 495 encontráveis e cinco secretas de missão. Os roteiros de construção e descrições de moradores nos demais arquivos de `docs/` registram escopo planejado além dos recursos já descritos aqui.
 
 O lote piloto usa arte procedural. Condensador Coral, Ímã de Núcleo e Janela Espectral são vendidos na Feira. Catadora de Ecos, Ferro de Pulso e Pressão de Sucata são prêmios das primeiras vitórias sobre Giba, Aline e Nanda, respectivamente. Os três adversários também usam cartas do lote.
 

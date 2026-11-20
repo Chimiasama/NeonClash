@@ -14,7 +14,7 @@ Abra **Bairros** para consultar os dez bairros e viajar aos seus locais. Em **In
 
 ## Planos de expansão
 
-- [Elenco de 100 NPCs e dez bairros](docs/baixa-luz-cidade.md)
+- [Plano original de elenco e dez bairros](docs/baixa-luz-cidade.md)
 - [Roteiro de campanha e ordem de construção](docs/baixa-luz-campanha.md)
 - [Plano dos modos e das 500 cartas](docs/plano-expansao.md)
 

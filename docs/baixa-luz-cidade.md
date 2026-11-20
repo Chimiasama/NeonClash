@@ -1,6 +1,6 @@
 # Baixa Luz · elenco e bairros
 
-Este plano define 100 NPCs e dez bairros. A campanha começa com os locais já jogáveis e abre o restante conforme Kairo ganha motivos para viajar. O roteiro usa os códigos deste elenco nas cenas e nas condições de missões. [Roteiro da campanha](baixa-luz-campanha.md)
+Este documento preserva o plano original de 100 NPCs e dez bairros. A versão jogável concentra o elenco em personagens com função em cenas, serviços e duelos. Os demais nomes abaixo servem de referência histórica de criação. Consulte a [referência técnica atual](referencia-tecnica.md). A campanha começa com os locais já jogáveis e abre o restante conforme Kairo ganha motivos para viajar. O roteiro usa os códigos deste elenco nas cenas e nas condições de missões. [Roteiro da campanha](baixa-luz-campanha.md)
 
 ## 1. Elenco
 

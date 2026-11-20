@@ -49,13 +49,21 @@
 .city-header, .city-detail { padding: 15px 16px; }
 
 .city-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px;
+  padding: 9px 12px;
   border-bottom: 1px solid #324254;
 }
+.city-header > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas: "title clock" "credits energy" "credits awake";
+  align-items: center;
+  column-gap: 12px;
+}
+.city-header #city-heading { grid-area: title; }
+.city-header #city-credits { grid-area: credits; align-self: start; }
+.city-header #city-clock { grid-area: clock; }
+.city-header .city-energy { grid-area: energy; }
+.city-header #city-awake { grid-area: awake; }
 
 #city-heading { font: 900 26px/1 var(--font-mono); letter-spacing: -.05em; }
 #city-credits { margin-top: 5px; color: #ffcd76; font-size: 13px; font-weight: 700; }
@@ -99,37 +107,68 @@
   position: relative;
   isolation: isolate;
   width: 100%;
-  height: clamp(245px, 40dvh, 370px);
-  border-bottom: 1px solid #324254;
-  background: linear-gradient(#07102124, #07102162), #192234 url('../src/assets/baixa-luz-map.webp') center / cover no-repeat;
+  height: clamp(320px, 53dvh, 430px);
+  border-block: 1px solid #42516a;
+  background: linear-gradient(#07102112, #07102140), #192234 url('../src/assets/baixa-luz-map.webp') center / cover no-repeat;
 }
 
 .city-panel .city-pin {
+  --pin-color: #9bdbff;
   position: absolute;
   z-index: 1;
   display: grid;
   place-items: center;
-  width: 18%;
-  min-width: 0;
-  min-height: 42px;
-  padding: 3px 1px;
-  align-content: center;
+  width: 42px;
+  height: 42px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #f9fcff;
   transform: translate(-50%, -50%);
-  border-color: #62e7e4;
-  background: #101827ec;
-  box-shadow: 0 3px 12px #050710a6;
-  font-size: clamp(9px, 2.8vw, 12px);
 }
-.city-panel .city-pin.city-locked { border-color: #8a90a2; color: #c4cbd9; }
-.city-pin.city-cleared:not([aria-current]) { border-color: #a1d795; }
-.city-panel .city-pin[aria-current] { border-color: #ffcb75; background: #352838; }
+.city-pin[data-category="food"] { --pin-color: #ffcb82; }
+.city-pin[data-category="care"] { --pin-color: #99edb8; }
+.city-pin[data-category="trade"] { --pin-color: #ffd7a1; }
+.city-pin[data-category="duel"] { --pin-color: #ff8cce; }
+.city-pin[data-category="story"] { --pin-color: #dab6ff; }
+
+.city-place-icon {
+  display: grid;
+  place-items: center;
+  width: 31px;
+  height: 31px;
+  border: 1px solid var(--pin-color);
+  border-radius: 50%;
+  background: #101928ed;
+  box-shadow: 0 2px 7px #06090be8;
+  color: var(--pin-color);
+  font: 17px/1 system-ui, sans-serif;
+}
+.city-place-label {
+  position: absolute;
+  top: 34px;
+  pointer-events: none;
+  padding: 0 3px;
+  border-radius: 2px;
+  background: #0b1321e8;
+  font-size: clamp(9px, 2.7vw, 11px);
+  line-height: 1.3;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px #000;
+}
+.city-pin.city-locked .city-place-icon { border-style: dashed; }
+.city-pin[aria-current] .city-place-icon { outline: 2px solid #ffcb75; }
+.city-pin-selected .city-place-icon { outline: 2px solid #f9fcff; }
+.city-panel .city-pin:focus-visible { z-index: 3; }
 
 #city-marker {
   position: absolute;
   z-index: 2;
   width: 21px;
   height: 21px;
-  transform: translate(-115%, -120%);
+  transform: translate(-105%, -105%);
   border: 2px solid #ffcb75;
   border-radius: 50%;
   background: #ffcb75 url('../src/assets/kairo-token.webp') center / cover no-repeat;
@@ -206,7 +245,7 @@
 #city-scene { width: 100%; max-height: 210px; object-fit: cover; border-radius: 6px; border: 1px solid #3c546a; }
 .city-life-row { display: grid; gap: 4px; padding: 8px; border: 1px solid #2d4056; border-radius: 5px; background: #101827; }
 
-.city-residents, .city-story-section {
+.city-story-section {
   display: grid;
   gap: 7px;
   padding: 10px;
@@ -214,9 +253,6 @@
   border-radius: 5px;
   background: #101827;
 }
-.city-residents summary { cursor: pointer; color: #a8f5f3; }
-.city-residents > button { display: block; margin-top: 6px; width: 100%; text-align: left; }
-.city-residents .city-clue-title { margin-top: 6px; }
 .city-story-section h4, #city-content > h4 { color: #a8f5f3; font-size: 15px; }
 .story-panel { max-height: 100%; }
 .story-header, .story-actions { flex-shrink: 0; }
@@ -264,8 +300,6 @@
   margin-bottom: 4px;
 }
 .workshop-editor:not([hidden]) { display: grid; gap: 8px; }
-.city-residents > .city-life-row { margin-top: 6px; }
-.city-residents [aria-live]:empty { display: none; }
 
 .city-sale-art { position: relative; width: 42px; height: 42px; }
 .city-sale-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
@@ -276,15 +310,24 @@
 #city-map-objectives:empty, #city-map[hidden], .city-panel .city-pin[hidden] { display: none; }
 .city-map-badges { display: inline-flex; gap: 4px; align-items: center; justify-content: center; font: 800 11px/1.15 var(--font-mono); }
 .city-map-badges:empty { display: none; }
-.city-residents button .city-map-badges { margin-inline-start: 8px; }
 .city-pin .city-map-badges, .city-pin .city-map-badges span { font: 800 11px/1.15 var(--font-mono); }
 .city-map-badges span.city-badge-clue, #city-map-legend [data-map-filter="clue"] span { color: #89fff7; }
 .city-map-badges span.city-badge-duel, #city-map-legend [data-map-filter="duel"] span { color: #ff77ca; }
 .city-map-badges span.city-badge-secret, #city-map-legend [data-map-filter="secret"] span { color: #b5ff69; }
-.city-panel .city-pin[data-markers~="clue"] {
+.city-pin .city-map-badges {
+  position: absolute;
+  top: 0;
+  left: 25px;
+  padding: 1px 3px;
+  border-radius: 8px;
+  background: #0b1321ed;
+  gap: 3px;
+  pointer-events: none;
+}
+.city-pin[data-markers~="clue"] .city-place-icon {
   border-color: #7cfff1;
-  background: #174449;
-  box-shadow: 0 0 10px #4fead6aa;
+  background: #16494b;
+  box-shadow: 0 0 11px #4fead6dd;
 }
 .city-pin[data-markers~="clue"] .city-badge-clue { animation: city-clue-pulse 1.5s ease-in-out infinite alternate; }
 @keyframes city-clue-pulse { to { color: #ffdb87; text-shadow: 0 0 8px #ffc661; opacity: .7; } }
@@ -292,3 +335,41 @@
   .city-pin[data-markers~="clue"] .city-badge-clue { animation: none; }
 }
 .city-active-destination { color: #89fff7; font-weight: 800; }
+
+#city-neighborhood-picker {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px 6px;
+  color: #bce4ed;
+  font-size: 12px;
+}
+#city-neighborhood-picker[hidden], .city-detail[hidden] { display: none; }
+#city-neighborhood {
+  min-height: 36px;
+  min-width: 0;
+  max-width: 68%;
+  color: #edf9ff;
+  background: #101928;
+  border: 1px solid #507389;
+  border-radius: 5px;
+  padding: 4px 6px;
+}
+#city-map-legend button {
+  min-height: 32px;
+  border-radius: 18px;
+  background: #101928;
+}
+.city-route, .city-local-duel {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid #324254;
+  border-radius: 0;
+  padding: 7px 0;
+}
+.city-route button { justify-self: start; min-width: 90px; }
+.city-local-duels { display: grid; gap: 6px; margin-top: 8px; }
+.city-local-duels h4 { color: #bce4ed; font-size: 14px; }
+.city-local-duel { display: grid; gap: 5px; }
+.city-local-duel button { justify-self: start; }

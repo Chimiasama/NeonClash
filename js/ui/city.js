@@ -8,14 +8,6 @@
   let job = null;
   let jobTimer = null;
   let view = 'district';
-  const residentVisits = new Map();
-  const residentNotes = {
-    1: ['Deixei as faturas na mesa. Se o leitor não aceitar o cartão, tenta a chave de sempre.', 'Pode levar as cópias. Os originais ficam na minha gaveta.'],
-    5: ['Paguei essa conta na terça. Na quinta juraram que esse apartamento nem existia.', 'Hoje eu não quero ligar pra central de novo. Se descobrir alguma coisa, me avisa.'],
-    10: ['O ferro está esquentando. Dá tempo de uma partida antes de eu voltar à solda.', 'Deixa eu virar essa peça e a gente joga de novo.'],
-    33: ['Pode testar seu baralho comigo. Eu aviso quando você deixar uma vaga fácil de explorar.', 'Se estiver perdendo sem entender por quê, olha quanta RAM sobra no fim do turno.'],
-    39: ['Eu assisto ao Ringue da arquibancada porque lá de cima dá para ver quem gasta RAM por ansiedade.', 'Se quiser outra partida, traz duas unidades que consigam ficar prontas juntas.']
-  };
   const residentDuels = {
     10: { hp: 10, credits: 5, deck: ['unit_01', 'unit_02', 'unit_08', 'unit_09', 'exploit_01'] },
     33: { hp: 14, credits: 7, card: 'unit_21', deck: sparringBoss.deckList },
@@ -25,9 +17,10 @@
   const markerTypes = {
     clue: { icon: '◆', label: 'Pista ativa' },
     duel: { icon: '⚔', label: 'Duelo disponível' },
-    secret: { icon: '✦', label: 'Contato ou segredo por descobrir' }
+    secret: { icon: '✦', label: 'Atalho ou favor disponível' }
   };
   let mapFilter = 'all';
+  let neighborhoodFilter = 'all';
 
   function urbanEncounter(save) {
     const minute = save.city.life.minute;
@@ -44,9 +37,7 @@
     const hasDuel = place.id === 'arena' || encounter?.location === place.id ||
       (NB.Campaign.NODES.some(boss => boss.id === place.id) && !access(place)) ||
       NB.CityAtlas.residents.some(person => person.location === place.id && residentDuels[person.id]);
-    const hasSecret = NB.CityAtlas.residents.some(person =>
-      person.location === place.id && !save.city.discoveredResidents.includes(person.id)) ||
-      (place.id === 'garage' && !save.city.life.favors.includes('hillPath')) ||
+    const hasSecret = (place.id === 'garage' && !save.city.life.favors.includes('hillPath')) ||
       (place.id === 'pump' && !save.city.life.favors.includes('pumpRelay'));
     return [clueLocations.has(place.id) && 'clue', hasDuel && 'duel', hasSecret && 'secret'].filter(Boolean);
   }
@@ -96,7 +87,7 @@
       NB.Audio.setScene(district.music || district.id);
     }
     render();
-    if (destination) $('city-name').scrollIntoView({ block: 'start' });
+    $('city-name').scrollIntoView({ block: 'start' });
   }
 
   function move(mode) {
@@ -152,10 +143,12 @@
     const encounter = urbanEncounter(save);
     const markers = new Map(districts.map(place => [place.id, locationMarkers(place, save, clueLocations, encounter)]));
     const marker = $('city-marker');
-    const position = NB.CityAtlas.mapPositions[district.id];
-    marker.style.left = `${position.x}%`;
-    marker.style.top = `${position.y}%`;
-    $('city-map').hidden = view === 'atlas';
+    const [x, y] = NB.CityAtlas.mapPins[district.id];
+    marker.style.left = `${x}%`;
+    marker.style.top = `${y}%`;
+    $('city-neighborhood-picker').hidden = view !== 'atlas';
+    document.querySelector('.city-detail').hidden = view === 'atlas';
+    const area = view === 'atlas' && NB.CityAtlas.neighborhoods.find(item => item.id === neighborhoodFilter);
     const objectives = [...clueLocations].map(id => districts.find(place => place.id === id).name);
     $('city-map-objectives').textContent = objectives.length ? `◆ Destino da investigação · ${objectives.join(' · ')}` : '';
     for (const filter of $('city-map-legend').querySelectorAll('button')) {
@@ -165,23 +158,24 @@
       const place = districts.find(item => item.id === pin.dataset.district);
       const types = markers.get(place.id);
       applyMarkers(pin, types);
-      pin.hidden = mapFilter !== 'all' && !types.includes(mapFilter);
+      pin.hidden = (mapFilter !== 'all' && !types.includes(mapFilter)) || Boolean(area && !area.locations.includes(place.id));
       const locked = Boolean(access(place));
       pin.classList.toggle('city-locked', locked);
+      pin.classList.toggle('city-pin-selected', place.id === destination);
       pin.classList.toggle('city-cleared', NB.Save.isNodeDefeated(place.id));
       if (place.id === district.id) pin.setAttribute('aria-current', 'location');
       else pin.removeAttribute('aria-current');
       pin.setAttribute('aria-label', place.name + (locked ? ' · bloqueado' : ''));
     }
 
+    if (!$('city-map').querySelector('button:not([hidden])')) $('city-map-objectives').textContent = 'Nenhum local corresponde aos filtros.';
     const content = $('city-content');
     content.replaceChildren();
     if (view === 'story') {
       $('city-name').textContent = 'Investigação';
       NB.StoryUI.journal(content, district, selectDestination);
     } else if (view === 'atlas') {
-      $('city-name').textContent = 'Bairros de Baixa Luz';
-      renderAtlas(content, district, markers);
+      return;
     } else if (view === 'travel') {
       renderTravel(content, save);
     } else if (view === 'bag') {
@@ -214,27 +208,7 @@
       renderContactServices(content, district.id);
       renderJobs(content, district.id, life);
       if (encounter?.location === district.id) renderEncounter(content, encounter);
-      renderResidents(content, district.id);
-    }
-  }
-
-  function renderAtlas(content, district, markers) {
-    for (const area of NB.CityAtlas.neighborhoods) {
-      const group = document.createElement('details');
-      group.className = 'city-residents';
-      const locations = area.locations.filter(id => mapFilter === 'all' || markers.get(id).includes(mapFilter));
-      if (!locations.length) continue;
-      group.open = area.locations.includes(district.id) || mapFilter !== 'all';
-      const heading = document.createElement('summary');
-      heading.textContent = area.name;
-      group.append(heading);
-      for (const id of locations) {
-        const place = districts.find(item => item.id === id);
-        const row = addButton(group, place.name, () => selectDestination(id));
-        row.dataset.atlasPlace = id;
-        applyMarkers(row, markers.get(id));
-      }
-      content.append(group);
+      if (district.id !== 'arena') renderLocalDuels(content, district.id);
     }
   }
 
@@ -307,62 +281,36 @@
     }
   }
 
-  function renderResidents(content, location) {
-    const people = NB.CityAtlas.residents.filter(person => person.location === location);
-    if (!people.length) return;
-    const group = document.createElement('details');
-    group.className = 'city-residents';
-    const heading = document.createElement('summary');
-    heading.textContent = 'Pessoas neste local';
-    group.append(heading);
-    for (const person of people) {
-      const row = document.createElement('div');
-      row.className = 'city-life-row';
-      addButton(row, `Falar com ${person.name}`, () => {
-        const count = residentVisits.get(person.id) || 0;
-        residentVisits.set(person.id, count + 1);
-        const seen = NB.Save.get().city.discoveredResidents;
-        if (!seen.includes(person.id)) {
-          seen.push(person.id);
-          NB.Save.save();
-          const save = NB.Save.get();
-          const pin = $('city-map').querySelector(`[data-district="${location}"]`);
-          const types = locationMarkers(districtAtPosition(), save, new Set(NB.Story.getScenes().map(scene => scene.location)), urbanEncounter(save));
-          if (NB.Story.pendingDuel(location) && !types.includes('clue')) types.unshift('clue');
-          applyMarkers(pin, types);
-          pin.hidden = mapFilter !== 'all' && !types.includes(mapFilter);
-        }
-        const replies = residentNotes[person.id];
-        reply.textContent = replies ? replies[Math.min(count, replies.length - 1)] : [
-          person.line,
-          'Agora estou no meio de uma coisa. Se precisar de mim, passa aqui mais tarde.',
-          'Eu ainda estou ocupado. A gente conversa outra hora.'
-        ][Math.min(count, 2)];
-      });
-      const reply = document.createElement('p');
-      reply.setAttribute('aria-live', 'polite');
-      row.append(reply);
+  function renderLocalDuels(content, location) {
+    const opponents = NB.CityAtlas.residents.filter(person => person.location === location && residentDuels[person.id]);
+    if (!opponents.length) return;
+    const section = document.createElement('section');
+    section.className = 'city-local-duels';
+    const heading = document.createElement('h4');
+    heading.textContent = 'Duelos locais';
+    section.append(heading);
+    for (const person of opponents) {
       const duel = residentDuels[person.id];
-      if (duel) {
-        const card = NB.Cards.CARD_DB[duel.card];
-        const firstWin = !NB.Save.get().city.residentWins.includes(person.id);
-        addText(row, `${duel.canOverclock ? 'Avançado' : duel.hp < 14 ? 'Iniciante' : 'Treino'} · +${duel.credits} créditos por vitória${card && firstWin ? ` · primeira vitória: ${card.name}` : ''}`);
-        addButton(row, `Desafiar ${person.name}`, () => {
-          NB.Input.startMatch({
-            mode: 'arena',
-            boss: {
-              ...sparringBoss, name: person.name, fullTitle: `${person.name} // Duelo de bairro`,
-              hp: duel.hp, deckList: duel.deck.length === 20 ? duel.deck : Array.from({ length: 20 }, (_, index) => duel.deck[index % duel.deck.length]),
-              canOverclock: Boolean(duel.canOverclock),
-              lines: { start: [residentNotes[person.id]?.[0] || person.line] },
-              residentId: person.id
-            }
-          });
+      const card = NB.Cards.CARD_DB[duel.card];
+      const firstWin = !NB.Save.get().city.residentWins.includes(person.id);
+      const row = document.createElement('div');
+      row.className = 'city-local-duel';
+      addButton(row, `Desafiar ${person.name}`, () => {
+        NB.Input.startMatch({
+          mode: 'arena',
+          boss: {
+            ...sparringBoss, name: person.name, fullTitle: `${person.name} // Duelo de bairro`,
+            hp: duel.hp, deckList: duel.deck.length === 20 ? duel.deck : Array.from({ length: 20 }, (_, index) => duel.deck[index % duel.deck.length]),
+            canOverclock: Boolean(duel.canOverclock),
+            lines: { start: [person.line] },
+            residentId: person.id
+          }
         });
-      }
-      group.append(row);
+      });
+      addText(row, `${duel.hp} HP · +${duel.credits} créditos por vitória${card && firstWin ? ` · primeira vitória: ${card.name}` : ''}`);
+      section.append(row);
     }
-    content.append(group);
+    content.append(section);
   }
 
   function addText(parent, text, className = '') {
@@ -406,7 +354,7 @@
     addText(content, `Energia atual: ${life.energy}. Os custos abaixo só são cobrados ao escolher um transporte.`);
     for (const route of NB.CityLife.routes(destination)) {
       const row = document.createElement('div');
-      row.className = 'city-life-row';
+      row.className = 'city-life-row city-route';
       addButton(row, route.name, () => move(route.id), !route.available);
       if (route.needsVehicle) {
         addText(row, 'Disponível na Garagem da Íris.');
@@ -770,14 +718,21 @@
   }
 
   function renderArena(content, save) {
-    const challenges = document.createElement('details');
-    challenges.className = 'city-residents';
-    const label = document.createElement('summary');
+    const stakeUnlocked = NB.Save.isNodeDefeated('kira');
+    addButton(content, 'Desafio de rua · vitória paga 15', () => startArena(0));
+    addButton(content, 'Apostar 25 · vitória paga 60', () => startArena(25), !stakeUnlocked || save.city.credits < 25);
+    if (!stakeUnlocked) addText(content, 'A mesa de apostas abre após vencer Kira.', 'city-notice');
+    else if (save.city.credits < 25) addText(content, 'Você precisa de 25 créditos para apostar.', 'city-notice');
+    else addText(content, 'Na mesa de apostas, sair do duelo encerra a partida e perde a entrada.');
+    renderLocalDuels(content, 'arena');
+    const challenges = document.createElement('section');
+    challenges.className = 'city-local-duels';
+    const label = document.createElement('h4');
     label.textContent = 'Desafios de arquétipo';
     challenges.append(label);
     for (const challenge of NB.Challenges) {
       const row = document.createElement('div');
-      row.className = 'city-life-row';
+      row.className = 'city-local-duel';
       addText(row, challenge.goal);
       addText(row, save.challengeWins.includes(challenge.id) ? 'Recompensas coletadas.' :
         `Primeira vitória · ${challenge.cards.map(id => NB.Cards.CARD_DB[id].name).join(' + ')}`);
@@ -788,12 +743,6 @@
     }
     addText(challenges, 'Decks emprestados de 20 cartas. Cada duelo consome tempo e energia da cidade.');
     content.append(challenges);
-    const stakeUnlocked = NB.Save.isNodeDefeated('kira');
-    addButton(content, 'Desafio de rua · vitória paga 15', () => startArena(0));
-    addButton(content, 'Apostar 25 · vitória paga 60', () => startArena(25), !stakeUnlocked || save.city.credits < 25);
-    if (!stakeUnlocked) addText(content, 'A mesa de apostas abre após vencer Kira.', 'city-notice');
-    else if (save.city.credits < 25) addText(content, 'Você precisa de 25 créditos para apostar.', 'city-notice');
-    else addText(content, 'Na mesa de apostas, sair do duelo encerra a partida e perde a entrada.');
   }
 
   function startArena(stake) {
@@ -860,11 +809,26 @@
     for (const district of districts) {
       const pin = addButton($('city-map'), '', () => selectDestination(district.id), false, 'city-pin');
       pin.dataset.district = district.id;
-      const position = NB.CityAtlas.mapPositions[district.id];
-      pin.style.left = `${position.x}%`;
-      pin.style.top = `${position.y}%`;
-      pin.textContent = district.short || NB.CityAtlas.shortNames[district.id];
+      const [x, y, glyph, category] = NB.CityAtlas.mapPins[district.id];
+      pin.style.left = `${x}%`;
+      pin.style.top = `${y}%`;
+      pin.dataset.category = category;
+      const icon = document.createElement('span');
+      icon.className = 'city-place-icon';
+      icon.setAttribute('aria-hidden', 'true');
+      icon.textContent = glyph;
+      const label = document.createElement('span');
+      label.className = 'city-place-label';
+      label.textContent = district.short || NB.CityAtlas.shortNames[district.id];
+      pin.append(icon, label);
     }
+    const neighborhood = $('city-neighborhood');
+    neighborhood.add(new Option('Todos os bairros', 'all'));
+    for (const area of NB.CityAtlas.neighborhoods) neighborhood.add(new Option(area.name, area.id));
+    neighborhood.addEventListener('change', () => {
+      neighborhoodFilter = neighborhood.value;
+      render();
+    });
     $('city-map-legend').addEventListener('click', event => {
       const filter = event.target.closest('[data-map-filter]');
       if (!filter) return;
@@ -887,7 +851,8 @@
         cancelJob();
         announce('');
         render();
-        if (view !== 'district') $('city-name').scrollIntoView({ block: 'start' });
+        if (view === 'atlas') $('city-neighborhood-picker').scrollIntoView({ block: 'nearest' });
+        else if (view !== 'district') $('city-name').scrollIntoView({ block: 'start' });
       });
     }
   }

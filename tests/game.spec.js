@@ -550,22 +550,24 @@ test('adds the city clock and backpack to existing saves without losing progress
   });
 });
 
-test('visits ten neighborhoods with residents and travel-backed locations', async ({ page }) => {
+test('filters the illustrated map by neighborhood and visits its locations directly', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
   await page.goto('/');
   await enterCity(page);
+  const map = page.locator('#city-map');
+  await expect(map).toBeInViewport({ ratio: 0.95 });
+  await expect(map.getByRole('button', { name: 'Quiosque 24h' }).locator('.city-place-icon')).toHaveText('☕');
+  await expect(map.getByRole('button', { name: 'Casa de Kairo' }).locator('.city-place-icon')).toHaveText('⌂');
   await page.getByRole('button', { name: 'Bairros', exact: true }).click();
-  await expect(page.locator('#city-content > details')).toHaveCount(10);
-  await page.getByText('Morro das Casas', { exact: true }).click();
-  await walkTo(page, page.getByRole('button', { name: 'Clínica do Morro', exact: true }));
+  const neighborhood = page.getByRole('combobox', { name: 'Bairro no mapa' });
+  await expect(neighborhood.locator('option')).toHaveCount(11);
+  await neighborhood.selectOption({ label: 'Morro das Casas' });
+  await expect(map.getByRole('button')).toHaveCount(2);
+  await walkTo(page, map.getByRole('button', { name: 'Clínica do Morro', exact: true }));
   await expect(page.getByRole('heading', { name: 'Clínica do Morro' })).toBeVisible();
   await page.locator('#city-scene').evaluate(image => image.decode());
-  await page.getByText('Pessoas neste local', { exact: true }).click();
-  await expect(page.locator('#city-content')).toContainText('Omar');
-  const roster = await page.evaluate(() => NB.CityAtlas.residents.reduce((counts, npc) => {
-    counts[npc.role] = (counts[npc.role] || 0) + 1;
-    return counts;
-  }, {}));
-  expect(roster).toEqual({ central: 12, contato: 28, morador: 60 });
+  await expect(page.locator('#city-npc')).toContainText('Ada');
+  await expect(page.getByText('Pessoas neste local', { exact: true })).toHaveCount(0);
 });
 
 test('resumes the prologue after reload and earns Kira’s proof by doing a favor', async ({ page }) => {
@@ -730,7 +732,7 @@ test('loans an archetype deck and unlocks its reward cards once', async ({ page 
   await page.goto('/');
   await enterCity(page);
   await walkTo(page, page.getByRole('button', { name: 'Ringue Baixa Tensão', exact: true }));
-  await page.getByText('Desafios de arquétipo', { exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Desafios de arquétipo' })).toBeVisible();
   await page.getByRole('button', { name: 'Turno da Estação' }).click();
 
   const result = await page.evaluate(() => {
@@ -839,16 +841,12 @@ test('resumes suspended audio on a regular gesture and respects an explicit mute
   expect(await page.evaluate(() => NB.Audio.ctx)).toBeNull();
 });
 
-test('talks to residents and earns a card from a neighborhood duel', async ({ page }) => {
+test('starts a neighborhood duel directly and preserves its card reward', async ({ page }) => {
   await page.goto('/');
   await enterCity(page);
   await walkTo(page, page.getByRole('button', { name: 'Ringue Baixa Tensão', exact: true }));
-  await page.getByText('Pessoas neste local', { exact: true }).click();
-  const talk = page.getByRole('button', { name: 'Falar com Tuca' });
-  await talk.click();
-  await expect(page.getByText('Pode testar seu baralho comigo.', { exact: false })).toBeVisible();
-  await talk.click();
-  await expect(page.getByText('olha quanta RAM sobra', { exact: false })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Falar com Tuca' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Desafiar Dora' })).toBeVisible();
   await page.getByRole('button', { name: 'Desafiar Tuca' }).click();
   await page.evaluate(() => {
     NB.State.get().enemy.hp = 0;
@@ -1104,26 +1102,31 @@ test('persists one Correio Expresso package and awards the speed bonus after ord
   expect(await page.evaluate(() => NB.Save.get().city.life.activeDelivery)).toBeNull();
 });
 
-test('shows and filters story, duel and undiscovered-contact badges on both city surfaces', async ({ page }) => {
+test('filters pins by story, duels and actionable secrets on the same map', async ({ page }) => {
   await page.goto('/');
   await enterCity(page);
   const home = page.locator('[data-district="home"]');
   const arena = page.locator('[data-district="arena"]');
+  const pump = page.locator('[data-district="pump"]');
   const filter = page.getByRole('group', { name: 'Filtros e legenda do mapa' });
-  await expect(home).toHaveAttribute('data-markers', 'clue secret');
-  await expect(arena).toHaveAttribute('data-markers', 'duel secret');
-  await expect(page.locator('[data-district="kira"]')).not.toHaveAttribute('data-markers', /duel/);
+  await expect(home).toHaveAttribute('data-markers', 'clue');
+  await expect(arena).toHaveAttribute('data-markers', 'duel');
+  await expect(pump).toHaveAttribute('data-markers', 'secret');
   await filter.getByRole('button', { name: 'Pistas' }).click();
   await expect(home).toBeVisible();
   await expect(arena).toBeHidden();
   await page.getByRole('button', { name: 'Bairros', exact: true }).click();
-  await expect(page.locator('[data-atlas-place="home"]')).toHaveAttribute('data-markers', 'clue secret');
-  await expect(page.locator('[data-atlas-place="arena"]')).toHaveCount(0);
+  const neighborhood = page.getByRole('combobox', { name: 'Bairro no mapa' });
+  await neighborhood.selectOption('viaduto');
+  await expect(home).toBeVisible();
+  await neighborhood.selectOption('tensao');
   await filter.getByRole('button', { name: 'Duelos' }).click();
-  await expect(page.locator('[data-atlas-place="arena"]')).toBeVisible();
+  await expect(arena).toBeVisible();
   await page.getByRole('button', { name: 'Mapa', exact: true }).click();
   await filter.getByRole('button', { name: 'Segredos' }).click();
-  await expect(home).toBeVisible();
+  await expect(pump).toBeVisible();
+  await expect(home).toBeHidden();
+  await filter.getByRole('button', { name: 'Pistas' }).click();
   await home.click();
   await expect(page.locator('#city-content')).toContainText('Ao chegar: Testar o leitor e a chave');
 });
