@@ -8,6 +8,10 @@ Pulso vence Malha, Malha vence Sombra e Sombra vence Pulso. A vantagem dá +1 de
 
 Na Feira do Viaduto, a oficina recalibra as unidades da coleção por 15 créditos e restaura gratuitamente a afinidade original. O Exploit Recompilar custa 1 RAM e muda a afinidade de uma unidade aliada durante o duelo.
 
+## Expansão planejada
+
+[Plano da cidade, dos modos e das 500 cartas](docs/plano-expansao.md)
+
 ## Desenvolvimento web
 
 Com Node.js 24, execute `npm ci` e `npm run dev`. O jogo salva o progresso no armazenamento local.

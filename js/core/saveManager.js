@@ -80,7 +80,7 @@
       clues: [],
       unlockedCards: starter,
       customDeck: buildBalancedDeck(starter, []),
-      city: { credits: 35, district: 'kira', traced: [] },
+      city: { credits: 35, district: 'kira', traced: [], life: NB.CityLife.normalize() },
       affinities: {},
       wins: 0,
       matches: 0
@@ -113,7 +113,8 @@
           city: {
             credits: Number.isSafeInteger(parsed.city?.credits) && parsed.city.credits >= 0 ? parsed.city.credits : def.city.credits,
             district: typeof parsed.city?.district === 'string' ? parsed.city.district : def.city.district,
-            traced: Array.isArray(parsed.city?.traced) ? parsed.city.traced.filter(id => typeof id === 'string') : []
+            traced: Array.isArray(parsed.city?.traced) ? parsed.city.traced.filter(id => typeof id === 'string') : [],
+            life: NB.CityLife.normalize(parsed.city?.life)
           },
           affinities: Object.fromEntries(Object.entries(parsed.affinities || {}).filter(([id, type]) =>
             NB.Cards.CARD_DB[id]?.kind === 'unit' && Object.hasOwn(NB.Cards.AFFINITIES, type))),

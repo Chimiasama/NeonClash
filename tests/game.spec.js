@@ -1,10 +1,16 @@
 import { expect, test } from '@playwright/test';
 
+async function walkTo(page, pin) {
+  await pin.click();
+  const walking = page.getByRole('button', { name: 'A pé', exact: true });
+  if (await walking.isVisible()) await walking.click();
+}
+
 test('earns credits, buys a card, and keeps the purchase after reloading', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 600 });
   await page.goto('/');
   await page.getByRole('button', { name: 'Entrar na cidade' }).click();
-  await page.getByRole('button', { name: 'Antena Comunitária' }).click();
+  await walkTo(page, page.getByRole('button', { name: 'Antena Comunitária' }));
   await page.clock.install();
   await page.getByRole('button', { name: 'Trabalho de hacker' }).click();
 
@@ -18,7 +24,7 @@ test('earns credits, buys a card, and keeps the purchase after reloading', async
     await page.getByRole('button', { name: symbol, exact: true }).click();
   }
   await expect(page.locator('#city-credits')).toHaveText('55 créditos');
-  await page.getByRole('button', { name: 'Feira do Viaduto' }).click();
+  await walkTo(page, page.getByRole('button', { name: 'Feira do Viaduto' }));
   await page.getByRole('button', { name: 'Comprar · 45' }).click();
   await expect(page.locator('#city-credits')).toHaveText('10 créditos');
 
@@ -32,7 +38,7 @@ test('earns credits, buys a card, and keeps the purchase after reloading', async
 test('penalizes wrong symbols and ends a paid job when time runs out', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Entrar na cidade' }).click();
-  await page.getByRole('button', { name: 'Antena Comunitária' }).click();
+  await walkTo(page, page.getByRole('button', { name: 'Antena Comunitária' }));
   await page.clock.install();
   const start = page.getByRole('button', { name: 'Trabalho de hacker' });
   await start.click();
@@ -52,7 +58,7 @@ test('keeps campaign clues untimed and unlocks the next district', async ({ page
   await page.goto('/');
   await page.getByRole('button', { name: 'Entrar na cidade' }).click();
   await page.evaluate(() => NB.Save.recordBossVictory(NB.Campaign.getNodeById('kira')));
-  await page.getByRole('button', { name: 'Antena Comunitária' }).click();
+  await walkTo(page, page.getByRole('button', { name: 'Antena Comunitária' }));
   await page.getByRole('button', { name: 'Rastrear pista' }).click();
   await expect(page.getByRole('timer')).toHaveCount(0);
 
@@ -61,7 +67,7 @@ test('keeps campaign clues untimed and unlocks the next district', async ({ page
   for (const symbol of symbols) {
     await page.getByRole('button', { name: symbol, exact: true }).click();
   }
-  await page.getByRole('button', { name: 'Muralha Setorial', exact: true }).click();
+  await walkTo(page, page.getByRole('button', { name: 'Muralha Setorial', exact: true }));
   await expect(page.getByRole('button', { name: 'Abrir dossiê' })).toBeEnabled();
 });
 
@@ -74,7 +80,7 @@ test('loads a distinct portrait at each city location', async ({ page }) => {
   };
   const portrait = page.locator('#city-portrait');
   for (const [district, filename] of Object.entries(expected)) {
-    await page.locator(`[data-district="${district}"]`).click();
+    await walkTo(page, page.locator(`[data-district="${district}"]`));
     await expect(portrait).toHaveAttribute('src', `./avatars/${filename}`);
     await expect.poll(() => portrait.evaluate(image => image.naturalWidth)).toBeGreaterThan(0);
   }
@@ -85,9 +91,9 @@ test('starts a campaign duel, deploys a unit, and advances the turn', async ({ p
   page.on('pageerror', error => errors.push(error.message));
   await page.goto('/');
   await page.getByRole('button', { name: 'Entrar na cidade' }).click();
-  await page.getByRole('button', { name: 'Muralha Setorial · bloqueado' }).click();
+  await walkTo(page, page.getByRole('button', { name: 'Muralha Setorial · bloqueado' }));
   await expect(page.getByText('Vença KIRA para abrir este local.')).toBeVisible();
-  await page.getByRole('button', { name: 'Estação Fantasma' }).click();
+  await walkTo(page, page.getByRole('button', { name: 'Estação Fantasma' }));
   await page.getByRole('button', { name: 'Abrir dossiê' }).click();
 
   // Seed the opening hand so this test always exercises a unit and a turn change.
@@ -142,11 +148,11 @@ test('plays distinct music themes and keeps the player’s mute preference', asy
     cipher: 'cipher', vex: 'vex', archon: 'archon'
   };
   for (const [district, theme] of Object.entries(themes)) {
-    await page.locator(`[data-district="${district}"]`).click();
+    await walkTo(page, page.locator(`[data-district="${district}"]`));
     await expect.poll(readScene).toBe(theme);
   }
 
-  await page.locator('[data-district="kira"]').click();
+  await walkTo(page, page.locator('[data-district="kira"]'));
   await page.getByRole('button', { name: 'Abrir dossiê' }).click();
   await page.getByRole('button', { name: 'Conectar e duelar' }).click();
   await expect.poll(readScene).toBe('kira');
@@ -221,12 +227,12 @@ test('Back unwinds the inspector, deck, city overlays and dossier one at a time'
   expect(await back()).toBe(true);
   await expect(page.locator('#city-journal')).toHaveAttribute('aria-pressed', 'false');
 
-  await page.getByRole('button', { name: 'Antena Comunitária' }).click();
+  await walkTo(page, page.getByRole('button', { name: 'Antena Comunitária' }));
   await page.getByRole('button', { name: 'Trabalho de hacker' }).click();
   expect(await back()).toBe(true);
   await expect(page.getByRole('button', { name: 'Trabalho de hacker' })).toBeVisible();
 
-  await page.getByRole('button', { name: 'Estação Fantasma' }).click();
+  await walkTo(page, page.getByRole('button', { name: 'Estação Fantasma' }));
   await page.getByRole('button', { name: 'Abrir dossiê' }).click();
   const dossier = page.getByRole('dialog', { name: 'Dossiê do Alvo' });
   await expect(dossier.getByRole('button', { name: 'VOLTAR', exact: true })).toBeInViewport({ ratio: 1 });
@@ -355,7 +361,7 @@ test('renders the redesigned effects through the effects bus only', async ({ pag
 test('recalibrates a unit at the workshop, preserves the choice, and restores it for free', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Entrar na cidade' }).click();
-  await page.getByRole('button', { name: 'Feira do Viaduto' }).click();
+  await walkTo(page, page.getByRole('button', { name: 'Feira do Viaduto' }));
   const units = page.getByRole('combobox', { name: 'Unidade para recalibrar' });
   const affinities = page.getByRole('combobox', { name: 'Nova afinidade' });
   const recalibrate = page.getByRole('button', { name: 'Recalibrar · 15 créditos' });
@@ -380,7 +386,7 @@ test('recalibrates a unit at the workshop, preserves the choice, and restores it
 test('applies affinity in a clash and a mixed Overclock, and recompiles a unit in battle', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Entrar na cidade' }).click();
-  await page.getByRole('button', { name: 'Feira do Viaduto' }).click();
+  await walkTo(page, page.getByRole('button', { name: 'Feira do Viaduto' }));
   await page.getByRole('button', { name: 'Comprar · 30' }).click();
   await expect(page.locator('#city-credits')).toHaveText('5 créditos');
 
@@ -418,5 +424,115 @@ test('applies affinity in a clash and a mixed Overclock, and recompiles a unit i
   expect(outcome).toEqual({
     clash: [10, 9], invalidCast: false, ramAfterInvalidCast: 4, ramAfterCast: 3,
     afterCast: 'malha', overflow: 1, oneAffinity: 0, neutral: 0
+  });
+});
+
+test('quotes travel without charging, then spends time, energy and only the chosen fare', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Entrar na cidade' }).click();
+  await expect(page.locator('#city-clock')).toHaveText('Dia 1 · 08:00 · Dia');
+  const home = page.getByRole('button', { name: 'Casa de Kairo' });
+  await home.click();
+  await expect(page.getByRole('heading', { name: 'Ir para Casa de Kairo' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Bicicleta', exact: true })).toBeDisabled();
+  await page.getByRole('button', { name: 'Cancelar viagem' }).click();
+  await expect(page.locator('#city-credits')).toHaveText('35 créditos');
+  await expect(page.locator('#city-clock')).toHaveText('Dia 1 · 08:00 · Dia');
+
+  await home.click();
+  await page.getByRole('button', { name: 'Ônibus', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Casa de Kairo' })).toBeVisible();
+  await expect(page.locator('#city-credits')).toHaveText('31 créditos');
+  await expect(page.locator('#city-clock')).toHaveText('Dia 1 · 08:17 · Dia');
+  await expect(page.locator('#city-energy')).toHaveAttribute('value', '96');
+  await page.getByRole('button', { name: 'Dormir · 8 h · Grátis' }).click();
+  await expect(page.locator('#city-clock')).toHaveText('Dia 1 · 16:17 · Dia');
+  await expect(page.locator('#city-energy')).toHaveAttribute('value', '100');
+});
+
+test('stores supplies and vehicles, restores the backpack and uses its contents', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Entrar na cidade' }).click();
+  await walkTo(page, page.getByRole('button', { name: 'Quiosque 24h' }));
+  await page.getByRole('button', { name: 'Comprar · 4 créditos', exact: true }).click();
+  await page.reload();
+  await page.getByRole('button', { name: 'Entrar na cidade' }).click();
+  await expect(page.getByRole('heading', { name: 'Quiosque 24h' })).toBeVisible();
+  await page.getByRole('button', { name: 'Mochila', exact: true }).click();
+  await expect(page.getByRole('button', { name: /Usar Café/ })).toBeEnabled();
+  await page.getByRole('button', { name: /Usar Café/ }).click();
+  await expect(page.locator('#city-energy')).toHaveAttribute('value', '100');
+  await expect(page.getByText('Mochila vazia.')).toBeVisible();
+
+  await page.evaluate(() => { NB.Save.get().city.credits = 800; });
+  await walkTo(page, page.getByRole('button', { name: 'Garagem da Íris' }));
+  await page.getByRole('button', { name: 'Comprar · 100 créditos' }).click();
+  await page.getByRole('button', { name: 'Comprar · 450 créditos' }).click();
+  await page.getByRole('button', { name: 'Comprar · 130 créditos' }).click();
+  await expect(page.locator('#city-energy')).toHaveAttribute('max', '120');
+  await page.getByRole('button', { name: 'Casa de Kairo' }).click();
+  await expect(page.getByRole('button', { name: 'Bicicleta', exact: true })).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Moto', exact: true })).toBeEnabled();
+});
+
+test('warns of exhaustion, resolves a street robbery and offers paid rest', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Entrar na cidade' }).click();
+  await page.evaluate(() => {
+    Math.random = () => 0.1;
+    Object.assign(NB.Save.get().city, { credits: 100 });
+    Object.assign(NB.Save.get().city.life, { energy: 100, awake: 940 });
+  });
+  await page.getByRole('button', { name: 'Pensão do Canal' }).click();
+  await expect(page.getByText(/Você vai precisar dormir ao chegar/).first()).toBeVisible();
+  await page.getByRole('button', { name: 'A pé', exact: true }).click();
+  await expect(page.locator('#city-feedback')).toContainText('Perdeu 60 créditos');
+  await expect(page.locator('#city-credits')).toHaveText('40 créditos');
+  await expect(page.locator('#city-energy')).toHaveAttribute('value', '60');
+  await page.getByRole('button', { name: 'Dormir · 7 h · 12 créditos' }).click();
+  await expect(page.locator('#city-energy')).toHaveAttribute('value', '100');
+  await expect(page.locator('#city-credits')).toHaveText('28 créditos');
+  await walkTo(page, page.getByRole('button', { name: 'Hotel Espelho · bloqueado' }));
+  await page.getByRole('button', { name: 'Dormir · 5 h · 26 créditos' }).click();
+  await expect(page.locator('#city-credits')).toHaveText('2 créditos');
+});
+
+test('opens the kiosk job only in its night window and prevents duplicate pay', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Entrar na cidade' }).click();
+  const kiosk = page.getByRole('button', { name: 'Quiosque 24h' });
+  await walkTo(page, kiosk);
+  const job = page.getByRole('button', { name: /Trabalhar no quiosque/ });
+  await expect(job).toBeDisabled();
+  await page.evaluate(() => { NB.Save.get().city.life.minute = 1190; });
+  await kiosk.click();
+  await expect(job).toBeEnabled();
+  await job.click();
+  await expect(page.locator('#city-credits')).toHaveText('49 créditos');
+  await expect(page.getByRole('button', { name: 'Turno já concluído' })).toBeDisabled();
+});
+
+test('adds the city clock and backpack to existing saves without losing progress', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('neon_breach_save_v1', JSON.stringify({
+      city: { credits: 87, district: 'market', traced: ['kira'] },
+      defeatedBosses: ['kira'],
+      clues: [{ bossId: 'kira', title: 'Pista salva', text: 'Texto anterior.' }],
+      unlockedCards: ['unit_21'],
+      affinities: { unit_03: 'pulso' },
+      wins: 1
+    }));
+  });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Entrar na cidade' }).click();
+  await expect(page.getByRole('heading', { name: 'Feira do Viaduto' })).toBeVisible();
+  await expect(page.locator('#city-credits')).toHaveText('87 créditos');
+  await expect(page.locator('#city-clock')).toHaveText('Dia 1 · 08:00 · Dia');
+  await expect(page.locator('#city-energy')).toHaveAttribute('value', '100');
+  expect(await page.evaluate(() => NB.Save.get())).toMatchObject({
+    defeatedBosses: ['kira'],
+    clues: [{ bossId: 'kira', title: 'Pista salva' }],
+    affinities: { unit_03: 'pulso' },
+    city: { traced: ['kira'], life: { inventory: { coffee: 0, energyDrink: 0, synthetic: 0 } } }
   });
 });

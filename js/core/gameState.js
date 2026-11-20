@@ -426,6 +426,7 @@
       NB.Physics.vibrateDamage();
     }
 
+    if (state.mode !== 'quick') NB.CityLife.advance(40, 8);
     NB.UI.showGameOverModal(winner, state, campaignResult);
   }
 

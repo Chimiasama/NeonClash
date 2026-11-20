@@ -175,9 +175,11 @@
     <div id="netmap-modal" class="full-modal city-screen">
       <section class="city-panel" aria-labelledby="city-heading">
         <header class="city-header">
-          <div><h2 id="city-heading">Baixa Luz</h2><p id="city-credits"></p></div>
+          <div><h2 id="city-heading">Baixa Luz</h2><p id="city-credits"></p><p id="city-clock"></p>
+            <label class="city-energy" for="city-energy"><span id="city-energy-label">Energia</span><progress id="city-energy" max="100" value="100"></progress></label><p id="city-awake"></p></div>
           <div class="city-nav">
             <button id="btn-netmap-deck" type="button">Meu Deck</button>
+            <button id="city-bag" type="button" aria-pressed="false">Mochila</button>
             <button id="city-journal" type="button" aria-pressed="false">Pistas</button>
             <button id="btn-netmap-settings" type="button">Config.</button>
             <button id="btn-netmap-back" type="button">Início</button>
@@ -188,6 +190,7 @@
         </div>
         <div class="city-detail">
           <h3 id="city-name"></h3>
+          <p id="city-feedback" role="status"></p>
           <div class="city-dialogue">
             <img id="city-portrait" alt="" width="72" height="72" />
             <div>
@@ -195,8 +198,8 @@
               <p id="city-line"></p>
             </div>
           </div>
+          <img id="city-scene" alt="" hidden />
           <div id="city-content"></div>
-          <p id="city-feedback" role="status"></p>
         </div>
       </section>
     </div>
@@ -429,6 +432,7 @@
   <script defer src="./js/data/campaign.js"></script>
   <script defer src="./js/data/dialogue.js"></script>
   <script defer src="./js/data/city.js"></script>
+  <script defer src="./js/core/cityLife.js"></script>
   <script defer src="./js/core/saveManager.js"></script>
   <script defer src="./js/sprites/proceduralArt.js"></script>
   <script defer src="./js/data/music.js"></script>

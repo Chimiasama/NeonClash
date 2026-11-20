@@ -49,6 +49,10 @@ jobs:
           entries=$(unzip -Z -1 "$apk")
           grep -Fx 'assets/index.html' <<< "$entries"
           grep -Fx 'assets/js/ui/city.js' <<< "$entries"
+          grep -Fx 'assets/js/core/cityLife.js' <<< "$entries"
+          for scene in quarto-kairo pensao-canal quiosque-24h garagem-iris; do
+            grep -Fx "assets/src/assets/$scene.webp" <<< "$entries"
+          done
           grep -Fx 'assets/js/data/music.js' <<< "$entries"
           grep -Fx 'assets/js/data/soundEffects.js' <<< "$entries"
           grep -Fx 'assets/cards/recompilar.webp' <<< "$entries"

@@ -11,6 +11,7 @@
   let jobTimer = null;
   let view = 'district';
   let workshopCardId = null;
+  let destination = null;
 
   function access(district) {
     const boss = NB.Campaign.NODES.find(node => node.id === district?.id);
@@ -25,24 +26,50 @@
     return districts.find(district => district.id === NB.Save.get().city.district) || districts[3];
   }
 
-  function move(id) {
-    const district = districts.find(item => item.id === id);
-    if (!district) return;
-    NB.Save.get().city.district = id;
-    NB.Save.save();
-    view = 'district';
+  function selectDestination(id) {
     cancelJob();
+    announce('');
+    destination = id === districtAtPosition().id ? null : id;
+    view = destination ? 'travel' : 'district';
+    if (!destination) {
+      const district = districtAtPosition();
+      NB.Audio.setScene(district.music || district.id);
+    }
+    render();
+    if (destination) $('city-name').scrollIntoView({ block: 'start' });
+  }
+
+  function move(mode) {
+    if (!NB.CityLife.travel(destination, mode)) return;
+    destination = null;
+    view = 'district';
+    const district = districtAtPosition();
     NB.Audio.setScene(district.music || district.id);
     render();
+    announce(NB.CityLife.takeNotice() || `Você chegou ao destino. ${district.name}.`);
+    $('city-name').scrollIntoView({ block: 'nearest' });
   }
 
   function render() {
     const save = NB.Save.get();
     const district = districtAtPosition();
+    const life = save.city.life;
+    const maxEnergy = NB.CityLife.maxEnergy(life);
+    const hour = Math.floor(life.minute % 1440 / 60);
     $('city-credits').textContent = `${save.city.credits} créditos`;
+    $('city-clock').textContent = `${NB.CityLife.clock(life.minute)} · ${hour >= 19 || hour < 6 ? 'Noite' : 'Dia'}`;
+    $('city-energy').max = maxEnergy;
+    $('city-energy').value = life.energy;
+    $('city-energy-label').textContent = `Energia ${life.energy}/${maxEnergy}`;
+    $('city-awake').textContent = `Limite de vigília em ${duration(Math.max(0, NB.CityLife.maxAwake(life) - life.awake))}`;
+    $('city-bag').setAttribute('aria-pressed', view === 'bag');
     $('city-name').textContent = district.name;
     const portrait = $('city-portrait');
-    portrait.hidden = view === 'journal';
+    portrait.hidden = view !== 'district' || !district.portrait;
+    const scene = $('city-scene');
+    scene.hidden = view !== 'district' || !district.scene;
+    if (!scene.hidden && scene.getAttribute('src') !== district.scene) scene.src = district.scene;
+    document.querySelector('.city-dialogue').hidden = view === 'bag' || view === 'travel';
     if (!portrait.hidden && portrait.getAttribute('src') !== district.portrait) portrait.src = district.portrait;
     $('city-npc').textContent = view === 'journal' ? 'Arquivo de Kairo' : district.npc;
     const cleared = NB.Save.isNodeDefeated(district.id);
@@ -69,8 +96,16 @@
 
     const content = $('city-content');
     content.replaceChildren();
-    if (view === 'journal') {
+    if (view === 'travel') {
+      renderTravel(content, save);
+    } else if (view === 'bag') {
+      renderBag(content, save.city.life);
+    } else if (view === 'journal') {
       renderJournal(content, save);
+    } else if (district.id === 'home' || district.id === 'pension') {
+      renderRest(content, save.city, district.rest);
+    } else if (district.id === 'kiosk' || district.id === 'garage') {
+      renderSupplies(content, save.city, district.id);
     } else if (district.id === 'market') {
       renderMarket(content, save);
     } else if (district.id === 'relay') {
@@ -78,6 +113,7 @@
     } else if (district.id === 'arena') {
       renderArena(content, save);
     } else {
+      if (district.rest) renderRest(content, save.city, district.rest);
       const requirement = access(district);
       if (requirement) {
         addText(content, requirement, 'city-notice');
@@ -110,6 +146,100 @@
 
   function announce(message) {
     $('city-feedback').textContent = message;
+  }
+
+  function duration(minutes) {
+    if (minutes < 60) return `${minutes} min`;
+    return `${Math.floor(minutes / 60)} h${minutes % 60 ? ` ${minutes % 60} min` : ''}`;
+  }
+
+  function renderTravel(content, save) {
+    const place = districts.find(item => item.id === destination);
+    const life = save.city.life;
+    $('city-name').textContent = `Ir para ${place.name}`;
+    for (const route of NB.CityLife.routes(destination)) {
+      const row = document.createElement('div');
+      row.className = 'city-life-row';
+      addButton(row, route.name, () => move(route.id), !route.available);
+      if (route.needsVehicle) {
+        addText(row, 'Disponível na Garagem da Íris.');
+      } else {
+        addText(row, `${duration(route.minutes)} · ${route.fare ? `${route.fare} créditos` : 'Grátis'} · −${route.energy} energia`);
+        addText(row, `Chegada: ${NB.CityLife.clock(life.minute + route.minutes)}`);
+        if (route.willCollapse) addText(row, place.id === 'home'
+          ? 'Você vai dormir em casa ao chegar.'
+          : 'Você vai precisar dormir ao chegar. Risco de assalto na rua.', 'city-notice');
+      }
+      content.append(row);
+    }
+    addButton(content, 'Cancelar viagem', () => {
+      resetView();
+      $('city-map').querySelector('[aria-current]')?.focus();
+    });
+  }
+
+  function renderRest(content, state, bedId) {
+    const bed = NB.CityLife.beds[bedId];
+    addButton(content, `Dormir · ${duration(bed.minutes)} · ${bed.price ? `${bed.price} créditos` : 'Grátis'}`, () => {
+      if (NB.CityLife.sleep(bedId)) {
+        render();
+        announce('Você descansou e recuperou toda a energia.');
+      }
+    }, state.credits < bed.price);
+    if (bedId === 'home') addButton(content, 'Esperar 1 hora', () => {
+      NB.CityLife.advance(60, 3);
+      render();
+      announce(NB.CityLife.takeNotice() || 'Uma hora se passou.');
+    });
+  }
+
+  function renderBag(content, life) {
+    $('city-name').textContent = 'Mochila';
+    addText(content, `${NB.CityLife.bagCount(life)}/${NB.CityLife.bagLimit} itens`, 'city-clue-title');
+    addText(content, `Acordado há ${duration(life.awake)} de ${duration(NB.CityLife.maxAwake(life))}. Consumíveis recuperam energia. Dormir reinicia o tempo acordado.`);
+    for (const [id, item] of Object.entries(NB.CityLife.items)) {
+      const quantity = life.inventory[id];
+      if (!quantity) continue;
+      addButton(content, `Usar ${item.name} (${quantity}) · +${item.energy} de energia`, () => {
+        if (!NB.CityLife.use(id)) return;
+        render();
+        announce(`${item.name} usado.`);
+      }, life.energy >= NB.CityLife.maxEnergy(life));
+    }
+    if (!NB.CityLife.bagCount(life)) addText(content, 'Mochila vazia.');
+    if (life.implant) addText(content, 'Implante de vigília instalado.');
+  }
+
+  function renderSupplies(content, state, districtId) {
+    const life = state.life;
+    const goods = districtId === 'kiosk'
+      ? Object.entries(NB.CityLife.items).map(([id, item]) => ({ id, ...item, detail: `+${item.energy} de energia`, owned: false }))
+      : [
+        ...['bike', 'motorbike'].map(id => ({ id, ...NB.CityLife.transport[id], owned: life.vehicles.includes(id) })),
+        { id: 'implant', name: 'Implante de vigília', price: NB.CityLife.implantPrice, owned: life.implant,
+          detail: '+20 de energia máxima · +4 h acordado' }
+      ];
+    for (const item of goods) {
+      const row = document.createElement('div');
+      row.className = 'city-life-row';
+      addText(row, item.name, 'city-clue-title');
+      if (item.detail) addText(row, item.detail);
+      addButton(row, item.owned ? 'Adquirido' : `Comprar · ${item.price} créditos`, () => {
+        if (!NB.CityLife.buy(item.id)) return;
+        render();
+        announce(`${item.name} adquirido.`);
+      }, item.owned || state.credits < item.price || (districtId === 'kiosk' && NB.CityLife.bagCount(life) >= NB.CityLife.bagLimit));
+      content.append(row);
+    }
+    if (districtId === 'kiosk') {
+      const shift = NB.CityLife.nightShift();
+      addText(content, 'Turno de atendimento entre 19h e 2h. Último início à 1h.');
+      addButton(content, shift.done ? 'Turno já concluído' : 'Trabalhar no quiosque · 1 h · +14 créditos', () => {
+        if (!NB.CityLife.workNightShift()) return;
+        render();
+        announce(['Turno concluído. +14 créditos.', NB.CityLife.takeNotice()].filter(Boolean).join(' '));
+      }, !shift.open || shift.done);
+    }
   }
 
   function renderJournal(content, save) {
@@ -263,8 +393,10 @@
     const now = performance.now();
     if (now >= job.deadline) {
       cancelJob();
+      NB.CityLife.advance(45, 8);
+      const notice = NB.CityLife.takeNotice();
+      announce(`Tempo esgotado. Nenhum crédito recebido.${notice ? ' ' + notice : ''}`);
       render();
-      announce('Tempo esgotado. Nenhum crédito recebido.');
       $('city-content').querySelector('button')?.focus();
     } else if (job.revealing && now >= job.revealUntil) {
       job.revealing = false;
@@ -335,7 +467,9 @@
         announce('Trabalho concluído. Você recebeu 20 créditos.');
       }
       cancelJob();
-      NB.Save.save();
+      NB.CityLife.advance(45, 8);
+      const notice = NB.CityLife.takeNotice();
+      if (notice) announce(`${$('city-feedback').textContent} ${notice}`);
     }
     render();
     const buttons = $('city-content').querySelectorAll('.city-symbols button');
@@ -368,6 +502,7 @@
 
   function resetView() {
     view = 'district';
+    destination = null;
     cancelJob();
     announce('');
     render();
@@ -376,6 +511,7 @@
   function open() {
     resetView();
     $('netmap-modal').classList.add('open');
+    announce(NB.CityLife.takeNotice());
     document.querySelector('.city-panel').inert = false;
     $('game-ui').inert = true;
     $('city-map').querySelector('[aria-current]')?.focus();
@@ -383,7 +519,7 @@
 
   function bindEvents() {
     for (const district of districts) {
-      const pin = addButton($('city-map'), '', () => { announce(''); move(district.id); }, false, 'city-pin');
+      const pin = addButton($('city-map'), '', () => selectDestination(district.id), false, 'city-pin');
       pin.dataset.district = district.id;
       pin.style.left = `${district.x}%`;
       pin.style.top = `${district.y}%`;
@@ -395,6 +531,13 @@
       pin.append(icon, label);
     }
     $('city-journal').addEventListener('click', toggleJournal);
+    $('city-bag').addEventListener('click', () => {
+      view = view === 'bag' ? 'district' : 'bag';
+      destination = null;
+      cancelJob();
+      announce('');
+      render();
+    });
   }
 
   function toggleJournal() {
@@ -412,7 +555,7 @@
       $('city-journal').focus();
       return true;
     }
-    if (!job) return false;
+    if (!job && view !== 'bag' && view !== 'travel') return false;
     resetView();
     $('city-content').querySelector('button')?.focus();
     return true;
