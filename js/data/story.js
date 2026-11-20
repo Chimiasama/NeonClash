@@ -263,15 +263,23 @@
 
   const comicPortraits = {
     kairo: { name: 'Kairo', art: './avatars/kairo.webp' },
-    nair: { name: 'Dona Nair', art: './avatars/nair.webp' },
+    nair: { name: 'Dona Nair', dialogueName: 'Nair', art: './avatars/nair.webp' },
     nina: { name: 'Nina', art: './avatars/nina.png' },
     lume: { name: 'Lume', art: './avatars/lume.png' },
     beto: { name: 'Beto', art: './avatars/beto.webp' },
-    mara: { name: 'Mara' },
-    severino: { name: 'Severino' },
-    leila: { name: 'Leila' },
+    mara: { name: 'Mara', art: './avatars/mara.webp' },
+    severino: { name: 'Severino', art: './avatars/severino.webp' },
+    leila: { name: 'Leila', art: './avatars/leila.webp' },
     kira: { name: 'Kira', art: './avatars/kira.png' },
     cipher: { name: 'Cipher', art: './avatars/cipher.png' },
+    iris: { name: 'Íris', art: './avatars/iris.webp' },
+    ada: { name: 'Ada', art: './avatars/ada.webp' },
+    raquel: { name: 'Raquel', art: './avatars/raquel.webp' },
+    cris: { name: 'Cris', art: './avatars/cris.webp' },
+    vex: { name: 'Vex', art: './avatars/vex.png' },
+    helena: { name: 'Helena', art: './avatars/helena.webp' },
+    renan: { name: 'Renan', art: './avatars/renan.webp' },
+    nalva: { name: 'Nalva', art: './avatars/nalva.webp' },
     archon: { name: 'Archon', art: './avatars/archon.png' }
   };
   const prologueBeats = [

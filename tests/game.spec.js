@@ -1453,6 +1453,29 @@ test('applies Nair solidarity at the counter and preserves Helena’s evidence a
   }
 });
 
+test('shows and archives the speaker portrait in early and late investigation scenes', async ({ page }) => {
+  await page.goto('/');
+  await enterCity(page);
+  for (const [id, name, filename] of [['guard', 'Severino', 'severino'], ['renan', 'Renan', 'renan']]) {
+    const title = await page.evaluate(({ id, name }) => {
+      const scene = NB.Story.sceneById[id];
+      const index = scene.lines.findIndex(line => line.startsWith(name + ' —'));
+      const save = NB.Save.get();
+      save.story = NB.Story.normalize({ started: true, chapter: scene.chapter, flags: scene.requires, read: { [id]: index } });
+      save.city.district = scene.location;
+      NB.Input.openNetMap();
+      return scene.title;
+    }, { id, name });
+    await page.getByRole('button', { name: title, exact: true }).click();
+    const path = `./avatars/${filename}.webp`;
+    const portrait = page.locator(`#story-comic .comic-panel--active .comic-speaker img[src="${path}"]`);
+    await expect(portrait).toBeVisible();
+    await expect.poll(() => portrait.evaluate(img => img.naturalWidth)).toBeGreaterThan(0);
+    await expect.poll(() => page.evaluate(path => NB.Save.get().seenArt.includes(path), path)).toBe(true);
+    await page.locator('#btn-story-close').click();
+  }
+});
+
 test('reveals and saves comic beats with tactile key, wipe and radio controls', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 640 });
   await page.goto('/');

@@ -205,12 +205,13 @@
     const location = NB.CityData.districts.find(item => item.id === scene.location);
     const art = scene.comicArt?.art || location.scene || location.portrait;
     const frames = lines.map((line, index) => {
-      const baseline = { line, art: index === 0 ? art : null };
+      const speaker = Object.entries(NB.StoryData.comicPortraits)
+        .find(([, person]) => line.startsWith(`${person.dialogueName || person.name} —`))?.[0];
+      const baseline = { line, art: index === 0 ? art : null, speaker, bubbleType: speaker ? 'speech' : 'narration' };
       const beat = scene.beats?.[index];
       if (scene.chapter >= 2) return { ...baseline, ...(beat ? { art, ...beat } : {}) };
-      const speaker = Object.keys(NB.StoryData.comicPortraits).find(key => line.startsWith(NB.StoryData.comicPortraits[key].name + ' —'));
       const camera = ['wide', 'zoom-in', 'pan-left', 'focus-detail'][index % 4];
-      return { ...baseline, art, camera, speaker, bubbleType: speaker ? 'speech' : 'narration', ...beat };
+      return { ...baseline, art, camera, ...beat };
     });
     reading = { scene, replay, lines, frames, cursor, visited: cursor, origin: document.activeElement };
     resetComic($('story-comic'));
