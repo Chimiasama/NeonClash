@@ -172,7 +172,7 @@ test('opens and navigates the enlarged card inspector above the deck', async ({ 
   await expect(art).toHaveAttribute('src', './cards/unit_01.webp');
   await expect.poll(() => art.evaluate(image => image.naturalWidth)).toBeGreaterThan(400);
 
-  await inspector.getByRole('button', { name: 'Carta seguinte' }).click();
+  await inspector.getByRole('button', { name: 'Próxima carta' }).click();
   await expect(page.getByRole('dialog', { name: 'SPIDEY-DRONE' })).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
