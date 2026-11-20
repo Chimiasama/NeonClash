@@ -23,7 +23,13 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run build
-      - run: npx playwright install --with-deps chromium
+      - name: Preparar navegador para os testes
+        run: |
+          if chrome=$(command -v google-chrome); then
+            echo "CHROMIUM_PATH=$chrome" >> "$GITHUB_ENV"
+          else
+            npx playwright install --with-deps chromium
+          fi
       - run: npm test
         env:
           CI: true
