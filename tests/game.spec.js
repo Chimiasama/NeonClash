@@ -1280,7 +1280,7 @@ test('applies Nair solidarity at the counter and preserves Helena’s evidence a
     const aside = reader.getByRole('button', { name: reply });
     await expect(aside).toBeVisible();
     await aside.click();
-    await expect(reader.locator('#story-options p')).toContainText('Kairo —');
+    await expect(reader.locator('#story-options').getByText(/^Kairo —/)).toBeVisible();
     await reader.getByRole('button', { name: 'VOLTAR', exact: true }).click();
   }
 });
