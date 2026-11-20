@@ -35,6 +35,12 @@
   function startMatch(options = {}) {
     const mode = options.mode || 'campaign';
     const boss = options.boss || (mode === 'quick' ? NB.Campaign.getRandomBoss() : NB.Campaign.NODES[0]);
+    if (mode === 'challenge') {
+      const challenge = NB.Challenges.find(entry => entry.id === options.challenge?.id);
+      if (!challenge || challenge.opponent !== boss.id || !NB.Save.isArchetypeUnlocked(boss.id)) return;
+      options = { ...options, challenge };
+    }
+    if (mode === 'quick' && boss.id === 'archon' && !NB.Save.isArchetypeUnlocked(boss.id)) return;
 
     if (mode === 'campaign' && boss.id === 'archon' && NB.Story.finalBattle() && !NB.Story.get().kiraSupportUsed && NB.Story.get().allies.kira) {
       NB.Story.applyKiraSupport();
@@ -478,6 +484,12 @@
       NB.Physics.vibrateCard();
       if (NB.Save.get().prologueSeen) openNetMap();
       else NB.StoryUI.openPrologue();
+    });
+    document.getElementById('btn-new-game-plus').addEventListener('click', () => {
+      if (!NB.Save.startNewGamePlus()) return;
+      NB.City.resetView();
+      NB.UI.renderTitleStats();
+      NB.StoryUI.openPrologue();
     });
     document.getElementById('btn-quick-duel').addEventListener('click', () => {
       NB.Physics.vibrateCard();

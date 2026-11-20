@@ -29,6 +29,7 @@
     const nodes = NB.Campaign ? NB.Campaign.NODES : [];
     for (const node of nodes) {
       if (Array.isArray(node.rewardCards) && node.rewardCards.includes(cardId)) {
+        if (!NB.Save.isArchetypeUnlocked(node.id)) return 'Recompensa de um encontro da aventura.';
         return `Derrote ${node.name} (${node.nodeCode}) para desbloquear esta carta.`;
       }
     }
@@ -41,7 +42,9 @@
       return `Vença ${resident.name} em ${place.name}.`;
     }
     const challenge = NB.Challenges.find(entry => entry.cards.includes(cardId));
-    if (challenge) return `Vença ${challenge.name} no Ringue Baixa Tensão.`;
+    if (challenge) return NB.Save.isArchetypeUnlocked(challenge.opponent)
+      ? `Vença ${challenge.name} no Ringue Baixa Tensão.`
+      : 'Recompensa de um desafio que será liberado ao avançar na aventura.';
     return 'Avance na campanha para desbloquear esta carta.';
   }
 

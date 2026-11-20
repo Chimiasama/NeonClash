@@ -26,6 +26,17 @@
 .title-screen .title-logo-slash { display: block; color: var(--cyan); }
 .title-screen .story-box { font-size: 13px; line-height: 1.5; }
 
+#new-game-plus {
+  padding: 9px 12px;
+  border: 1px solid #3c546a;
+  background: #101b29;
+}
+#new-game-plus summary {
+  color: var(--cyan);
+  cursor: pointer;
+}
+#new-game-plus p { margin: 8px 0; }
+
 .full-modal.city-screen {
   padding: 0;
   background: #0b101c;

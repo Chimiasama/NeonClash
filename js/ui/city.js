@@ -301,7 +301,7 @@
         NB.Input.startMatch({
           mode: 'arena',
           boss: {
-            ...sparringBoss, name: person.name, fullTitle: `${person.name} // Duelo de bairro`,
+            ...sparringBoss, name: person.name, fullTitle: `${person.name} // Duelo de bairro`, avatar: person.portrait,
             hp: duel.hp, deckList: duel.deck.length === 20 ? duel.deck : Array.from({ length: 20 }, (_, index) => duel.deck[index % duel.deck.length]),
             canOverclock: Boolean(duel.canOverclock),
             lines: { start: [person.line] },
@@ -732,7 +732,9 @@
     const label = document.createElement('h4');
     label.textContent = 'Desafios de arquétipo';
     challenges.append(label);
-    for (const challenge of NB.Challenges) {
+    const unlocked = NB.Challenges.filter(challenge => NB.Save.isArchetypeUnlocked(challenge.opponent));
+    if (!unlocked.length) addText(challenges, 'Novos desafios aparecem conforme você resolve encontros na aventura.');
+    for (const challenge of unlocked) {
       const row = document.createElement('div');
       row.className = 'city-local-duel';
       addText(row, challenge.goal);
@@ -762,7 +764,7 @@
         boss: {
           ...(encounter.period === 'night' ? wagerBoss : sparringBoss),
           hp: encounter.hp, name: encounter.name, fullTitle: `${encounter.name} // Encontro urbano`,
-          encounterKey: encounter.key, encounterReward: encounter.credits
+          avatar: encounter.portrait, encounterKey: encounter.key, encounterReward: encounter.credits
         }
       });
     });

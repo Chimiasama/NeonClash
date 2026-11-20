@@ -180,7 +180,8 @@
   }
 
   function getRandomBoss() {
-    return CAMPAIGN_NODES[Math.floor(Math.random() * CAMPAIGN_NODES.length)];
+    const available = CAMPAIGN_NODES.filter(node => node.index === 0 || NB.Save.isArchetypeUnlocked(node.id));
+    return available[Math.floor(Math.random() * available.length)];
   }
 
   NB.Campaign = {

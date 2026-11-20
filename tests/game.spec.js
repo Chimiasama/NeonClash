@@ -201,7 +201,7 @@ test('previews locked cards without making them available to edit', async ({ pag
   await page.getByRole('button', { name: 'Bastion-Core · bloqueada' }).click();
   const inspector = page.getByRole('dialog', { name: 'BASTION-CORE' });
   await expect(inspector).toBeVisible();
-  await expect(inspector).toContainText(/Derrote CIPHER/);
+  await expect(inspector).toContainText('Recompensa de um encontro da aventura.');
   await expect(inspector.locator('.inspector-deck-controls')).toBeHidden();
   await inspector.getByRole('button', { name: 'Fechar' }).click();
   await expect(page.getByRole('button', { name: 'Bastion-Core · bloqueada' })).toBeFocused();
@@ -739,7 +739,14 @@ test('loans an archetype deck and unlocks its reward cards once', async ({ page 
   await enterCity(page);
   await walkTo(page, page.getByRole('button', { name: 'Ringue Baixa Tensão', exact: true }));
   await expect(page.getByRole('heading', { name: 'Desafios de arquétipo' })).toBeVisible();
-  await page.getByRole('button', { name: 'Turno da Estação' }).click();
+  const challenge = page.getByRole('button', { name: 'Turno da Estação' });
+  await expect(challenge).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Frequência Cruzada' })).toHaveCount(0);
+  await page.evaluate(() => {
+    NB.Story.get().flags.push('kiraProof');
+    NB.Input.openNetMap();
+  });
+  await challenge.click();
 
   const result = await page.evaluate(() => {
     const state = NB.State.get();
@@ -763,6 +770,58 @@ test('loans an archetype deck and unlocks its reward cards once', async ({ page 
     mode: 'challenge', quality: true, matches: 1, loanCount: 2, activeDeckUnchanged: true,
     wins: ['infiltration'], rewards: ['unit_24', 'exploit_08'], unlocked: ['unit_24', 'exploit_08']
   });
+});
+
+test('hides late archetypes until the encounter or a completed adventure restarted as New Game Plus', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByText('Novo Jogo+', { exact: true })).toBeHidden();
+  const initial = await page.evaluate(() => {
+    const challenge = NB.Challenges.find(entry => entry.opponent === 'archon');
+    NB.Input.startMatch({ mode: 'challenge', challenge, boss: NB.Campaign.getNodeById('archon') });
+    return {
+      matches: Array.from({ length: 20 }, () => NB.Campaign.getRandomBoss().id),
+      rewards: NB.Save.recordChallengeVictory(challenge.id),
+      started: NB.Save.startNewGamePlus()
+    };
+  });
+  expect(new Set(initial.matches)).toEqual(new Set(['kira']));
+  expect(initial.rewards).toEqual([]);
+  expect(initial.started).toBe(false);
+  await page.evaluate(() => {
+    const save = NB.Save.get();
+    save.defeatedBosses.push('cipher', 'archon');
+    save.story.flags.push('vexProof');
+    save.city.credits = 200;
+    save.challengeWins.push('armor');
+    save.seenArt.push('saved-art');
+    save.unlockedCards.push('unit_25');
+    NB.UI.renderTitleStats();
+  });
+  expect(await page.evaluate(() => ['kira', 'cipher', 'vex', 'archon'].map(NB.Save.isArchetypeUnlocked)))
+    .toEqual([false, true, true, false]);
+  await expect(page.getByText('Novo Jogo+', { exact: true })).toBeHidden();
+  await page.evaluate(() => {
+    NB.Story.get().flags.push('epilogue');
+    NB.UI.renderTitleStats();
+  });
+  await page.getByText('Novo Jogo+', { exact: true }).click();
+  await page.getByRole('button', { name: 'Confirmar Novo Jogo+' }).click();
+  await expect(page.locator('#prologue-modal')).toBeVisible();
+  await page.reload();
+  const progress = await page.evaluate(() => ({
+    ...NB.Save.get(),
+    archonChallenge: NB.Save.isArchetypeUnlocked('archon')
+  }));
+  expect(progress).toMatchObject({
+    newGamePlus: true, archonChallenge: true, prologueSeen: false, defeatedBosses: [],
+    challengeWins: ['armor'], story: { chapter: 0, flags: [] }, city: { credits: 35 }
+  });
+  expect(progress.unlockedCards).toContain('unit_25');
+  expect(progress.seenArt).toContain('saved-art');
+  await enterCity(page);
+  await walkTo(page, page.getByRole('button', { name: 'Ringue Baixa Tensão', exact: true }));
+  await page.getByRole('button', { name: 'Frequência Cruzada' }).click();
+  expect(await page.evaluate(() => [NB.State.get().mode, NB.State.get().boss.id])).toEqual(['challenge', 'archon']);
 });
 
 test('limits repair, protects RAM on invalid targets and previews affinity damage', async ({ page }) => {
@@ -863,6 +922,34 @@ test('starts a neighborhood duel directly and preserves its card reward', async 
   await page.reload();
   expect(await page.evaluate(() => NB.Save.get().city.residentWins)).toEqual([33]);
   expect(await page.evaluate(() => NB.Save.get().unlockedCards)).toContain('unit_21');
+});
+
+test('shows a distinct combat portrait for each neighborhood and urban duel opponent', async ({ page }) => {
+  await page.goto('/');
+  await enterCity(page);
+  const opponents = [
+    ['Damião', 'kiosk', 'damiao'], ['Tuca', 'arena', 'tuca'], ['Dora', 'arena', 'dora'],
+    ['Giba', 'depots', 'giba'], ['Aline', 'garage', 'aline'], ['Nanda', 'docks', 'nanda'],
+    ['Nexo', 'terminal', 'nexo', 5 * 1440 + 8 * 60],
+    ['Vagalume', 'square', 'vagalume', 8 * 60], ['Maré', 'ferry', 'mare', 2 * 1440 + 8 * 60],
+    ['Rebite', 'depots', 'rebite', 4 * 1440 + 20 * 60],
+    ['Sombra Curta', 'morroKitchen', 'sombra-curta', 20 * 60],
+    ['Contraluz', 'theatre', 'contraluz', 2 * 1440 + 20 * 60]
+  ];
+  for (const [name, district, filename, minute] of opponents) {
+    await page.evaluate(({ district, minute }) => {
+      const save = NB.Save.get();
+      save.city.district = district;
+      save.city.life.minute = minute ?? 8 * 60;
+      NB.Input.openNetMap();
+    }, { district, minute });
+    await page.getByRole('button', { name: `Desafiar ${name}${minute ? ' · encontro urbano' : ''}`, exact: true }).click();
+    const path = `./avatars/${filename}.webp`;
+    const portrait = page.locator(`#enemy-avatar-box img[src="${path}"]`);
+    await expect(portrait).toBeVisible();
+    await expect.poll(() => portrait.evaluate(img => img.naturalWidth)).toBe(320);
+    await expect.poll(() => page.evaluate(path => NB.Save.get().seenArt.includes(path), path)).toBe(true);
+  }
 });
 
 test('archives only displayed artwork and reopens full art with its description after reload', async ({ page }) => {
@@ -1240,6 +1327,7 @@ test('gives Kira only one recovery and starts the final Eclipse battle at 18 HP 
   await expect(page.locator('#enemy-interference')).toHaveText('Interferência de Cipher: Firewall primário desativado');
   const comparison = await page.evaluate(() => {
     const boss = NB.Campaign.getNodeById('archon');
+    NB.Save.get().newGamePlus = true;
     NB.Input.startMatch({ mode: 'quick', boss });
     const quick = NB.State.get().enemy.hp;
     NB.Story.get().allies.cipher = false;

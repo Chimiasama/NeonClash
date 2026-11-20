@@ -34,7 +34,7 @@
     [2, "Lume", "central", "market", "Mantém a banca da Feira e conhece a origem de quase todas as peças."],
     [3, "Jota", "contato", "kiosk", "Trabalha no quiosque e deixa a cafeteira ligada até o último ônibus."],
     [4, "Beto", "contato", "market", "Confere encomendas na saída da Feira."],
-    [10, "Damião", "morador", "kiosk", "Damião aquece solda na banca."],
+    [10, "Damião", "morador", "kiosk", "Damião aquece solda na banca.", "./avatars/damiao.webp"],
     [11, "Nina Fase", "central", "relay", "Cuida da Antena Comunitária e organiza a manutenção por turnos."],
     [12, "Cris", "central", "pension", "Recebe hóspedes e separa as contas com um lápis azul."],
     [13, "Maíra", "contato", "pump", "Cuida da bomba do Canal."],
@@ -42,12 +42,12 @@
     [22, "Mara", "contato", "terminal", "Atende no Terminal das 6h às 19h e deixa os horários no caderno."],
     [23, "Severino", "contato", "kira", "Conhece todos os portões da Estação."],
     [31, "Risco", "central", "arena", "Apresenta as lutas e mantém o livro de entradas."],
-    [33, "Tuca", "contato", "arena", "Empresta baralhos de treino."],
+    [33, "Tuca", "contato", "arena", "Empresta baralhos de treino.", "./avatars/tuca.webp"],
     [34, "Leila", "contato", "ringArchive", "Mantém os recibos em ordem de entrada."],
-    [39, "Dora", "morador", "arena", "Dora disputa os resultados com amigos."],
+    [39, "Dora", "morador", "arena", "Dora disputa os resultados com amigos.", "./avatars/dora.webp"],
     [41, "Íris", "central", "garage", "Monta bicicletas e desmonta implantes com a mesma bancada."],
-    [43, "Giba", "contato", "depots", "Carrega um estojo só para etiquetas de série."],
-    [44, "Aline", "contato", "garage", "Conhece os atalhos usados por quem faz entrega."],
+    [43, "Giba", "contato", "depots", "Carrega um estojo só para etiquetas de série.", "./avatars/giba.webp"],
+    [44, "Aline", "contato", "garage", "Conhece os atalhos usados por quem faz entrega.", "./avatars/aline.webp"],
     [51, "Cipher", "central", "cipher", "Coordena a segurança da Muralha."],
     [52, "Raquel", "contato", "archive", "Resolve problemas de acesso no corredor de manutenção."],
     [61, "Vex", "central", "vex", "Prefere conversar onde ninguém precise dizer o número do quarto."],
@@ -59,12 +59,12 @@
     [74, "Ravi", "contato", "clinic", "Conserta os equipamentos dos moradores."],
     [81, "Renan", "central", "docks", "Plantão na subestação."],
     [82, "Sol", "contato", "ferry", "Conduz a balsa antes de fechar a linha."],
-    [84, "Nanda", "contato", "docks", "Organiza os manifestos das remessas."],
+    [84, "Nanda", "contato", "docks", "Organiza os manifestos das remessas.", "./avatars/nanda.webp"],
     [91, "Archon", "central", "archon", "Diretor de operações da Vértice."],
     [92, "Isa", "contato", "square", "Faz a edição do jornal de bairro."],
     [94, "Nalva", "contato", "registry", "Emite protocolos e históricos."],
     [101, "Helena", "contato", "theatre", "Autentica os registros da Holding Meridiano com Bia."]
-  ].map(([id, name, role, location, line]) => ({ id, name, role, location, line }));
+  ].map(([id, name, role, location, line, portrait]) => ({ id, name, role, location, line, portrait }));
 
   const jobs = {
     delivery: { name: 'Correio Expresso', locations: ['kira', 'terminal', 'depots', 'registry', 'docks'] },
@@ -102,14 +102,14 @@
   };
   const encounters = {
     day: [
-      { location: 'terminal', name: 'Nexo', hp: 13, credits: 8 },
-      { location: 'square', name: 'Vagalume', hp: 14, credits: 9 },
-      { location: 'ferry', name: 'Maré', hp: 15, credits: 10 }
+      { location: 'terminal', name: 'Nexo', portrait: './avatars/nexo.webp', hp: 13, credits: 8 },
+      { location: 'square', name: 'Vagalume', portrait: './avatars/vagalume.webp', hp: 14, credits: 9 },
+      { location: 'ferry', name: 'Maré', portrait: './avatars/mare.webp', hp: 15, credits: 10 }
     ],
     night: [
-      { location: 'depots', name: 'Rebite', hp: 16, credits: 10 },
-      { location: 'morroKitchen', name: 'Sombra Curta', hp: 17, credits: 11 },
-      { location: 'theatre', name: 'Contraluz', hp: 18, credits: 12 }
+      { location: 'depots', name: 'Rebite', portrait: './avatars/rebite.webp', hp: 16, credits: 10 },
+      { location: 'morroKitchen', name: 'Sombra Curta', portrait: './avatars/sombra-curta.webp', hp: 17, credits: 11 },
+      { location: 'theatre', name: 'Contraluz', portrait: './avatars/contraluz.webp', hp: 18, credits: 12 }
     ]
   };
 

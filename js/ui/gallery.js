@@ -43,6 +43,13 @@
       add(district.scene, district.name, scenery[district.id] || `${district.name}, ponto de encontro com ${district.npc.split(' · ')[0]}.`, 'scenes');
       add(district.portrait, district.npc, `Retrato de personagem em ${district.name}.`, 'people');
     }
+    for (const person of NB.CityAtlas.residents) {
+      add(person.portrait, person.name, person.line, 'people');
+    }
+    for (const encounter of Object.values(NB.CityAtlas.encounters).flat()) {
+      const place = NB.CityData.districts.find(district => district.id === encounter.location);
+      add(encounter.portrait, encounter.name, `Duelista de um encontro urbano em ${place.name}.`, 'people');
+    }
     for (const scene of NB.StoryData.scenes) {
       for (const beat of [scene.comicArt, ...(scene.beats || [])].filter(Boolean)) {
         if (beat.art && !catalog.has(beat.art)) add(beat.art, beat.artTitle || scene.title, 'Quadro da investigação de Kairo.', 'scenes');

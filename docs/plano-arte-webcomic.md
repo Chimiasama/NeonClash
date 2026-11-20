@@ -23,7 +23,8 @@ Reserve as onomatopeias para sons que pontuam a ação, como o leitor da porta e
 
 | Personagem | Referência aprovada |
 | --- | --- |
-| Kairo | [Prólogo na Estação](../src/assets/prologo-estacao.webp), [prólogo em casa](../src/assets/prologo-casa.webp) e [capa](../src/assets/baixa-luz-cover.webp). Mulher negra jovem, com cabelo preto crespo preso em coque alto e jaqueta de técnica em tom ocre. Use a mesma idade aparente, os mesmos traços e o mesmo tom de pele do prólogo, também nos closes como o [leitor da porta](../src/assets/comic/leitor-da-porta.webp). |
+| Kairo | [Prólogo na Estação](../src/assets/prologo-estacao.webp), [prólogo em casa](../src/assets/prologo-casa.webp) e [capa](../src/assets/baixa-luz-cover.webp) e [retrato de diálogo](../avatars/kairo.webp). Mulher negra jovem, com cabelo preto crespo preso em coque alto e jaqueta de técnica em tom ocre. Use a mesma idade aparente, os mesmos traços e o mesmo tom de pele do prólogo, também nos closes como o [leitor da porta](../src/assets/comic/leitor-da-porta.webp). |
+| Dona Nair | O [retrato de diálogo](../avatars/nair.webp) é um recorte direto da [cena da Casa de Kairo](../src/assets/quarto-kairo.webp). Use essa cena como referência para o rosto, a idade aparente, o coque e as mechas grisalhas. |
 | Íris | [Garagem](../src/assets/garagem-iris.webp) e [calibração](../src/assets/comic/filtro-optico.webp). Cabelo escuro encaracolado preso, pele morena e roupa de oficina verde-azulada sem mangas. |
 | Bia | [Conferência no Teatro](../src/assets/comic/conferencia-no-teatro.webp), à esquerda. Mulher jovem de pele morena, cabelo preto comprido e jaqueta ferrugem. Ela confere o papel. |
 | Helena | [Conferência no Teatro](../src/assets/comic/conferencia-no-teatro.webp), à direita. Mulher de meia-idade com pele oliva clara, cabelo escuro curto com grisalho nas têmporas e blazer azul-acinzentado. Ela segura a chave. |

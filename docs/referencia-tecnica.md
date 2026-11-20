@@ -146,11 +146,13 @@ O catálogo atual tem **41 cartas**, sendo 25 unidades e 16 Exploits. Cada deck 
 | Desafio de rua | Oponente do Ringue com 14 HP. Vitória paga 15 créditos e a entrada é grátis. |
 | Mesa de apostas | Liberada ao derrotar Kira. Entrada de 25 créditos, vitória paga 60 e derrota mantém a entrada no Ringue. |
 | Moradores | Damião no Quiosque, Tuca e Dora no Ringue. Usam o sistema de arena, com perfis e prêmios próprios. |
-| Desafios de arquétipo | Turno da Estação (Infiltração/Kira), Linha de Contenção (Blindagem/Cipher), Ruído na Escuta (Sabotagem/Vex) e Frequência Cruzada (Overclock/Archon). Emprestam decks de 20 cartas com afinidades de fábrica e liberam duas cartas por primeira vitória. |
+| Desafios de arquétipo | Turno da Estação (Infiltração/Kira), Linha de Contenção (Blindagem/Cipher), Ruído na Escuta (Sabotagem/Vex) e Frequência Cruzada (Overclock/Archon). Os três primeiros só aparecem depois da vitória na aventura ou do registro da prova equivalente na rota pacifista. Frequência Cruzada aparece no Novo Jogo+. Emprestam decks de 20 cartas com afinidades de fábrica e liberam duas cartas por primeira vitória. |
 
 ### Fases e pontos de extensão
 
 `PLAYER_MAIN` concentra invocações e Exploits. `SELECT_TARGET` aguarda o alvo de um Exploit. `PLAYER_ATTACK` permite seleção de atacantes e `PLAYER_OVERCLOCK` prepara a dupla. `ENEMY_TURN` executa a IA. `PLAYER_DEFENSE` recebe os bloqueios. `COMBAT_ANIM` protege a resolução animada. `GAME_OVER` encerra as ações da partida. A IA avalia alvos e efeitos possíveis, conserva RAM para Overclock quando seu perfil permite e considera prioridades de Firewall.
+
+O **Novo Jogo+** aparece na tela inicial depois do epílogo. Reinicia história, prólogo e vida da cidade, preservando coleção, decks, afinidades, Galeria, estatísticas e recompensas já conquistadas no Ringue. O duelo rápido começa com Kira como oponente inicial e inclui os demais conforme os encontros são resolvidos. Archon entra nessa seleção no Novo Jogo+.
 
 Unidades são instâncias de campo com UID, ATK e DEF atuais, DEF máxima, afinidade e marcadores de boot e ataque. Exploits declarativos usam alvo próprio, inimigo ou nenhum alvo, com ações sobre uma unidade, aliados ou inimigos conforme a definição. As cartas emprestadas dos desafios não substituem o deck ativo. O limite de duas cópias vale para os decks do jogador. Os baralhos dos adversários são listas de dados próprias.
 

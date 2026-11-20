@@ -262,7 +262,7 @@
   };
 
   const comicPortraits = {
-    kairo: { name: 'Kairo', art: './src/assets/kairo-token.webp' },
+    kairo: { name: 'Kairo', art: './avatars/kairo.webp' },
     nair: { name: 'Dona Nair', art: './avatars/nair.webp' },
     nina: { name: 'Nina', art: './avatars/nina.png' },
     lume: { name: 'Lume', art: './avatars/lume.png' },

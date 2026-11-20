@@ -83,6 +83,7 @@
       deckSlot: 0,
       deckSlots: {},
       challengeWins: [],
+      newGamePlus: false,
       seenArt: [],
       prologueSeen: false,
       city: { credits: 35, district: 'kira', traced: [], residentWins: [], encounterWins: [], life: NB.CityLife.normalize() },
@@ -123,6 +124,7 @@
           })),
           challengeWins: [...new Set((Array.isArray(parsed.challengeWins) ? parsed.challengeWins : [])
             .filter(id => NB.Challenges.some(challenge => challenge.id === id)))],
+          newGamePlus: parsed.newGamePlus === true,
           prologueSeen: parsed.prologueSeen === true,
           seenArt: [...new Set(Array.isArray(parsed.seenArt) ? parsed.seenArt.filter(path => typeof path === 'string') : [])],
           city: {
@@ -203,10 +205,32 @@
     return true;
   }
 
+  function isArchetypeUnlocked(opponent) {
+    const progress = get();
+    if (opponent === 'archon') return progress.newGamePlus;
+    return progress.newGamePlus || isNodeDefeated(opponent) || NB.Story.has(`${opponent}Proof`);
+  }
+
+  function startNewGamePlus() {
+    const progress = get();
+    if (!NB.Story.has('epilogue')) return false;
+    const fresh = createDefaultSave();
+    Object.assign(progress, {
+      newGamePlus: true,
+      story: fresh.story,
+      city: fresh.city,
+      prologueSeen: false,
+      defeatedBosses: [],
+      clues: []
+    });
+    save();
+    return true;
+  }
+
   function recordChallengeVictory(id) {
     const progress = get();
     const challenge = NB.Challenges.find(entry => entry.id === id);
-    if (!challenge) return [];
+    if (!challenge || !isArchetypeUnlocked(challenge.opponent)) return [];
     progress.matches++;
     progress.wins++;
     const rewards = [];
@@ -318,6 +342,8 @@
     saveCustomDeck,
     selectDeckSlot,
     recordChallengeVictory,
+    isArchetypeUnlocked,
+    startNewGamePlus,
     buildBalancedDeck,
     resetSave,
     isNodeDefeated,

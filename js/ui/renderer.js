@@ -444,12 +444,15 @@
     const box = document.getElementById('enemy-avatar-box');
     box.innerHTML = '';
     box.style.borderColor = target.accent || 'var(--magenta)';
-    box.appendChild(NB.Sprites.createArtMarkup(target.id, target.avatar, target.fullTitle, target.fallbackArt));
+    box.appendChild(NB.Sprites.createArtMarkup(target.avatar || target.id, target.avatar, target.fullTitle, target.fallbackArt || target.id));
   }
 
   /* Tela Inicial — Estatísticas do Save */
   function renderTitleStats() {
     const save = NB.Save.get();
+    const restart = document.getElementById('new-game-plus');
+    restart.hidden = !NB.Story.has('epilogue');
+    restart.open = false;
     const el = document.getElementById('title-progress-strip');
     if (el) {
       el.innerHTML = `
