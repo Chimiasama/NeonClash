@@ -208,7 +208,7 @@
     } else if (job.revealing && now >= job.revealUntil) {
       job.revealing = false;
       render();
-      announce('Sequência oculta. Comece a digitar.');
+      announce('Sequência oculta. Toque nos símbolos.');
       $('city-content').querySelector('.city-symbols button')?.focus();
     } else {
       updateClock();
@@ -236,6 +236,7 @@
     if (lead) {
       $('city-content').querySelector('.city-symbols button').focus();
     } else {
+      $('city-content').querySelector('.city-sequence').scrollIntoView({ block: 'nearest' });
       jobTimer = setInterval(tickJob, 100);
     }
   }

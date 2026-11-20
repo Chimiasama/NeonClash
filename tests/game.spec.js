@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('earns credits, buys a card, and keeps the purchase after reloading', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 600 });
   await page.goto('/');
   await page.getByRole('button', { name: 'Entrar na cidade' }).click();
   await page.getByRole('button', { name: 'Antena Comunitária' }).click();
@@ -9,6 +10,7 @@ test('earns credits, buys a card, and keeps the purchase after reloading', async
 
   const symbols = await page.locator('.city-sequence span').allTextContents();
   expect(symbols).toHaveLength(6);
+  await expect(page.locator('.city-sequence')).toBeInViewport({ ratio: 1 });
   await expect(page.getByRole('button', { name: symbols[0], exact: true })).toBeDisabled();
   await page.clock.fastForward(3500);
   await expect(page.locator('.city-sequence span')).toHaveText(Array(6).fill('·'));
