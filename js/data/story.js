@@ -292,7 +292,8 @@
     kiraPeace: [kiraReceipt, { speaker: 'kira', bubbleType: 'speech', expression: 'whisper' }],
     kiraProof: [kiraReceipt, { speaker: 'kira', bubbleType: 'speech' }],
     cipherToken: [opticalFilter],
-    cipherPeace: [{ ...opticalFilter, camera: 'focus-detail', focus: 'center', mood: 'tense' },
+    cipherPeace: [{ ...evidenceArt('filtro-na-muralha', 'O filtro instalado na Muralha'),
+      camera: 'focus-detail', focus: 'center', mood: 'tense' },
       { speaker: 'cipher', bubbleType: 'speech' }],
     vexAlt: [theatreProof],
     archonDeal: [
