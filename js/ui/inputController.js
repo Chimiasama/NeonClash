@@ -230,7 +230,13 @@
           return;
         }
         const existingEnemy = Object.keys(state.defenseMap).find(k => state.defenseMap[k] === slotIdx);
-        if (state.activeDefenderSlot === slotIdx) {
+        if (state.enemyAttackers.length === 1) {
+          const attacker = state.enemyAttackers[0];
+          state.defenseDeclined = state.defenseMap[attacker] === slotIdx;
+          if (state.defenseDeclined) delete state.defenseMap[attacker];
+          else state.defenseMap[attacker] = slotIdx;
+          state.activeDefenderSlot = null;
+        } else if (state.activeDefenderSlot === slotIdx) {
           if (existingEnemy !== undefined) delete state.defenseMap[existingEnemy];
           state.activeDefenderSlot = null;
         } else {

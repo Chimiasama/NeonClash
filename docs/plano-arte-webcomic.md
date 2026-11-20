@@ -7,8 +7,8 @@ A primeira entrega reaproveita as ilustrações do prólogo, o quarto de Kairo, 
 | Casa de Kairo | **Integrados.** Leitor com chaveiro, recibo molhado e retrato de Dona Nair. | Os dois pontos interativos ganham objetos identificáveis. O retrato pode acompanhar toda a conversa com Nair. |
 | Antena e Feira | **Integrados.** Bancada do rádio de Nina, banca de Lume e retrato de Beto. | A faixa de frequência fica sobre a bancada. Feira e recibo ganham contexto visual próprio. |
 | Estação | **Integrados.** Plano aberto e detalhe do terminal com o recibo, usado tanto na prova após o duelo quanto na entrega pacifista. Retratos de expressão de Kira seguem planejados. | Use o plano aberto para situar o percurso e faça a revelação com recortes dos objetos. |
-| Muralha e Teatro | **Integrados.** Filtro óptico na bancada de Íris e durante a extração de Raquel, além da conferência de Bia e Helena no Teatro. O retrato de Helena segue planejado. | Enfatiza o isolamento das credenciais e a autenticação do anexo sem expor os hóspedes. |
-| Torre Vértice | **Barramento central integrado.** O plano abre na conexão de Kairo e se aproxima quando o Eclipse assume a defesa. Console mestre e arte própria do Núcleo Eclipse seguem planejados. | Separa visualmente o terminal de Kairo, a intervenção de Cipher e a transferência da rede a Renan. |
+| Muralha e Teatro | **Integrados.** Filtro óptico na bancada de Íris e durante a extração de Raquel, além da conferência de Bia e Helena no Teatro. Os retratos de Bia e Helena usam a própria cena como referência. | Enfatiza o isolamento das credenciais e a autenticação do anexo sem expor os hóspedes. |
+| Torre Vértice | **Integrados.** Barramento central, console mestre e Núcleo Eclipse em quadros próprios durante o confronto. | Separa visualmente o terminal de Kairo, a intervenção de Cipher e a transferência da rede a Renan. |
 
 Para cada cenário, prefira uma composição horizontal com áreas de interesse em quadrantes distintos e espaço para o balão. Publique em WebP na área de assets existente. Associe cada arquivo ao quadro por `art` e, quando precisar de um título específico na Galeria, `artTitle`. Retratos principais e variantes de expressão entram em `comicPortraits`. Teste os enquadramentos numa tela de 320 px e com movimento reduzido.
 
@@ -30,3 +30,5 @@ Reserve as onomatopeias para sons que pontuam a ação, como o leitor da porta e
 | Helena | [Conferência no Teatro](../src/assets/comic/conferencia-no-teatro.webp), à direita. Mulher de meia-idade com pele oliva clara, cabelo escuro curto com grisalho nas têmporas e blazer azul-acinzentado. Ela segura a chave. |
 
 Na Muralha, Raquel conecta o mesmo filtro que Íris calibrou. O quadro da Muralha mostra [a peça encaixada no leitor](../src/assets/comic/filtro-na-muralha.webp).
+
+Isa usa o retrato de repórter da [cena de entrega na Praça](../avatars/isa.webp). A [interceptação de rádio](../src/assets/comic/radio-meridiano.webp) mostra o receptor preparado na Muralha.

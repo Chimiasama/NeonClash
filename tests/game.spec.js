@@ -906,6 +906,62 @@ test('exhausts attacking units on both sides and rejects them as manual or autom
   expect(result.playerDamage).toBeGreaterThan(0);
 });
 
+test('marks the only legal block, toggles it in one tap and leaves a choice against two attacks', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    NB.Input.startMatch({ mode: 'quick' });
+    const state = NB.State.get();
+    state.player.field = [
+      { ...NB.State.createFieldUnit('unit_04', 971, 'player'), attacked: true },
+      NB.State.createFieldUnit('unit_01', 972, 'player'), null
+    ];
+    state.enemy.field[0] = NB.State.createFieldUnit('unit_04', 973, 'enemy');
+    NB.Combat.preparePlayerDefense([0]);
+    NB.UI.renderAll();
+  });
+  const exhausted = page.locator('.player-slot').nth(0);
+  const defender = page.locator('.player-slot').nth(1);
+  await expect(exhausted).toContainText('SEM BLOQUEIO');
+  await expect(defender).toContainText('BLOQUEANDO');
+  await defender.click();
+  expect(await page.evaluate(() => NB.State.get().defenseMap)).toEqual({});
+  await defender.click();
+  expect(await page.evaluate(() => NB.State.get().defenseMap)).toEqual({ 0: 1 });
+
+  await page.evaluate(() => {
+    const state = NB.State.get();
+    state.enemy.field[1] = NB.State.createFieldUnit('unit_05', 974, 'enemy');
+    NB.Combat.preparePlayerDefense([0, 1]);
+    NB.UI.renderAll();
+  });
+  await expect(defender).toContainText('SELECIONADO');
+  expect(await page.evaluate(() => NB.State.get().defenseMap)).toEqual({});
+  await page.locator('.enemy-slot').nth(1).click();
+  expect(await page.evaluate(() => NB.State.get().defenseMap)).toEqual({ 1: 1 });
+
+  await page.evaluate(() => {
+    const state = NB.State.get();
+    state.player.field[0].attacked = false;
+    NB.Combat.preparePlayerDefense([0]);
+    NB.UI.renderAll();
+  });
+  expect(await page.evaluate(() => NB.State.get().defenseMap)).toEqual({});
+  await exhausted.click();
+  expect(await page.evaluate(() => NB.State.get().defenseMap)).toEqual({ 0: 0 });
+
+  const hpBefore = await page.evaluate(() => {
+    const state = NB.State.get();
+    state.player.field = [NB.State.createFieldUnit('unit_03', 975, 'player'), null, null];
+    NB.Combat.preparePlayerDefense([0]);
+    NB.State.wait = async () => true;
+    NB.UI.renderAll();
+    return state.player.hp;
+  });
+  await exhausted.click();
+  await page.getByRole('button', { name: 'Confirmar defesa' }).click();
+  await expect.poll(() => page.evaluate(() => NB.State.get().player.hp)).toBeLessThan(hpBefore);
+});
+
 test('supports vigilance, specialized units and temporary protection exploits', async ({ page }) => {
   await page.goto('/');
   const result = await page.evaluate(() => {

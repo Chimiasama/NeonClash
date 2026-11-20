@@ -408,6 +408,24 @@
     await NB.State.wait(360);
   }
 
+  function preparePlayerDefense(attackers) {
+    const state = NB.State.get();
+    state.enemyAttackers = attackers;
+    state.defenseDeclined = false;
+    state.defenseMap = {};
+    state.activeDefenderSlot = null;
+    const eligible = state.player.field.flatMap((unit, slot) => canBlock(unit, state.player) ? [slot] : []);
+    const firewalls = eligible.filter(slot => NB.Cards.hasKeyword(state.player.field[slot], 'FIREWALL'));
+    attackers.forEach((attacker, index) => {
+      if (firewalls[index] !== undefined) state.defenseMap[attacker] = firewalls[index];
+    });
+    if (eligible.length === 1 && !firewalls.length) {
+      if (attackers.length === 1) state.defenseMap[attackers[0]] = eligible[0];
+      else state.activeDefenderSlot = eligible[0];
+    }
+    state.phase = 'PLAYER_DEFENSE';
+  }
+
   async function confirmPlayerDefense() {
     const state = NB.State.get();
     if (state.phase !== 'PLAYER_DEFENSE') return;
@@ -438,7 +456,7 @@
     }
 
     const unblockedEnemies = state.enemyAttackers.filter(eSlot => state.defenseMap[eSlot] === undefined);
-    const idlePlayerFirewalls = freePlayerSlots.filter(pSlot => NB.Cards.hasKeyword(state.player.field[pSlot], 'FIREWALL'));
+    const idlePlayerFirewalls = freePlayerSlots.filter(pSlot => !state.defenseDeclined && NB.Cards.hasKeyword(state.player.field[pSlot], 'FIREWALL'));
     if (unblockedEnemies.length > 0 && idlePlayerFirewalls.length > 0) {
       idlePlayerFirewalls.forEach((pSlot, i) => {
         if (unblockedEnemies[i] !== undefined) {
@@ -477,6 +495,7 @@
     resolveCombatSequence,
     executeOverclockAttack,
     confirmPlayerAttack,
+    preparePlayerDefense,
     confirmPlayerDefense
   };
 })(window.NB = window.NB || {});

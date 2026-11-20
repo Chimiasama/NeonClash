@@ -75,6 +75,7 @@
       selectedAttackers: [],
       overclockUnits: [],
       enemyAttackers: [],
+      defenseDeclined: false,
       enemyOverclock: null, // { slots: [a, b], combinedAtk } quando Archon ativa Overclock
       defenseMap: {},
       activeDefenderSlot: null,

@@ -174,15 +174,7 @@
 
       state.enemy.ram -= NB.Cards.OVERCLOCK_COST;
       state.enemyOverclock = { slots: [slotA, slotB], combinedAtk };
-      state.enemyAttackers = [slotA]; // slotA representa o ataque combinado para bloqueio
-      state.defenseMap = {};
-      state.activeDefenderSlot = null;
-
-      // Pré-conecta Firewall do jogador se existir
-      const pFw = state.player.field.findIndex(u => NB.Combat.canBlock(u, state.player) && NB.Cards.hasKeyword(u, 'FIREWALL'));
-      if (pFw !== -1) state.defenseMap[slotA] = pFw;
-
-      state.phase = 'PLAYER_DEFENSE';
+      NB.Combat.preparePlayerDefense([slotA]);
       NB.Dialogue.setDialogue(NB.Dialogue.pickLine('overclock'));
       NB.Audio.playOverclock();
       NB.Physics.vibrateOverclock();
@@ -212,21 +204,7 @@
       return;
     }
 
-    state.enemyAttackers = chosenAttackers;
-    state.defenseMap = {};
-    state.activeDefenderSlot = null;
-
-    const playerFirewalls = [];
-    state.player.field.forEach((u, idx) => {
-      if (NB.Combat.canBlock(u, state.player) && NB.Cards.hasKeyword(u, 'FIREWALL')) playerFirewalls.push(idx);
-    });
-    playerFirewalls.forEach((pSlot, i) => {
-      if (chosenAttackers[i] !== undefined) {
-        state.defenseMap[chosenAttackers[i]] = pSlot;
-      }
-    });
-
-    state.phase = 'PLAYER_DEFENSE';
+    NB.Combat.preparePlayerDefense(chosenAttackers);
     NB.Dialogue.setDialogue(NB.Dialogue.pickLine('attack'));
     NB.Audio.playAttack();
     NB.Physics.showToast('FASE DE DEFESA!', 'var(--magenta)');

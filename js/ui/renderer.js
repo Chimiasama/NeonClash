@@ -171,20 +171,20 @@
       btnS.textContent = 'CANCELAR';
     } else if (state.phase === 'PLAYER_DEFENSE') {
       strip.classList.add('mode-defense');
-      if (state.enemyOverclock) {
-        lbl.textContent = `⚡ OVERCLOCK ${state.enemyOverclock.combinedAtk} ATK`;
-        hint.textContent = state.activeDefenderSlot !== null
-          ? 'Toque numa unidade ligada do chefe para amortecer'
-          : 'Ataque combinado com Perfuração! Bloqueie ou confirme';
+      lbl.textContent = state.enemyOverclock
+        ? `⚡ OVERCLOCK ${state.enemyOverclock.combinedAtk} ATK` : 'FASE DE DEFESA';
+      if (!state.player.field.some(unit => NB.Combat.canBlock(unit, state.player))) {
+        hint.textContent = 'Sem unidades aptas para bloquear. Confirme para continuar.';
+      } else if (state.enemyAttackers.length === 1) {
+        hint.textContent = Object.keys(state.defenseMap).length
+          ? 'Bloqueio marcado. Toque na sua carta para desmarcar.'
+          : NB.Cards.hasKeyword(state.enemy.field[state.enemyAttackers[0]], 'FIREWALL')
+            ? 'Firewall inimigo. Toque na sua carta para bloquear.'
+            : 'Toque na sua carta para bloquear ou confirme para passar.';
+      } else if (state.activeDefenderSlot !== null) {
+        hint.textContent = 'Toque no atacante que deseja bloquear.';
       } else {
-        lbl.textContent = 'FASE DE DEFESA';
-        if (state.activeDefenderSlot !== null) {
-          hint.textContent = 'Agora toque no atacante INIMIGO para bloquear';
-        } else if (!state.player.field.some(Boolean)) {
-          hint.textContent = 'Sem unidades para bloquear — confirme';
-        } else {
-          hint.textContent = 'Toque sua unidade e depois o atacante inimigo';
-        }
+        hint.textContent = 'Toque na sua unidade e depois no atacante inimigo.';
       }
       btnP.textContent = 'CONFIRMAR DEFESA';
       btnP.classList.add('magenta');

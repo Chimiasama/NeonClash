@@ -181,7 +181,8 @@
 
   scene('vexAlt', 4, 'theatre', 'Conferir o horário do arquivo com Bia', ['vexStub'], 'vexAlt', [
     'Celina abre a sala neutra do Teatro. Vex escondeu Helena ali depois que a ex-auditora descobriu a fraude da Holding Meridiano. Bia compara o selo de horário do arquivo com o canhoto de Cris.',
-    'Helena — Bia assina a conferência comigo. Leva esta chave complementar para Vex. Ela abre o anexo de horário sem expor os hóspedes.'
+    'Helena — Bia assina a conferência comigo. Leva esta chave complementar para Vex. Ela abre o anexo de horário sem expor os hóspedes.',
+    'Bia — Eu fico com a via assinada. Se o horário da outra cópia mudar, temos como provar quando conferimos.'
   ], { when: 'vexAlternative', minutes: 25 });
 
   scene('vexPeace', 4, 'vex', 'Apresentar a conferência testemunhada a Vex', ['vexAlt'], 'vexProof', [
@@ -213,7 +214,7 @@
 
   scene('press', 5, 'square', 'Entregar a cópia de transição à Isa', ['grid'], 'communication', [
     'Isa confere quais nomes vieram com autorização e imprime uma via de serviço sem os dados pessoais.',
-    'Ela leva a cópia à equipe que vai acompanhar a mudança. Kairo pode seguir para o balcão da Torre.'
+    'Isa — Eu levo a cópia à equipe que vai acompanhar a mudança. Você pode seguir para o balcão da Torre.'
   ], { minutes: 20 });
 
   scene('registry', 5, 'registry', 'Pedir a Nalva o histórico do cadastro', ['reserve', 'communication'], 'protocol', [
@@ -277,6 +278,8 @@
     raquel: { name: 'Raquel', art: './avatars/raquel.webp' },
     cris: { name: 'Cris', art: './avatars/cris.webp' },
     vex: { name: 'Vex', art: './avatars/vex.png' },
+    bia: { name: 'Bia', art: './avatars/bia.webp' },
+    isa: { name: 'Isa', art: './avatars/isa.webp' },
     helena: { name: 'Helena', art: './avatars/helena.webp' },
     renan: { name: 'Renan', art: './avatars/renan.webp' },
     nalva: { name: 'Nalva', art: './avatars/nalva.webp' },
@@ -308,8 +311,9 @@
       ...Array(dialogue[5].length),
       { art: './src/assets/comic/barramento-vertice.webp', artTitle: 'O barramento central da Torre Vértice',
         camera: 'wide', mood: 'tense' },
-      { art: './src/assets/comic/barramento-vertice.webp', camera: 'focus-detail', focus: 'center', mood: 'revelation' },
-      { speaker: 'archon', expression: 'alert', bubbleType: 'speech', mood: 'tense' }
+      { art: './src/assets/comic/console-de-archon.webp', artTitle: 'O console mestre da diretoria', camera: 'focus-detail', mood: 'revelation' },
+      { art: './src/assets/comic/nucleo-eclipse.webp', artTitle: 'O Núcleo Eclipse',
+        speaker: 'archon', expression: 'alert', bubbleType: 'speech', camera: 'zoom-in', mood: 'tense' }
     ],
     keys: [
       { camera: 'wide', mood: 'tense', bubbleType: 'thought',
@@ -356,7 +360,7 @@
       { camera: 'focus-detail', focus: 'center', speaker: 'kira', expression: 'alert', bubbleType: 'speech' }
     ],
     meridianoRadio: [
-      { camera: 'wide', mood: 'radio', sfxVisual: { text: 'TRRRIM…', style: 'electric', pos: 'top-right', sound: 'glitch' } },
+      { art: './src/assets/comic/radio-meridiano.webp', artTitle: 'O rádio da interceptação de Meridiano', camera: 'wide', mood: 'radio', sfxVisual: { text: 'TRRRIM…', style: 'electric', pos: 'top-right', sound: 'glitch' } },
       { camera: 'zoom-in', mood: 'radio', speaker: 'archon', expression: 'radio', bubbleType: 'radio' }
     ]
   };
