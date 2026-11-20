@@ -554,6 +554,7 @@
 
     // Configurações & Resetar Save
     const openSettings = () => {
+      document.getElementById('btn-netmap-back').hidden = !document.getElementById('netmap-modal').classList.contains('open');
       NB.Audio.playSelect();
       NB.UI.renderSettingsModal();
       document.getElementById('settings-modal').classList.add('open');

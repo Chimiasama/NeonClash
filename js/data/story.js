@@ -261,5 +261,81 @@
     check: 'Dona Nair abre a página que deixou em branco. Nair — Nesse tempo todo eu fiquei imaginando que parte você achava que eu não aguentava ouvir. Fala agora. Ainda dá para começar a devolver a confiança.'
   };
 
-  NB.StoryData = { chapters, scenes, archonWarning, prologue, alliedLines };
+  const comicPortraits = {
+    kairo: { name: 'Kairo', art: './src/assets/kairo-token.webp' },
+    nair: { name: 'Dona Nair' },
+    nina: { name: 'Nina', art: './avatars/nina.png' },
+    lume: { name: 'Lume', art: './avatars/lume.png' },
+    beto: { name: 'Beto' },
+    mara: { name: 'Mara' },
+    severino: { name: 'Severino' },
+    leila: { name: 'Leila' },
+    kira: { name: 'Kira', art: './avatars/kira.png' },
+    archon: { name: 'Archon', art: './avatars/archon.png' }
+  };
+  const prologueBeats = [
+    { camera: 'wide', mood: 'memory' },
+    { camera: 'pan-left', mood: 'tense', sfxVisual: { text: 'BZZT!', style: 'electric', pos: 'top-right', sound: 'glitch' } },
+    { camera: 'zoom-in', mood: 'revelation', sfxVisual: { text: 'CLACK!', style: 'impact', pos: 'bottom-left', sound: 'clack' } }
+  ];
+
+  const beats = {
+    keys: [
+      { camera: 'focus-detail', focus: 'bottom-right', mood: 'tense', bubbleType: 'thought',
+        interact: { type: 'tap-device', label: 'Testar a chave no leitor', pos: 'bottom-right' },
+        sfxVisual: { text: 'BIP-BIP', style: 'electric', pos: 'top-right', sound: 'beep' } },
+      { camera: 'pan-right', mood: 'memory', sfxVisual: { text: 'CREAK…', style: 'impact', pos: 'bottom-left', sound: 'clack' } }
+    ],
+    nair: [
+      { camera: 'wide', speaker: 'nair', bubbleType: 'speech' },
+      { camera: 'zoom-in', speaker: 'kairo', bubbleType: 'speech', mood: 'tense' },
+      { camera: 'pan-left', speaker: 'nair', bubbleType: 'speech', expression: 'whisper' },
+      { camera: 'focus-detail', focus: 'bottom-right', mood: 'revelation', bubbleType: 'evidence',
+        interact: { type: 'wipe', label: 'Limpar o recibo molhado' },
+        sfxVisual: { text: 'CLACK!', style: 'impact', pos: 'top-right', sound: 'clack' } },
+      { camera: 'zoom-in', speaker: 'kairo', expression: 'shock', bubbleType: 'speech', mood: 'revelation' },
+      { camera: 'wide', speaker: 'nair', bubbleType: 'speech' }
+    ],
+    firstSignal: [
+      { camera: 'focus-detail', focus: 'top-left', mood: 'radio', speaker: 'nina', expression: 'radio', bubbleType: 'radio',
+        art: './src/assets/baixa-luz-map.webp', interact: { type: 'tune', label: 'Sintonizar o rádio de Nina', target: 64 },
+        sfxVisual: { text: 'BZZT!', style: 'electric', pos: 'top-right', sound: 'glitch' } },
+      { camera: 'pan-right', mood: 'radio', speaker: 'nina', expression: 'radio', bubbleType: 'radio' },
+      { camera: 'zoom-in', speaker: 'kairo', bubbleType: 'speech' },
+      { camera: 'wide', mood: 'revelation', speaker: 'nina', bubbleType: 'radio' }
+    ],
+    invoice: [
+      { camera: 'wide', mood: 'neutral' },
+      { camera: 'focus-detail', focus: 'center', mood: 'revelation', speaker: 'lume', expression: 'alert', bubbleType: 'speech' },
+      { camera: 'pan-left', speaker: 'kairo', bubbleType: 'speech' },
+      { camera: 'zoom-in', speaker: 'lume', expression: 'secret', bubbleType: 'speech' }
+    ],
+    delivery: [
+      { camera: 'wide', mood: 'memory' },
+      { camera: 'zoom-in', speaker: 'beto', expression: 'whisper', bubbleType: 'speech' },
+      { camera: 'focus-detail', focus: 'center', mood: 'revelation', bubbleType: 'evidence',
+        sfxVisual: { text: 'CLACK!', style: 'impact', pos: 'top-right', sound: 'clack' } },
+      { camera: 'pan-right', speaker: 'beto', bubbleType: 'speech', mood: 'tense' }
+    ],
+    guard: [{ camera: 'wide' }, { camera: 'pan-right', mood: 'tense' }, { camera: 'focus-detail', focus: 'center' }],
+    kiraDeal: [
+      { camera: 'wide', speaker: 'kira', bubbleType: 'speech', mood: 'tense' },
+      { camera: 'zoom-in', speaker: 'kairo', bubbleType: 'speech' },
+      { camera: 'pan-left', mood: 'memory' },
+      { camera: 'focus-detail', focus: 'center', speaker: 'kira', expression: 'alert', bubbleType: 'speech' }
+    ],
+    meridianoRadio: [
+      { camera: 'wide', mood: 'radio', sfxVisual: { text: 'BZZT!', style: 'electric', pos: 'top-right', sound: 'glitch' } },
+      { camera: 'zoom-in', mood: 'radio', speaker: 'archon', expression: 'radio', bubbleType: 'radio' }
+    ]
+  };
+  for (const scene of scenes) {
+    if (beats[scene.id]) scene.beats = beats[scene.id];
+    else if (scene.chapter < 2) scene.beats = [
+      { camera: 'wide' }, { camera: 'zoom-in', mood: 'tense' },
+      { camera: 'focus-detail', focus: 'center', mood: 'revelation' }
+    ];
+  }
+
+  NB.StoryData = { chapters, scenes, archonWarning, prologue, alliedLines, prologueBeats, comicPortraits };
 })(window.NB = window.NB || {});

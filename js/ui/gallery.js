@@ -43,6 +43,16 @@
       add(district.scene, district.name, scenery[district.id] || `${district.name}, ponto de encontro com ${district.npc.split(' · ')[0]}.`, 'scenes');
       add(district.portrait, district.npc, `Retrato de personagem em ${district.name}.`, 'people');
     }
+    for (const scene of NB.StoryData.scenes) {
+      for (const beat of scene.beats || []) {
+        if (beat.art && !catalog.has(beat.art)) add(beat.art, beat.artTitle || scene.title, 'Quadro da investigação de Kairo.', 'scenes');
+      }
+    }
+    for (const person of Object.values(NB.StoryData.comicPortraits)) {
+      for (const source of Object.values(person.variants || {})) {
+        add(source, person.name, 'Retrato usado na webcomic de Baixa Luz.', 'people');
+      }
+    }
     for (const card of Object.values(NB.Cards.CARD_DB)) {
       add(card.img, card.name, [card.lore, card.desc].filter(Boolean).join(' '), 'cards');
       catalog.get(card.img).card = card;
@@ -50,7 +60,7 @@
   }
 
   function sourceOf(element) {
-    if (element.closest('#gallery-modal, .col-card.locked')) return null;
+    if (element.closest('#gallery-modal, .col-card.locked') || element.matches('.comic-art img')) return null;
     return element.dataset.galleryArt || element.getAttribute('src');
   }
 
@@ -181,7 +191,6 @@
     setupCatalog();
     bindDiscovery();
     $('btn-title-gallery').addEventListener('click', open);
-    $('btn-city-gallery').addEventListener('click', open);
     $('gallery-close').addEventListener('click', close);
     $('gallery-back').addEventListener('click', handleBack);
     $('gallery-filter').addEventListener('change', () => renderList());

@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="./css/campaign.css" />
   <link rel="stylesheet" href="./css/deckbuilder.css" />
   <link rel="stylesheet" href="./css/city.css" />
+  <link rel="stylesheet" href="./css/comic.css" />
 </head>
 <body>
   <div id="console-shell">
@@ -180,16 +181,10 @@
           <button id="prologue-close" class="hud-btn" type="button">Voltar</button>
         </header>
         <section class="adventure-prologue" aria-label="Prólogo de Kairo">
-          <figure>
-            <img id="prologue-art" alt="">
-            <figcaption aria-live="polite">
-              <h2 id="prologue-title"></h2>
-              <p id="prologue-text"></p>
-            </figcaption>
-          </figure>
+          <div id="prologue-comic" class="comic-strip" aria-label="Quadros do prólogo" tabindex="0"></div>
           <nav aria-label="Páginas do prólogo">
             <button id="prologue-prev" type="button" aria-label="Quadro anterior">‹</button>
-            <span id="prologue-page"></span>
+            <span id="prologue-page" aria-live="polite"></span>
             <button id="prologue-next" type="button" aria-label="Próximo quadro">›</button>
           </nav>
           <div class="prologue-actions">
@@ -236,19 +231,13 @@
           </div>
         </div>
         <nav class="city-nav" aria-label="Navegação da cidade">
-          <div class="city-nav-main">
-            <button id="city-map-tab" type="button">Mapa</button>
-            <button id="city-story" type="button" aria-pressed="false">Investigação</button>
-            <button id="city-atlas" type="button" aria-pressed="false">Bairros</button>
-            <button id="city-bag" type="button" aria-pressed="false">Mochila</button>
-            <button id="city-journal" type="button" aria-pressed="false">Pistas</button>
-          </div>
-          <div class="city-nav-more">
-            <button id="btn-netmap-deck" type="button">Meu Deck</button>
-            <button id="btn-city-gallery" type="button">Galeria</button>
-            <button id="btn-netmap-settings" type="button">Config.</button>
-            <button id="btn-netmap-back" type="button">Início</button>
-          </div>
+          <button id="city-map-tab" type="button" aria-label="Mapa" title="Mapa"><span aria-hidden="true">🗺</span></button>
+          <button id="city-story" type="button" aria-label="Investigação" title="Investigação" aria-pressed="false"><span aria-hidden="true">⌕</span></button>
+          <button id="city-atlas" type="button" aria-label="Bairros" title="Bairros" aria-pressed="false"><span aria-hidden="true">▦</span></button>
+          <button id="city-bag" type="button" aria-label="Mochila" title="Mochila" aria-pressed="false"><span aria-hidden="true">🎒</span></button>
+          <button id="city-journal" type="button" aria-label="Pistas" title="Pistas" aria-pressed="false"><span aria-hidden="true">◆</span></button>
+          <button id="btn-netmap-deck" type="button" aria-label="Meu Deck" title="Meu Deck"><span aria-hidden="true">▤</span></button>
+          <button id="btn-netmap-settings" type="button" aria-label="Config." title="Config."><span aria-hidden="true">⚙</span></button>
         </nav>
       </section>
     </div>
@@ -285,12 +274,9 @@
           <div><p class="title-sub" id="story-chapter"></p><h2 id="story-title"></h2></div>
           <button id="btn-story-close" class="hud-btn chamfer-sm" type="button">VOLTAR</button>
         </header>
-        <div class="story-reading" tabindex="0">
-          <img id="story-art" alt="" hidden />
-          <p id="story-line" aria-live="polite"></p>
-        </div>
+        <div id="story-comic" class="story-reading comic-strip" aria-label="Quadros da cena" tabindex="0"></div>
         <footer class="story-actions">
-          <p id="story-page"></p>
+          <p id="story-page" aria-live="polite"></p>
           <div id="story-options"></div>
         </footer>
       </section>
@@ -331,6 +317,7 @@
           </div>
           <button id="btn-settings-close" class="hud-btn chamfer-sm" type="button">FECHAR</button>
         </div>
+        <button id="btn-netmap-back" class="hud-btn chamfer-sm" type="button" hidden>Voltar ao início</button>
         <div class="settings-row">
           <span>ÁUDIO</span>
           <button id="btn-settings-sound" class="hud-btn chamfer-sm muted-sound" type="button">SOM: OFF</button>

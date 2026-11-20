@@ -158,6 +158,8 @@
       const place = districts.find(item => item.id === pin.dataset.district);
       const types = markers.get(place.id);
       applyMarkers(pin, types);
+      pin.classList.toggle('city-pin-labeled', types.includes('clue') || place.id === destination ||
+        place.id === district.id || Boolean(area));
       pin.hidden = (mapFilter !== 'all' && !types.includes(mapFilter)) || Boolean(area && !area.locations.includes(place.id));
       const locked = Boolean(access(place));
       pin.classList.toggle('city-locked', locked);

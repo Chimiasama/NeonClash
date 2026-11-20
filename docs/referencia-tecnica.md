@@ -9,12 +9,12 @@ NeonClash é um jogo solo em português que combina exploração urbana, investi
 | Superfície | Comportamento |
 | --- | --- |
 | Início | Exibe progresso, início da aventura, duelo rápido, coleção, galeria e volume/configurações. A primeira entrada na aventura apresenta três quadros do prólogo. Concluir ou pular marca a apresentação no save e inicia a investigação com a Casa de Kairo em destaque. |
-| Cidade | Área rolável com relógio, créditos, energia, mapa, legenda com filtros e detalhes. A barra inferior mantém Mapa, Investigação, Bairros, Mochila, Pistas, Meu Deck, Galeria, Config. e Início acessíveis. |
+| Cidade | Área rolável com relógio, créditos, energia, mapa, legenda com filtros e detalhes. A barra inferior usa ícones com nomes acessíveis para Mapa, Investigação, Bairros, Mochila, Pistas, Meu Deck e Configurações. O retorno ao início fica dentro de Configurações. |
 | Investigação | Mostra passos disponíveis, viagens até os locais, cenas paginadas com retomada, decisões e provas já reunidas. Há destaque neon para ações relevantes. |
 | Mercado e oficina | Compra de cartas na Feira. A oficina de Lume tem vitrine ilustrada das unidades possuídas, prévia de afinidade e confirmação. |
 | Duelo | Dossiê com voltar ou iniciar, tabuleiro com três posições por lado, mão, visor de cartas, indicação de fase, previsão de defesa e tela de estatísticas/recompensas. |
 | Coleção | Busca textual sem distinção de acentos, filtros, três baralhos, autocompletar e inspetor ampliado. |
-| Galeria | Reúne cenas, retratos e cartas vistas, com visualização sem recorte e descrição. Acessível pelo início e pela cidade. |
+| Galeria | Reúne cenas, retratos e cartas vistas, com visualização sem recorte e descrição. Acessível pelo menu inicial. |
 | Configurações | Som geral, volume independente para música e efeitos e confirmação de reset do progresso. O painel de artes do combate mostra o estado dos recursos. |
 
 ## Estrutura e fluxo de execução
@@ -47,7 +47,7 @@ Uma partida nova começa na Estação Fantasma às 08:00 do dia 1, com 35 crédi
 
 ## Cidade, tempo e economia
 
-O atlas contém 10 bairros, 23 locais e um elenco ligado a cenas, serviços e duelos. O mapa oferece os 23 locais em posições ilustrativas, com ícones de tipos de lugar. **Bairros** filtra o próprio mapa. Uma viagem tem cotação e execução. Abrir a cotação não cobra nem avança o relógio. Ao escolher transporte, o motor verifica disponibilidade, cobra a tarifa, salva a posição de destino e aplica tempo e energia.
+O atlas contém 10 bairros, 23 locais e um elenco ligado a cenas, serviços e duelos. O mapa oferece os 23 locais em posições ilustrativas, com ícones compactos e nomes para o destino ativo, a posição atual e lugares destacados. **Bairros** filtra o próprio mapa. Uma viagem tem cotação e execução. Abrir a cotação não cobra nem avança o relógio. Ao escolher transporte, o motor verifica disponibilidade, cobra a tarifa, salva a posição de destino e aplica tempo e energia.
 
 A distância é `max(2, ceil(hypot(Δx, Δy) / 10))` com as coordenadas do mapa. Na tabela, `d` representa essa distância.
 
@@ -161,6 +161,23 @@ Unidades são instâncias de campo com UID, ATK e DEF atuais, DEF máxima, afini
 | Ruído na Escuta | Escuta do Cais e Ferrugem Óptica |
 | Frequência Cruzada | Condutor Bifásico e Ponte Dupla |
 
+## Leitor de Webcomic Cinética
+
+O prólogo e o leitor de investigação usam uma tira rolável progressiva. `Continuar` ou tocar no quadro ativo revela o próximo beat. Os anteriores ficam acima com `.comic-panel--past`. O leitor centraliza o novo quadro quando há espaço de rolagem e respeita a configuração de movimento reduzido. `story.read` mantém o índice de cena já existente. `story.prologueFrame` guarda a posição no prólogo e `story.comicDone` guarda ações concluídas por ID de cena e índice. Campos ausentes recebem os padrões no carregamento.
+
+| Metadado | Uso |
+| --- | --- |
+| `scene.beats[index]` e `prologueBeats[index]` | Extensões opcionais por índice. Textos de `scene.lines` e os índices existentes continuam válidos. |
+| `art`, `artTitle` | Imagem opcional que substitui a do local e título para o registro na Galeria. |
+| `camera`, `focus` | `wide`, `zoom-in`, `focus-detail`, `pan-left` e `pan-right`. O foco aceita `top-left`, `center` e `bottom-right`. |
+| `mood` | `neutral`, `tense`, `revelation`, `radio` ou `memory`, com iluminação e efeitos próprios. |
+| `speaker`, `expression` | Chave do retrato em `comicPortraits` e atuação `default`, `alert`, `shock`, `whisper`, `secret` ou `radio`. Variantes de arquivo são opcionais. A base e os monogramas cobrem o elenco com o material atual. |
+| `bubbleType` | `speech`, `thought`, `radio`, `narration` e `evidence`. Kairo fala pela esquerda e os NPCs pela direita. |
+| `sfxVisual` | `text`, `style`, `pos` e `sound`. O efeito visual acompanha o som configurado e a vibração breve em dispositivo compatível. |
+| `interact` | `tap-device`, `wipe` e `tune`. Os dois primeiros aceitam botão, e o recibo também aceita gesto de limpeza. O rádio usa um controle deslizante com faixa indicada. Ações pendentes bloqueiam o avanço. |
+
+A Galeria registra o quadro quando sua imagem termina de carregar e a moldura aparece na tela. O [plano de arte](plano-arte-webcomic.md) organiza os novos cenários, retratos e detalhes em levas.
+
 ## Artes, áudio e navegação no Android
 
 - O jogo usa imagens locais, principalmente WebP e PNG. A arte procedural serve como fallback. A galeria cadastra a abertura, o mapa, o marcador, os quadros do prólogo, imagens de locais, retratos e cartas. O observador de interseção registra imagens carregadas que atingem 50% da área visível, excluindo conteúdo inerte, miniaturas bloqueadas da coleção e a própria galeria. Abrir o inspetor de uma carta bloqueada conta como ver sua arte. Categorias vazias e artes não vistas não antecipam conteúdo.
@@ -173,7 +190,7 @@ Unidades são instâncias de campo com UID, ATK e DEF atuais, DEF máxima, afini
 | Item | Configuração |
 | --- | --- |
 | Web | Node.js 24 e npm. `npm ci`, `npm run dev` (porta 3000), `npm run lint` (TypeScript), `npm run build` e `npm run preview`. |
-| Testes | `tests/game.spec.js` tem 47 cenários Playwright. Usa perfil Pixel 7 e o build servido na porta 4317. Cobre combate, campanha, cidade, economia, galeria, áudio, deck e navegação. Para rodar localmente, gere `dist`, instale Chromium com `npx playwright install chromium` ou defina `CHROMIUM_PATH`, e execute `npm test`. |
+| Testes | `tests/game.spec.js` tem 48 cenários Playwright. Usa perfil Pixel 7 e o build servido na porta 4317. Cobre combate, campanha, cidade, economia, galeria, áudio, deck e navegação. Para rodar localmente, gere `dist`, instale Chromium com `npx playwright install chromium` ou defina `CHROMIUM_PATH`, e execute `npm test`. |
 | Android | Application ID `io.github.chimiasama.neonclash`, versão `0.1.0` e código 1. JDK 17, AGP 9.5.1, Gradle 9.9.2, SDK alvo/compile 35, mínimo 23 e Build Tools 36.0.0. A Activity usa orientação retrato. |
 | APK | Depois do build web, execute `./gradlew :app:assembleDebug` em `android/`. Saída `android/app/build/outputs/apk/debug/app-debug.apk`, com assinatura de depuração. |
 | CI | `.github/workflows/android.yml` usa Linux, Chrome preinstalado quando disponível e Chromium Playwright como alternativa. Executa lint, build e testes, gera o APK, verifica assinatura e arquivos internos e publica `NeonClash-debug` como artefato. Gatilhos configurados para push/PR na `main` e execução manual. |

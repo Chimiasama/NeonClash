@@ -27,7 +27,12 @@
     const nairTruthEarly = typeof raw?.nairTruthEarly === 'boolean' ? raw.nairTruthEarly :
       choices.tellingNair ? choices.tellingNair === 'tell' : null;
     return { started: raw?.started === true || prologueSeen, chapter, flags, choices, read, evidence,
-      allies, nairTruthEarly, kiraSupportUsed: raw?.kiraSupportUsed === true };
+      allies, nairTruthEarly, kiraSupportUsed: raw?.kiraSupportUsed === true,
+      prologueFrame: Number.isInteger(raw?.prologueFrame) && raw.prologueFrame >= 0 && raw.prologueFrame < NB.StoryData.prologue.length ? raw.prologueFrame : 0,
+      comicDone: Object.fromEntries(Object.entries(raw?.comicDone || {}).flatMap(([id, frames]) => {
+        if (!sceneById[id]?.beats || !Array.isArray(frames)) return [];
+        return [[id, [...new Set(frames.filter(index => Number.isInteger(index) && sceneById[id].beats[index]?.interact))]]];
+      })) };
   }
 
   const get = () => NB.Save.get().story;

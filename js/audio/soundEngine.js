@@ -344,6 +344,13 @@
       carrier.stop(time + length);
     },
 
+    playComicCue(cue) {
+      const patch = { glitch: 'virus', clack: 'clash', beep: 'select', zap: 'laser' }[cue];
+      if (!patch) return;
+      this.playEffect(patch);
+      if (navigator.userActivation?.hasBeenActive) navigator.vibrate?.(12);
+    },
+
     playSelect() { this.playEffect('select'); },
     playDraw() { this.playEffect('draw'); },
     playSummon() { this.playEffect('summon'); },

@@ -578,7 +578,13 @@ test('resumes the prologue after reload and earns Kira’s proof by doing a favo
     const dialog = page.getByRole('dialog', { name: title });
     await expect(dialog).toBeVisible();
     const next = dialog.getByRole('button', { name: 'Continuar', exact: true });
-    while (await next.isVisible()) await next.click();
+    while (await next.isVisible()) {
+      const tap = dialog.getByRole('button', { name: /Testar a chave no leitor|Limpar o recibo molhado/ });
+      if (await tap.isVisible()) await tap.click();
+      const tuning = dialog.getByRole('slider');
+      if (await tuning.isVisible()) await tuning.fill('64');
+      await next.click();
+    }
     await dialog.getByRole('button', { name: last, exact: true }).click();
     await expect(dialog).toBeHidden();
   };
@@ -890,7 +896,10 @@ test('archives only displayed artwork and reopens full art with its description 
   await expect(page.locator('#btn-title-gallery')).toBeFocused();
   await enterCity(page);
   await expect.poll(before).toContain('./src/assets/baixa-luz-map.webp');
-  await page.locator('#btn-city-gallery').click();
+  await expect(page.getByRole('navigation', { name: 'Navegação da cidade' }).getByRole('button', { name: 'Galeria' })).toHaveCount(0);
+  await page.locator('#btn-netmap-settings').click();
+  await page.getByRole('button', { name: 'Voltar ao início' }).click();
+  await page.locator('#btn-title-gallery').click();
   await gallery.getByLabel('Categoria').selectOption('scenes');
   await expect(gallery.getByRole('button', { name: 'Mapa de Baixa Luz' })).toBeVisible();
   await expect(gallery.getByRole('button', { name: /Kira · contrabandista/ })).toHaveCount(0);
@@ -1286,4 +1295,53 @@ test('applies Nair solidarity at the counter and preserves Helena’s evidence a
     await expect(reader.locator('#story-options').getByText(/^Kairo —/)).toBeVisible();
     await reader.getByRole('button', { name: 'VOLTAR', exact: true }).click();
   }
+});
+
+test('reveals and saves comic beats with tactile key, wipe and radio controls', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 640 });
+  await page.goto('/');
+  await page.locator('#btn-start-campaign').click();
+  await page.locator('#prologue-comic .comic-panel--active').click();
+  await expect(page.locator('#prologue-page')).toHaveText('2 / 3');
+  await expect(page.locator('#prologue-comic .comic-panel--past')).toHaveCount(1);
+  await page.reload();
+  await page.locator('#btn-start-campaign').click();
+  await expect(page.locator('#prologue-page')).toHaveText('2 / 3');
+  await page.getByRole('button', { name: 'Pular prólogo' }).click();
+  await walkTo(page, page.locator('[data-district="home"]'));
+  await page.getByRole('button', { name: 'Testar o leitor e a chave' }).click();
+  const next = page.getByRole('button', { name: 'Continuar', exact: true });
+  await expect(next).toBeDisabled();
+  await page.getByRole('button', { name: 'Testar a chave no leitor' }).tap();
+  await expect(next).toBeEnabled();
+  await expect(page.locator('#story-line')).toBeVisible();
+  await next.click();
+  await expect(page.locator('#story-comic .comic-panel--past')).toHaveCount(1);
+  await page.getByRole('button', { name: 'Registrar e sair' }).click();
+
+  await page.getByRole('button', { name: 'Ler as faturas com Dona Nair' }).click();
+  for (let i = 0; i < 3; i++) await next.click();
+  await expect(page.locator('#story-comic .comic-panel--past')).toHaveCount(3);
+  await expect(next).toBeDisabled();
+  const receipt = page.locator('#story-comic .comic-panel--active .comic-art');
+  await receipt.scrollIntoViewIfNeeded();
+  const box = await receipt.boundingBox();
+  await page.mouse.move(box.x + 20, box.y + 24);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 58, box.y + 24, { steps: 4 });
+  await page.mouse.up();
+  await expect(next).toBeEnabled();
+  await page.reload();
+  await enterCity(page);
+  await page.getByRole('button', { name: 'Ler as faturas com Dona Nair' }).click();
+  await expect(page.locator('#story-page')).toContainText('4 /');
+  await expect(next).toBeEnabled();
+  while (await next.isVisible()) await next.click();
+  await page.getByRole('button', { name: 'Registrar e sair' }).click();
+
+  await walkTo(page, page.locator('[data-district="relay"]'));
+  await page.getByRole('button', { name: 'Levar a cópia do recibo à Antena' }).click();
+  await expect(next).toBeDisabled();
+  await page.getByRole('slider', { name: 'Sintonizar o rádio de Nina' }).fill('64');
+  await expect(next).toBeEnabled();
 });
