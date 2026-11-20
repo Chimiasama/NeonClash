@@ -899,11 +899,12 @@ test('counts card images in view without archiving offscreen or locked collectio
 });
 
 test('keeps city navigation in place when reading investigation or district details', async ({ page }) => {
-  await page.setViewportSize({ width: 360, height: 600 });
+  await page.setViewportSize({ width: 320, height: 568 });
   await page.goto('/');
   await enterCity(page);
   const nav = page.getByRole('navigation', { name: 'Navegação da cidade' });
   const expectedPosition = await nav.boundingBox();
+  expect(await nav.getByRole('button', { name: 'Investigação' }).evaluate(button => button.scrollWidth <= button.clientWidth)).toBe(true);
   await nav.getByRole('button', { name: 'Investigação' }).click();
   await expect(page.getByRole('button', { name: 'Começar investigação' })).toBeInViewport();
   expect(await nav.boundingBox()).toEqual(expectedPosition);

@@ -370,6 +370,7 @@
 }
 
 .adventure-prologue {
+  flex: none;
   background: #111927;
   border: 1px solid #385264;
   border-radius: 6px;
@@ -379,7 +380,7 @@
 .adventure-prologue img {
   display: block;
   width: 100%;
-  height: clamp(110px, 32dvh, 280px);
+  height: clamp(110px, 28dvh, 280px);
   object-fit: contain;
 }
 .adventure-prologue figcaption { padding: 8px 12px 1px; }
@@ -431,6 +432,7 @@
 
 .prologue-panel { max-width: 550px; max-height: 100%; overflow-y: auto; border-radius: 8px; }
 .prologue-panel header { flex: none; }
+.prologue-panel header h2 { font-size: clamp(17px, 5.8vw, 23px); }
 .prologue-actions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; padding: 8px; }
 .adventure-prologue .prologue-actions button {
   min-height: 42px;

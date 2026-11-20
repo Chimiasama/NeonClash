@@ -70,7 +70,7 @@
   border-top: 1px solid #3c546a;
 }
 .city-nav-main, .city-nav-more { display: grid; gap: 4px; }
-.city-nav-main { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.city-nav-main { grid-template-columns: minmax(0, 1fr) minmax(74px, 1.25fr) repeat(3, minmax(0, 1fr)); }
 .city-nav-more { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .city-panel .city-nav button {
   padding-inline: 2px;
