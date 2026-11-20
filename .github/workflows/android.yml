@@ -1,0 +1,53 @@
+name: Testes e APK Android
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm test
+        env:
+          CI: true
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Instalar SDK Android 35
+        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Gerar APK de teste
+        working-directory: android
+        run: ./gradlew --no-daemon :app:assembleDebug
+      - name: Verificar APK
+        run: |
+          apk=android/app/build/outputs/apk/debug/app-debug.apk
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify "$apk"
+          entries=$(unzip -Z -1 "$apk")
+          grep -Fx 'assets/index.html' <<< "$entries"
+          grep -Fx 'assets/js/ui/city.js' <<< "$entries"
+          grep -Fx 'assets/avatars/risco.webp' <<< "$entries"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NeonClash-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error

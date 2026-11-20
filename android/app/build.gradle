@@ -1,0 +1,40 @@
+plugins {
+    id 'com.android.application' version '8.7.3'
+}
+
+def webBuild = rootProject.layout.projectDirectory.dir('../dist')
+def verifyWebBuild = tasks.register('verifyWebBuild') {
+    inputs.dir(webBuild)
+    doLast {
+        if (!webBuild.file('index.html').asFile.isFile() ||
+                !webBuild.file('js/main.js').asFile.isFile()) {
+            throw new GradleException('Run npm run build before assembling the Android app.')
+        }
+    }
+}
+
+android {
+    namespace 'io.github.chimiasama.neonclash'
+    compileSdk 35
+    buildToolsVersion '35.0.0'
+
+    defaultConfig {
+        applicationId 'io.github.chimiasama.neonclash'
+        minSdk 23
+        targetSdk 35
+        versionCode 1
+        versionName '0.1.0'
+    }
+
+    sourceSets {
+        main.assets.srcDirs = [webBuild]
+    }
+}
+
+tasks.named('preBuild').configure {
+    dependsOn verifyWebBuild
+}
+
+dependencies {
+    implementation 'androidx.webkit:webkit:1.12.1'
+}

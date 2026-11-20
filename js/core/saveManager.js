@@ -80,6 +80,7 @@
       clues: [],
       unlockedCards: starter,
       customDeck: buildBalancedDeck(starter, []),
+      city: { credits: 35, district: 'kira', traced: [] },
       wins: 0,
       matches: 0
     };
@@ -108,6 +109,11 @@
           clues: Array.isArray(parsed.clues) ? parsed.clues : def.clues,
           unlockedCards,
           customDeck: finalDeck,
+          city: {
+            credits: Number.isSafeInteger(parsed.city?.credits) && parsed.city.credits >= 0 ? parsed.city.credits : def.city.credits,
+            district: typeof parsed.city?.district === 'string' ? parsed.city.district : def.city.district,
+            traced: Array.isArray(parsed.city?.traced) ? parsed.city.traced.filter(id => typeof id === 'string') : []
+          },
           wins: Number(parsed.wins) || 0,
           matches: Number(parsed.matches) || 0
         };
@@ -176,6 +182,7 @@
     const isFirstClear = !s.defeatedBosses.includes(boss.id);
     if (isFirstClear) {
       s.defeatedBosses.push(boss.id);
+      s.city.credits += NB.CityData.campaignCredits(boss);
     }
 
     if (!s.clues.some(c => c.bossId === boss.id)) {

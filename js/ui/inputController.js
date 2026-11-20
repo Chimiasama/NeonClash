@@ -14,6 +14,9 @@
     NB.UI.closeVisor();
     NB.Physics.clearLasers();
     NB.Physics.cancelUiTransitions();
+    NB.State.cancelPending();
+    document.getElementById('game-ui').inert = true;
+    NB.Audio.setScene('city');
     NB.UI.renderTitleStats();
     document.getElementById('title-modal').classList.add('open');
   }
@@ -23,22 +26,21 @@
     NB.UI.closeVisor();
     NB.Physics.clearLasers();
     NB.Physics.cancelUiTransitions();
-    document.getElementById('clues-drawer').classList.remove('open');
-    document.getElementById('netmap-nodes').style.display = 'flex';
-    NB.UI.renderNetMap();
-    document.getElementById('netmap-modal').classList.add('open');
+    NB.State.cancelPending();
+    NB.Audio.setScene('city');
+    NB.City.open();
   }
 
   function startMatch(options = {}) {
     const mode = options.mode || 'campaign';
     const boss = options.boss || (mode === 'quick' ? NB.Campaign.getRandomBoss() : NB.Campaign.NODES[0]);
 
-    if (!NB.Audio.isEnabled() && options.autoSound !== false) {
-      NB.Audio.setEnabled(true);
-    }
+    if (options.autoSound !== false) NB.Audio.activateOnEntry();
 
     hideAllScreens();
-    NB.State.reset({ mode, boss });
+    document.getElementById('game-ui').inert = false;
+    NB.Audio.setScene('duel');
+    NB.State.reset({ mode, boss, stake: options.stake });
     NB.UI.closeVisor();
     NB.Physics.clearLasers();
     NB.UI.renderEnemyAvatar(boss);
@@ -355,7 +357,7 @@
 
     // Navegação Tela Inicial
     document.getElementById('btn-start-campaign').addEventListener('click', () => {
-      if (!NB.Audio.isEnabled()) NB.Audio.setEnabled(true);
+      NB.Audio.activateOnEntry();
       NB.Audio.playSelect();
       NB.Physics.vibrateCard();
       openNetMap();
@@ -380,22 +382,16 @@
       NB.Audio.playSelect();
       openTitleScreen();
     });
-    document.getElementById('btn-toggle-clues').addEventListener('click', () => {
-      NB.Audio.playSelect();
-      const drawer = document.getElementById('clues-drawer');
-      const nodes = document.getElementById('netmap-nodes');
-      const opening = !drawer.classList.contains('open');
-      drawer.classList.toggle('open', opening);
-      nodes.style.display = opening ? 'none' : 'flex';
-    });
-
     // Dossiê do Alvo
     document.getElementById('btn-dossier-back').addEventListener('click', () => {
       NB.Audio.playSelect();
       document.getElementById('dossier-modal').classList.remove('open');
+      document.querySelector('.city-panel').inert = false;
+      document.querySelector('#city-content button')?.focus();
     });
     document.getElementById('btn-dossier-duel').addEventListener('click', (e) => {
       const bossId = e.currentTarget.dataset.bossId;
+      if (NB.City.access(NB.CityData.districts.find(district => district.id === bossId))) return;
       const boss = NB.Campaign.getNodeById(bossId);
       NB.Physics.vibrateExploit();
       startMatch({ mode: 'campaign', boss });
@@ -422,11 +418,13 @@
     document.getElementById('btn-top-menu').addEventListener('click', () => {
       NB.Audio.playSelect();
       const state = NB.State.get();
-      if (state && state.mode === 'campaign') openNetMap();
+      if (state.mode === 'arena' && state.stake && !state.winner && !window.confirm(`Sair encerra o duelo e perde ${state.stake} créditos. Sair mesmo assim?`)) return;
+      if (state && (state.mode === 'campaign' || state.mode === 'arena')) openNetMap();
       else openTitleScreen();
     });
 
     // Áudio
+    document.getElementById('btn-title-sound').addEventListener('click', () => NB.Audio.toggle());
     document.getElementById('btn-sound').addEventListener('click', () => NB.Audio.toggle());
     document.getElementById('btn-settings-sound').addEventListener('click', () => NB.Audio.toggle());
 
@@ -461,7 +459,7 @@
       NB.Physics.vibrateDamage();
       NB.UI.renderSettingsModal();
       NB.UI.renderTitleStats();
-      NB.UI.renderNetMap();
+      NB.City.resetView();
       NB.Physics.showToast('SAVE RESETADO COM SUCESSO', 'var(--amber)');
     });
 
@@ -471,7 +469,6 @@
       document.getElementById('png-modal').classList.add('open');
     };
     document.getElementById('btn-png-modal').addEventListener('click', openPng);
-    document.getElementById('btn-title-png').addEventListener('click', openPng);
     document.getElementById('btn-png-close').addEventListener('click', () => {
       document.getElementById('png-modal').classList.remove('open');
     });

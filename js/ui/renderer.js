@@ -404,7 +404,7 @@
     const box = document.getElementById('enemy-avatar-box');
     box.innerHTML = '';
     box.style.borderColor = target.accent || 'var(--magenta)';
-    box.appendChild(NB.Sprites.createArtMarkup(target.id, target.avatar, target.fullTitle));
+    box.appendChild(NB.Sprites.createArtMarkup(target.id, target.avatar, target.fullTitle, target.fallbackArt));
   }
 
   /* Tela Inicial — Estatísticas do Save */
@@ -414,91 +414,10 @@
     if (el) {
       el.innerHTML = `
         <span>NÓS INVADIDOS: ${save.defeatedBosses.length}/4</span>
-        <span>CARTAS: ${save.unlockedCards.length}/20</span>
+        <span>CARTAS: ${save.unlockedCards.length}/${Object.keys(NB.Cards.CARD_DB).length}</span>
         <span>PISTAS: ${save.clues.length}/4</span>
       `;
     }
-  }
-
-  /* Mapa da Net Interativo (4 Nós + Pistas Coletadas) */
-  function renderNetMap() {
-    const container = document.getElementById('netmap-nodes');
-    container.innerHTML = '';
-    const save = NB.Save.get();
-
-    document.getElementById('btn-toggle-clues').textContent = `PISTAS (${save.clues.length}/4)`;
-
-    NB.Campaign.NODES.forEach((node, idx) => {
-      if (idx > 0) {
-        const conn = document.createElement('div');
-        conn.className = 'node-connector' + (NB.Save.isNodeUnlocked(idx) ? ' active' : '');
-        container.appendChild(conn);
-      }
-
-      const unlocked = NB.Save.isNodeUnlocked(idx);
-      const cleared = NB.Save.isNodeDefeated(node.id);
-      const statusCls = cleared ? 'status-cleared' : (unlocked ? 'status-active' : 'status-locked');
-      const badgeCls = cleared ? 'cleared' : (unlocked ? 'active' : 'locked');
-      const badgeText = cleared ? 'INVADIDO ✓' : (unlocked ? 'ALVO ATIVO' : 'BLOQUEADO');
-
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = `net-node-card chamfer-sm ${statusCls}`;
-      btn.disabled = !unlocked;
-
-      const av = document.createElement('div');
-      av.className = 'node-avatar chamfer-sm';
-      av.style.color = unlocked ? node.accent : '#556078';
-      av.appendChild(NB.Sprites.createArtMarkup(node.id, node.avatar, node.fullTitle));
-
-      const meta = document.createElement('div');
-      meta.className = 'node-meta';
-      meta.innerHTML = `
-        <span class="node-code">${node.nodeCode} · ${node.hp} HP</span>
-        <span class="node-name">${node.name}</span>
-        <span class="node-role">${node.title}</span>
-        <span class="node-archetype">${node.archetype}</span>
-      `;
-
-      const tag = document.createElement('span');
-      tag.className = `node-state-tag ${badgeCls}`;
-      tag.textContent = badgeText;
-
-      btn.appendChild(av);
-      btn.appendChild(meta);
-      btn.appendChild(tag);
-
-      if (unlocked) {
-        btn.addEventListener('click', () => {
-          NB.Audio.playSelect();
-          NB.Physics.vibrateCard();
-          openDossier(node.id);
-        });
-      }
-
-      container.appendChild(btn);
-    });
-
-    renderCluesDrawer();
-  }
-
-  function renderCluesDrawer() {
-    const drawer = document.getElementById('clues-drawer');
-    const save = NB.Save.get();
-    drawer.innerHTML = '';
-    if (save.clues.length === 0) {
-      drawer.innerHTML = `<div class="story-box" style="text-align:center;color:var(--text-muted)">Nenhuma pista extraída ainda. Derrote o Nó 01 (KIRA) para iniciar sua investigação.</div>`;
-      return;
-    }
-    save.clues.forEach(c => {
-      const box = document.createElement('div');
-      box.className = 'clue-item chamfer-sm';
-      box.innerHTML = `
-        <div class="clue-item-title">${c.title}</div>
-        <div class="clue-item-text">${c.text}</div>
-      `;
-      drawer.appendChild(box);
-    });
   }
 
   /* Modal Dossiê do Alvo */
@@ -533,12 +452,14 @@
     const cleared = NB.Save.isNodeDefeated(boss.id);
     document.getElementById('dossier-reward-line').textContent = cleared
       ? `Recompensas já extraídas (${rewardPreview})`
-      : `Recompensa ao vencer: 2 cartas (${rewardPreview}) + Pista`;
+      : `Vitória: ${rewardPreview} · pista · ${NB.CityData.campaignCredits(boss)} créditos`;
 
     const launchBtn = document.getElementById('btn-dossier-duel');
     launchBtn.dataset.bossId = boss.id;
 
+    document.querySelector('.city-panel').inert = true;
     document.getElementById('dossier-modal').classList.add('open');
+    launchBtn.focus();
   }
 
   /* Tela Pós-Duelo / Extração de Dados Concluída */
@@ -562,7 +483,7 @@
 
     if (winner === 'player' && state.mode === 'campaign') {
       panel.classList.add('victory');
-      kicker.textContent = `${boss.nodeCode} INVADIDO · ${boss.name} DERROTADO`;
+      kicker.textContent = `${boss.nodeCode} INVADIDO · ${boss.name} DERROTADO${campaignResult?.isFirstClear ? ` · +${NB.CityData.campaignCredits(boss)} CRÉDITOS` : ''}`;
       kicker.style.color = 'var(--ram)';
       title.textContent = 'EXTRAÇÃO DE DADOS CONCLUÍDA';
       title.style.color = 'var(--ram)';
@@ -575,7 +496,7 @@
       rewardWrap.style.display = 'flex';
       const isNew = campaignResult && campaignResult.newlyUnlockedCards.length > 0;
       document.getElementById('go-rewards-label').textContent = isNew
-        ? '2 NOVAS CARTAS DESBLOQUEADAS NO BANCO DE DADOS (MEU DECK):'
+        ? 'NOVAS CARTAS DESBLOQUEADAS NO BANCO DE DADOS (MEU DECK):'
         : 'CARTAS DESTE NÓ (DISPONÍVEIS EM MEU DECK):';
 
       rewardGrid.innerHTML = '';
@@ -598,16 +519,27 @@
 
       if (campaignResult && campaignResult.nextNodeUnlocked) {
         nextNodeBanner.style.display = 'block';
-        nextNodeBanner.textContent = `PRÓXIMO NÓ DESBLOQUEADO: ${campaignResult.nextNodeUnlocked.fullTitle}`;
+        nextNodeBanner.textContent = `PISTA RECEBIDA · RASTREIE NA ANTENA COMUNITÁRIA`;
       } else if (boss.id === 'archon') {
         nextNodeBanner.style.display = 'block';
         nextNodeBanner.textContent = 'CAMPANHA CONCLUÍDA · TODOS OS 4 NÓS DOMINADOS!';
       }
 
-      primaryBtn.textContent = 'VOLTAR AO MAPA DA NET';
+      primaryBtn.textContent = 'VOLTAR À CIDADE';
       primaryBtn.dataset.action = 'netmap';
       secondaryBtn.textContent = 'REVANCHE';
       secondaryBtn.dataset.action = 'rematch';
+    } else if (state.mode === 'arena') {
+      const won = winner === 'player';
+      panel.classList.add(won ? 'victory' : 'defeat');
+      kicker.textContent = 'RINGUE BAIXA TENSÃO';
+      kicker.style.color = won ? 'var(--ram)' : 'var(--magenta)';
+      title.textContent = won ? `VITÓRIA · +${state.payout} CRÉDITOS` : (state.stake ? 'DERROTA · APOSTA PERDIDA' : 'DERROTA NO TREINO');
+      title.style.color = kicker.style.color;
+      primaryBtn.textContent = 'VOLTAR À CIDADE';
+      primaryBtn.dataset.action = 'netmap';
+      secondaryBtn.textContent = 'TELA INICIAL';
+      secondaryBtn.dataset.action = 'title';
     } else if (winner === 'player') {
       panel.classList.add('victory');
       kicker.textContent = `DUELO RÁPIDO · ${boss.name} DERROTADO`;
@@ -629,7 +561,7 @@
       document.getElementById('go-clue-text').textContent = `${boss.name} derrubou sua integridade. Ajuste o uso de RAM, Overclock e bloqueios e invada novamente.`;
       primaryBtn.textContent = 'TENTAR NOVAMENTE';
       primaryBtn.dataset.action = 'rematch';
-      secondaryBtn.textContent = state.mode === 'campaign' ? 'MAPA DA NET' : 'TELA INICIAL';
+      secondaryBtn.textContent = state.mode === 'campaign' ? 'VOLTAR À CIDADE' : 'TELA INICIAL';
       secondaryBtn.dataset.action = state.mode === 'campaign' ? 'netmap' : 'title';
     }
 
@@ -645,7 +577,7 @@
   function renderSettingsModal() {
     const save = NB.Save.get();
     document.getElementById('settings-bosses').textContent = `${save.defeatedBosses.length}/4`;
-    document.getElementById('settings-cards').textContent = `${save.unlockedCards.length}/20`;
+    document.getElementById('settings-cards').textContent = `${save.unlockedCards.length}/${Object.keys(NB.Cards.CARD_DB).length}`;
     document.getElementById('settings-clues').textContent = `${save.clues.length}/4`;
     const resetBtn = document.getElementById('btn-reset-save');
     resetBtn.dataset.confirm = '0';
@@ -776,7 +708,7 @@
   function updateSoundButtons() {
     const on = NB.Audio.isEnabled();
     const label = on ? 'SOM: ON' : 'SOM: OFF';
-    ['btn-sound', 'btn-settings-sound'].forEach(id => {
+    ['btn-sound', 'btn-settings-sound', 'btn-title-sound'].forEach(id => {
       const btn = document.getElementById(id);
       if (!btn) return;
       btn.textContent = label;
@@ -789,7 +721,6 @@
     renderAll,
     renderEnemyAvatar,
     renderTitleStats,
-    renderNetMap,
     openDossier,
     showGameOverModal,
     renderSettingsModal,

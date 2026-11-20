@@ -36,7 +36,8 @@
     const enemyMaxHp = (boss && boss.hp) ? boss.hp : NB.Cards.MAX_HP;
 
     return {
-      mode, // 'campaign' | 'quick'
+      mode,
+      stake: options.stake || 0,
       boss,
       turn: 1,
       phase: 'PLAYER_MAIN',
@@ -404,6 +405,7 @@
     NB.UI.renderAll();
 
     let campaignResult = null;
+    if (state.mode === 'arena') NB.City.finishArena(state, winner);
     if (winner === 'player') {
       if (state.mode === 'campaign' && state.boss) {
         campaignResult = NB.Save.recordBossVictory(state.boss);
@@ -424,6 +426,7 @@
   NB.State = {
     get,
     reset,
+    cancelPending() { matchGen++; },
     wait,
     getSlotEl,
     drawCard,

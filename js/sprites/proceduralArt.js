@@ -125,7 +125,7 @@
       ctx.fillStyle = '#FFB800';
       ctx.fillRect(10, -22, 16, 8);
     } else if (id === 'cipher') {
-      // CIPHER: Cão de Guarda da Arasaka-Corp — capacete blindado hexagonal
+      // CIPHER: Cão de Guarda da Vértice — capacete blindado hexagonal
       ctx.fillStyle = '#0D172E';
       ctx.strokeStyle = '#38BDF8';
       ctx.lineWidth = 3.5;
@@ -790,8 +790,8 @@
     });
   }
 
-  function createArtMarkup(id, imgPath, altText) {
-    const fallbackUrl = generateProceduralArt(id);
+  function createArtMarkup(id, imgPath, altText, fallbackId = NB.Cards.CARD_DB[id]?.fallbackArt || id) {
+    const fallbackUrl = generateProceduralArt(fallbackId);
     const wrap = document.createDocumentFragment();
 
     const fb = document.createElement('img');

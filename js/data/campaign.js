@@ -16,10 +16,10 @@
       archetype: 'Agressivo · [ZERO-DAY]',
       canOverclock: false,
       rewardCards: ['unit_13', 'exploit_06'],
-      clueTitle: 'PISTA #01 · CONTRATO DA ARASAKA-CORP',
-      clueText: 'Os logs de proxy da Kira confirmam que a emboscada contra você foi financiada por uma subconta da Arasaka-Corp — blindada pelo cão de guarda CIPHER.',
+      clueTitle: 'PISTA #01 · CONTRATO DA VÉRTICE',
+      clueText: 'Os logs de proxy da Kira confirmam que a emboscada contra você foi financiada por uma subconta da Vértice — blindada pelo cão de guarda CIPHER.',
       dossierDialogue: [
-        { speaker: 'KAIRO', text: 'Seu sinal estava no ponto de acesso onde tentaram fritar meu córtex, Kira. Quem pagou pelo serviço?' },
+        { speaker: 'KAIRO', text: 'A Vértice vende segurança nos outdoors. Por que o seu sinal apareceu onde ela tentou me apagar?' },
         { speaker: 'KIRA', text: 'Calma, fantasma! Eu só vendi a rota da sub-rede. Se quer o nome do contratante, tente acompanhar minha velocidade!' }
       ],
       deckList: [
@@ -50,8 +50,8 @@
       id: 'cipher',
       nodeCode: 'NÓ 02',
       name: 'CIPHER',
-      title: 'Cão de Guarda da Arasaka-Corp',
-      fullTitle: 'CIPHER // Cão de Guarda da Arasaka-Corp',
+      title: 'Cão de Guarda da Vértice',
+      fullTitle: 'CIPHER // Cão de Guarda da Vértice',
       avatar: './avatars/cipher.png',
       accent: '#38BDF8',
       hp: 20,
@@ -59,10 +59,10 @@
       canOverclock: false,
       rewardCards: ['unit_10', 'unit_12'],
       clueTitle: 'PISTA #02 · O CORRETOR FANTASMA',
-      clueText: 'Dentro do cofre da Arasaka-Corp, Cipher guardava a transferência das suas coordenadas neurais em tempo real — vendidas pelo corretor VEX.',
+      clueText: 'Dentro do cofre da Vértice, Cipher guardava a transferência das suas coordenadas neurais em tempo real — vendidas pelo corretor VEX.',
       dossierDialogue: [
-        { speaker: 'CIPHER', text: 'Intruso identificado: Kairo. Status oficial: eliminado. Protocolo de contenção corporativa ativado.' },
-        { speaker: 'KAIRO', text: 'A Arasaka-Corp pagou pela minha emboscada. Vou derrubar cada camada do seu Firewall até arrancar o nome do mandante.' }
+        { speaker: 'CIPHER', text: 'A Vértice mantém luz, trem e dados. Meu trabalho é impedir que uma falha derrube tudo. Hoje, a falha é você.' },
+        { speaker: 'KAIRO', text: 'A Vértice pagou pela minha emboscada. Vou derrubar cada camada do seu Firewall até arrancar o nome do mandante.' }
       ],
       deckList: [
         'unit_03', 'unit_03', 'unit_03',
@@ -76,7 +76,7 @@
       ],
       lines: {
         start: ['"Perímetro selado. Nenhuma invasão passará pelo Firewall."', '"Autorização negada, Kairo. Iniciando expurgo."'],
-        playerSummonStrong: ['"Ameaça detectada. Reforçando blindagem frontal."', '"Força bruta não rompe a Arasaka-Corp."'],
+        playerSummonStrong: ['"Ameaça detectada. Reforçando blindagem frontal."', '"Força bruta não rompe a Vértice."'],
         playerExploit: ['"Exploit registrado no log de segurança."', '"Tentativa de invasão contida parcialmente."'],
         hit: ['"Alerta: integridade do cofre comprometida!"', '"Dano no núcleo detectado. Recalibrando."'],
         critical: ['"Aviso crítico! Protocolo de emergência falhando!"', '"Impossível... você atravessou minha defesa!"'],
@@ -145,7 +145,7 @@
       clueTitle: 'PISTA FINAL · OPERAÇÃO ECLIPSE EXPOSTA',
       clueText: 'O núcleo central de ARCHON foi destruído e os arquivos da Operação Eclipse vazaram para toda a rede. Sua vingança foi concluída e seu nome limpo.',
       dossierDialogue: [
-        { speaker: 'ARCHON', text: 'Impressionante, Kairo. Eu mesmo ensinei você a hackear... mas você descobriu demais sobre a Operação Eclipse.' },
+        { speaker: 'ARCHON', text: 'Impressionante, Kairo. Ensinei você a ver a cidade como um circuito. A Operação Eclipse só fez a pergunta seguinte: quem pode ser desligado?' },
         { speaker: 'KAIRO', text: 'Você me traiu para enterrar os testes ilegais, Archon. Hoje eu derrubo seu núcleo e exponho tudo na rede aberta!' }
       ],
       deckList: [

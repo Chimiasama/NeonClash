@@ -149,7 +149,7 @@
       copies: 1,
       img: './cards/unit_07.png',
       accent: '#F59E0B',
-      lore: 'Ex-operador de demolição da Arasaka reconstruído com blindagem pesada de titânio cromado.',
+      lore: 'Ex-operador de demolição da Vértice reconstruído com blindagem pesada de titânio cromado.',
       desc: 'Colosso ciborgue 6/6 capaz de esmagar defensores pesados ou liderar um Overclock devastador. Gera +2 RAM.'
     },
     unit_08: {
@@ -344,6 +344,24 @@
     }
   };
 
+  Object.assign(CARD_DB, {
+    unit_21: {
+      ...CARD_DB.unit_02, id: 'unit_21', name: 'Drone do Viaduto', atk: 1, def: 4,
+      fallbackArt: 'unit_02', img: './cards/drone-viaduto.webp', lore: 'Peças reaproveitadas mantêm a Antena Comunitária no ar.',
+      desc: 'Gera +3 RAM ao entrar em campo. Tem 1 ATK e 4 DEF.'
+    },
+    unit_22: {
+      ...CARD_DB.unit_06, id: 'unit_22', name: 'Moto-Fantasma', atk: 3, def: 3, fallbackArt: 'unit_06', img: './cards/moto-fantasma.webp',
+      lore: 'Uma mensageira autônoma que conhece as ruelas fora do alcance dos radares.',
+      desc: '[ZERO-DAY] Pode atacar no turno de entrada. Gera +2 RAM.'
+    },
+    unit_23: {
+      ...CARD_DB.unit_03, id: 'unit_23', name: 'Guarda da Feira', atk: 3, def: 5, fallbackArt: 'unit_03', img: './cards/guarda-feira.webp',
+      lore: 'A associação dos feirantes programou esta unidade para proteger suas bancas.',
+      desc: '[FIREWALL] Atrai confrontos e protege o HP de Kairo. Gera +2 RAM.'
+    }
+  });
+
   function hasKeyword(cardOrId, kw) {
     const def = typeof cardOrId === 'string' ? CARD_DB[cardOrId] : (cardOrId && cardOrId.cardId ? CARD_DB[cardOrId.cardId] : cardOrId);
     return Boolean(def && Array.isArray(def.keywords) && def.keywords.includes(kw));
@@ -357,7 +375,7 @@
 
   const AVATAR_ASSETS = {
     kira: { id: 'kira', name: 'KIRA // Rato de Sub-rede', img: './avatars/kira.png' },
-    cipher: { id: 'cipher', name: 'CIPHER // Cão de Guarda Arasaka-Corp', img: './avatars/cipher.png' },
+    cipher: { id: 'cipher', name: 'CIPHER // Cão de Guarda Vértice', img: './avatars/cipher.png' },
     vex: { id: 'vex', name: 'VEX // Corretor de Dados Fantasma', img: './avatars/vex.png' },
     archon: { id: 'archon', name: 'ARCHON // Diretor de Operações Negras', img: './avatars/archon.png' }
   };
@@ -365,7 +383,7 @@
   const AVATAR_ASSET = AVATAR_ASSETS.vex;
 
   const ASSET_LIST = [
-    ...Object.values(CARD_DB).map(c => ({
+    ...Object.values(CARD_DB).filter(c => !c.fallbackArt).map(c => ({
       id: c.id,
       label: c.name + ' (' + (c.kind === 'unit' ? 'Unidade' : 'Exploit') + ')',
       path: c.img

@@ -6,3 +6,7 @@ coverage/
 *.log
 .env*
 !.env.example
+.gradle/
+local.properties
+playwright-report/
+test-results/

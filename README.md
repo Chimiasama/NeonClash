@@ -1,0 +1,30 @@
+# NeonClash
+
+Jogo de cartas cyberpunk em que Kairo explora Baixa Luz, investiga a Vértice e desafia os personagens da cidade.
+
+## Desenvolvimento web
+
+Com Node.js 24, execute `npm ci` e `npm run dev`. O jogo salva o progresso no armazenamento local.
+
+Para testar o build em um navegador com tamanho de celular, execute:
+
+```sh
+npm run build
+npx playwright install chromium
+npm test
+```
+
+## APK Android
+
+A [Action do Android](https://github.com/Chimiasama/NeonClash/actions/workflows/android.yml) testa o build web a cada push na `main` e disponibiliza o APK de teste em **Artifacts → NeonClash-debug** na execução concluída.
+
+Para gerar o mesmo APK localmente, instale JDK 17, Android SDK 35 e Build Tools 35.0.0 e configure `ANDROID_HOME`:
+
+```sh
+npm ci
+npm run build
+cd android
+./gradlew :app:assembleDebug
+```
+
+O APK em `android/app/build/outputs/apk/debug/app-debug.apk` é assinado com uma chave de depuração. A WebView carrega os arquivos do próprio APK e mantém o progresso local no dispositivo.

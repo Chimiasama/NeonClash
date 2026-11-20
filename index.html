@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>NEON BREACH // CARD FIGHTERS</title>
-  <meta name="description" content="Jogo de cartas tático 1v1 cyberpunk em modo retrato inspirado em Card Fighters' Clash, com campanha de vingança, Mapa da Net e salvamento local." />
-  <meta property="og:title" content="NEON BREACH // CARD FIGHTERS" />
-  <meta property="og:description" content="Jogo de cartas tático 1v1 cyberpunk com campanha de vingança, Overclock e arquitetura modular para Android Studio WebView." />
+  <title>NEON BREACH // CLASH</title>
+  <meta name="description" content="Explore Baixa Luz, investigue a Vértice e desafie os personagens da cidade em duelos táticos de cartas." />
+  <meta property="og:title" content="NEON BREACH // CLASH" />
+  <meta property="og:description" content="Duelos de cartas, trabalhos de hacker e uma investigação em uma cidade cyberpunk." />
   <meta property="og:type" content="website" />
 
   <!-- Estilos Modulares (caminhos estritamente relativos para Android Studio WebView) -->
@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="./css/modals.css" />
   <link rel="stylesheet" href="./css/campaign.css" />
   <link rel="stylesheet" href="./css/deckbuilder.css" />
+  <link rel="stylesheet" href="./css/city.css" />
 </head>
 <body>
   <div id="console-shell">
@@ -144,54 +145,55 @@
     <div id="float-layer"></div>
     <div id="toast-banner" class="chamfer-sm"></div>
 
-    <!-- Modal 1: Tela Inicial (NEON BREACH // CARD FIGHTERS) -->
+    <!-- Modal 1: Tela Inicial (NEON BREACH // CLASH) -->
     <div id="title-modal" class="full-modal title-screen open">
       <div class="modal-panel chamfer-md">
         <div class="title-hero">
-          <div class="title-sub">PROTOCOLO DE VINGANÇA · DUELO 1V1</div>
-          <h1 class="title-logo-main">NEON BREACH<br /><span class="title-logo-slash">//</span> CARD FIGHTERS</h1>
+          <div class="title-sub">UMA NOITE EM BAIXA LUZ</div>
+          <h1 class="title-logo-main">NEON BREACH<span class="title-logo-slash"> // CLASH</span></h1>
         </div>
         <div id="title-progress-strip" class="title-progress-strip tabular">
           <span>NÓS INVADIDOS: 0/4</span>
-          <span>CARTAS: 12/20</span>
+          <span>CARTAS: 12/23</span>
           <span>PISTAS: 0/4</span>
         </div>
         <div class="story-box">
-          Você é <strong style="color:var(--cyan)">KAIRO</strong>, ex-netrunner traído em uma emboscada corporativa. Invada 4 nós da rede neural, desbloqueie cartas raras e descubra quem ordenou sua execução.
+          A Vértice declarou Kairo morto. Na cidade que ainda guarda o rastro da emboscada, cada duelo aproxima você de quem deu a ordem.
         </div>
         <div class="title-cta-row">
-          <button id="btn-start-campaign" class="btn-launch chamfer-sm" type="button">INICIAR INVASÃO</button>
+          <button id="btn-start-campaign" class="btn-launch chamfer-sm" type="button">ENTRAR NA CIDADE</button>
           <button id="btn-quick-duel" class="btn-quick-duel chamfer-sm" type="button">DUELO RÁPIDO</button>
           <button id="btn-title-deck" class="btn-my-deck chamfer-sm" type="button">MEU DECK · BANCO DE DADOS</button>
           <div class="title-secondary-row">
-            <button id="btn-title-png" class="hud-btn chamfer-sm" type="button" style="padding:9px">ARQUIVOS PNG</button>
+            <button id="btn-title-sound" class="hud-btn chamfer-sm" type="button" style="padding:9px">SOM: OFF</button>
             <button id="btn-title-settings" class="hud-btn chamfer-sm" type="button" style="padding:9px">CONFIG / SAVE</button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Modal 2: Mapa da Net (Campanha 4 Nós) -->
-    <div id="netmap-modal" class="full-modal">
-      <div class="modal-panel netmap-panel chamfer-md">
-        <div class="netmap-header">
-          <div>
-            <div class="title-sub" style="color:var(--cyan)">REDE NEURAL CLANDESTINA</div>
-            <div style="font-family:var(--font-mono);font-size:16px;font-weight:900;">MAPA DA NET</div>
+    <div id="netmap-modal" class="full-modal city-screen">
+      <section class="city-panel" aria-labelledby="city-heading">
+        <header class="city-header">
+          <div><h2 id="city-heading">Baixa Luz</h2><p id="city-credits"></p></div>
+          <div class="city-nav">
+            <button id="btn-netmap-deck" type="button">Meu Deck</button>
+            <button id="city-journal" type="button" aria-pressed="false">Pistas</button>
+            <button id="btn-netmap-settings" type="button">Config.</button>
+            <button id="btn-netmap-back" type="button">Início</button>
           </div>
-          <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;">
-            <button id="btn-netmap-deck" class="hud-btn chamfer-sm" type="button" style="border-color:var(--cyan);color:var(--cyan)">MEU DECK</button>
-            <button id="btn-toggle-clues" class="hud-btn chamfer-sm" type="button" style="border-color:var(--amber);color:var(--amber)">PISTAS (0/4)</button>
-            <button id="btn-netmap-settings" class="hud-btn chamfer-sm" type="button">CONFIG</button>
-            <button id="btn-netmap-back" class="hud-btn chamfer-sm" type="button">INÍCIO</button>
-          </div>
+        </header>
+        <div id="city-map" aria-label="Mapa interativo de Baixa Luz">
+          <span id="city-marker" aria-hidden="true"></span>
         </div>
-        <div style="font-size:11px;color:var(--text-muted);line-height:1.35;">
-          Toque em um nó desbloqueado para abrir o <strong style="color:var(--cyan)">Dossiê do Alvo</strong> e invadir o servidor. Cada vitória desbloqueia 2 cartas novas e uma pista.
+        <div class="city-detail">
+          <h3 id="city-name"></h3>
+          <p id="city-npc"></p>
+          <p id="city-line"></p>
+          <div id="city-content"></div>
+          <p id="city-feedback" role="status"></p>
         </div>
-        <div id="netmap-nodes" class="netmap-nodes"></div>
-        <div id="clues-drawer" class="clues-drawer"></div>
-      </div>
+      </section>
     </div>
 
     <!-- Modal 3: Dossiê do Alvo -->
@@ -237,7 +239,7 @@
         </div>
         <div class="settings-row tabular">
           <span>CARTAS DESBLOQUEADAS</span>
-          <strong id="settings-cards" style="color:var(--cyan)">12/20</strong>
+          <strong id="settings-cards" style="color:var(--cyan)">12/23</strong>
         </div>
         <div class="settings-row tabular">
           <span>PISTAS COLETADAS</span>
@@ -307,7 +309,7 @@
         </div>
 
         <div class="end-action-row">
-          <button id="btn-go-primary" class="btn-launch chamfer-sm" type="button" data-action="netmap" style="padding:11px 12px;font-size:12px;">VOLTAR AO MAPA DA NET</button>
+          <button id="btn-go-primary" class="btn-launch chamfer-sm" type="button" data-action="netmap" style="padding:11px 12px;font-size:12px;">VOLTAR À CIDADE</button>
           <button id="btn-go-secondary" class="btn-secondary chamfer-sm" type="button" data-action="rematch">REVANCHE</button>
         </div>
       </div>
@@ -318,7 +320,7 @@
       <div class="modal-panel deck-modal-panel chamfer-md">
         <div class="deck-header">
           <div>
-            <div id="deck-unlocked-sub" class="title-sub" style="color:var(--cyan)">BANCO DE DADOS · 12/20 DESBLOQUEADAS</div>
+            <div id="deck-unlocked-sub" class="title-sub" style="color:var(--cyan)">BANCO DE DADOS · 12/23 DESBLOQUEADAS</div>
             <div style="font-family:var(--font-mono);font-size:15px;font-weight:900;">MEU DECK</div>
           </div>
           <button id="btn-deck-close" class="hud-btn chamfer-sm" type="button">VOLTAR</button>
@@ -405,6 +407,7 @@
   <script defer src="./js/data/cards.js"></script>
   <script defer src="./js/data/campaign.js"></script>
   <script defer src="./js/data/dialogue.js"></script>
+  <script defer src="./js/data/city.js"></script>
   <script defer src="./js/core/saveManager.js"></script>
   <script defer src="./js/sprites/proceduralArt.js"></script>
   <script defer src="./js/audio/soundEngine.js"></script>
@@ -415,6 +418,7 @@
   <script defer src="./js/ui/renderer.js"></script>
   <script defer src="./js/ui/deckBuilder.js"></script>
   <script defer src="./js/ui/inputController.js"></script>
+  <script defer src="./js/ui/city.js"></script>
   <script defer src="./js/main.js"></script>
 </body>
 </html>

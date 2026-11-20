@@ -6,11 +6,13 @@
     NB.Save.load();
     NB.Sprites.initAssets();
     NB.Input.bindEvents();
+    NB.City.bindEvents();
     NB.Physics.init();
     NB.State.reset({ mode: 'campaign', boss: NB.Campaign.NODES[0] });
     NB.UI.renderEnemyAvatar(NB.Campaign.NODES[0]);
     NB.UI.renderTitleStats();
     NB.UI.renderAll();
+    document.getElementById('game-ui').inert = true;
   }
 
   if (document.readyState === 'loading') {

@@ -1,0 +1,152 @@
+.full-modal.title-screen {
+  padding: 0;
+  justify-content: flex-end;
+  background: #10121f url('../src/assets/baixa-luz-cover.webp') 16% center / cover no-repeat;
+}
+
+.title-screen > .modal-panel {
+  width: 100%;
+  max-width: none;
+  max-height: 100%;
+  overflow: auto;
+  padding: 70px 22px 24px;
+  border: 0;
+  clip-path: none;
+  box-shadow: none;
+  background: linear-gradient(transparent, #0a0c17 25%, #0a0c17 94%);
+}
+
+.title-screen .title-logo-main {
+  font-size: clamp(26px, 8vw, 38px);
+  letter-spacing: -.045em;
+  color: #f2f5ff;
+  text-shadow: 0 0 24px #00f0ff61;
+}
+
+.title-screen .title-logo-slash { display: block; color: var(--cyan); }
+.title-screen .story-box { font-size: 13px; line-height: 1.5; }
+
+.full-modal.city-screen {
+  padding: 0;
+  background: #0b101c;
+}
+
+.city-panel {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  color: #e8f1ff;
+}
+
+.city-header, .city-detail { padding: 15px 16px; }
+
+.city-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  border-bottom: 1px solid #324254;
+}
+
+#city-heading { font: 900 26px/1 var(--font-mono); letter-spacing: -.05em; }
+#city-credits { margin-top: 5px; color: #ffcd76; font-size: 13px; font-weight: 700; }
+
+.city-nav { display: grid; grid-template-columns: repeat(2, auto); gap: 4px; }
+
+.city-panel button {
+  min-height: 35px;
+  border: 1px solid #3c546a;
+  border-radius: 4px;
+  padding: 6px 9px;
+  background: #141f30;
+  color: #e8f1ff;
+  font: 700 12px/1.25 var(--font-display);
+  cursor: pointer;
+}
+
+.city-panel button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.city-panel button:disabled { opacity: .62; cursor: default; }
+.city-panel button[aria-pressed='true'] { border-color: var(--cyan); color: var(--cyan); }
+
+#city-map {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  height: clamp(245px, 40dvh, 370px);
+  border-bottom: 1px solid #324254;
+  background: linear-gradient(#07102124, #07102162), #192234 url('../src/assets/baixa-luz-map.webp') center / cover no-repeat;
+}
+
+.city-panel .city-pin {
+  position: absolute;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  min-width: 50px;
+  min-height: 44px;
+  transform: translate(-50%, -50%);
+  border-color: #62e7e4;
+  background: #101827ec;
+  box-shadow: 0 3px 12px #050710a6;
+  font-size: 11px;
+}
+
+.city-pin span:first-child { color: #8cfbf8; font: 800 14px var(--font-mono); }
+.city-panel .city-pin.city-locked { border-color: #8a90a2; color: #c4cbd9; }
+.city-pin.city-cleared:not([aria-current]) { border-color: #a1d795; }
+.city-locked span:first-child { color: #c4cbd9; }
+.city-panel .city-pin[aria-current] { border-color: #ffcb75; background: #352838; }
+
+#city-marker {
+  position: absolute;
+  z-index: 2;
+  width: 25px;
+  height: 25px;
+  transform: translate(-50%, -41px);
+  border: 2px solid #ffcb75;
+  border-radius: 50%;
+  background: #ffcb75 url('../src/assets/kairo-token.webp') center / cover no-repeat;
+  box-shadow: 0 0 14px #ffcb75;
+  pointer-events: none;
+  transition: left .48s ease, top .48s ease;
+}
+
+.city-detail { display: grid; gap: 7px; }
+#city-name { font-size: 23px; line-height: 1.15; }
+#city-npc, .city-clue-title { font-weight: 800; color: #a8f5f3; }
+#city-line, #city-content p, #city-feedback { font-size: 13px; line-height: 1.45; }
+#city-line { color: #bec9dc; }
+#city-content { display: grid; gap: 8px; margin-top: 3px; }
+#city-feedback, .city-notice { color: #ffcd76; }
+#city-feedback:empty { display: none; }
+
+.city-panel button.city-primary {
+  min-height: 42px;
+  background: #9cf3ef;
+  color: #0a1821;
+  border-color: #9cf3ef;
+}
+
+.city-sale, #city-content article {
+  display: grid;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid #2d4056;
+  border-radius: 5px;
+  background: #101827;
+}
+
+.city-sale { grid-template-columns: 42px 1fr auto; }
+.city-sale img { border-radius: 4px; object-fit: cover; }
+.city-sequence, .city-symbols { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.city-sequence span { text-align: center; padding: 7px; border: 1px solid #344b64; border-radius: 4px; }
+.city-sequence .city-next { border-color: #ffcd76; color: #ffcd76; }
+.city-sequence .city-done { color: #9cf3ef; }
+.city-symbols button { min-height: 44px; font-size: 17px; }
+
+@media (prefers-reduced-motion: reduce) {
+  #city-marker { transition: none; }
+}

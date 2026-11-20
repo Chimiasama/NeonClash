@@ -1,11 +1,30 @@
 (function (NB) {
   'use strict';
 
+  const tracks = {
+    city: {
+      bpm: 116,
+      chords: [[38, 50, 53, 57, 60], [34, 46, 50, 53, 57], [41, 53, 57, 60, 64], [36, 48, 52, 55, 62]],
+      bass: [0, -1, 0, 1, -1, 0, 3, -1, 0, -1, 0, 1, -1, 1, 3, -1],
+      lead: [1, -1, 2, -1, 3, -1, 4, -1, -1, 3, -1, 2, 4, -1, 3, 2]
+    },
+    duel: {
+      bpm: 142,
+      chords: [[40, 52, 55, 59, 62], [40, 52, 55, 59, 65], [36, 48, 52, 55, 59], [38, 50, 53, 57, 60]],
+      bass: [-1, 0, 0, 1, -1, 0, 0, 3, -1, 0, 0, 1, -1, 1, 0, 0],
+      lead: [-1, -1, 3, -1, -1, 4, -1, 2, -1, -1, 3, 3, -1, 4, -1, 2]
+    }
+  };
+  const frequency = midi => 440 * 2 ** ((midi - 69) / 12);
+
   /* Motor de Áudio: Sintetizador Synthwave/Chiptune 100% Web Audio API
      + helper playCustomFile() para usar arquivos futuros na pasta ./audio/ */
   const SoundEngine = {
     ctx: null,
     enabled: false,
+    scene: 'city',
+    chosen: false,
+    nextBeat: 0,
     musicTimer: null,
     step: 0,
     masterGain: null,
@@ -39,18 +58,26 @@
     setEnabled(on) {
       this.enabled = on;
       if (on) {
+        this.step = 0;
         this.init();
         if (this.ctx && this.ctx.state === 'suspended') {
           this.ctx.resume();
         }
+        if (this.masterGain) this.masterGain.gain.value = 0.7;
         this.startMusic();
       } else {
+        if (this.masterGain) this.masterGain.gain.value = 0;
         this.stopMusic();
       }
       if (NB.UI && NB.UI.updateSoundButtons) NB.UI.updateSoundButtons();
     },
 
+    activateOnEntry() {
+      if (!this.chosen) this.setEnabled(true);
+    },
+
     toggle() {
+      this.chosen = true;
       this.setEnabled(!this.enabled);
       if (this.enabled) this.playSelect();
     },
@@ -68,75 +95,78 @@
       } catch (_) {}
     },
 
+    setScene(scene) {
+      if (scene === this.scene) return;
+      this.scene = scene;
+      this.stopMusic();
+      this.step = 0;
+      if (this.enabled) this.startMusic();
+    },
+
     startMusic() {
       if (!this.ctx || this.musicTimer) return;
-      const bassPattern = [
-        73.42, 73.42, 0, 73.42, 87.31, 0, 73.42, 65.41,
-        58.27, 58.27, 0, 58.27, 65.41, 0, 82.41, 98.00
-      ];
-      const arpPattern = [
-        293.66, 0, 349.23, 0, 440.00, 0, 523.25, 0,
-        293.66, 0, 440.00, 349.23, 329.63, 0, 261.63, 0
-      ];
-      const stepMs = 134; // ~112 BPM em semicolcheias
+      const track = tracks[this.scene];
+      const interval = 60 / track.bpm / 4;
+      this.nextBeat = this.ctx.currentTime + 0.04;
       this.musicTimer = setInterval(() => {
-        if (!this.enabled || !this.ctx || this.ctx.state !== 'running') return;
+        if (!this.enabled || this.ctx.state !== 'running') return;
         const now = this.ctx.currentTime;
-        const s = this.step % 16;
-
-        if (s % 4 === 0) {
-          const osc = this.ctx.createOscillator();
-          const g = this.ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(128, now);
-          osc.frequency.exponentialRampToValueAtTime(36, now + 0.11);
-          g.gain.setValueAtTime(0.45, now);
-          g.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
-          osc.connect(g);
-          g.connect(this.musicGain);
-          osc.start(now);
-          osc.stop(now + 0.14);
+        this.nextBeat = Math.max(this.nextBeat, now + 0.01);
+        while (this.nextBeat < now + 0.11) {
+          this.playBeat(track, this.nextBeat, interval);
+          this.nextBeat += interval;
+          this.step++;
         }
+      }, 25);
+    },
 
-        if (s % 2 === 1) {
-          this.playNoise(now, 0.03, 0.08, 6000, this.musicGain);
+    playBeat(track, time, interval) {
+      const s = this.step % 16;
+      const bar = Math.floor(this.step / 16);
+      const chord = track.chords[bar % track.chords.length];
+      const duel = this.scene === 'duel';
+      if (s % 4 === 0) this.musicNote(time, 'sine', 145, 43, 0.18, duel ? 0.72 : 0.58);
+      if (s % 8 === 4) this.playNoise(time, 0.13, 0.28, 1250, this.musicGain);
+      if (s % 2 === 0 || duel) this.playNoise(time, s % 4 === 2 ? 0.075 : 0.027, s % 4 === 2 ? 0.17 : 0.046, 6200, this.musicGain);
+
+      const bass = track.bass[s];
+      if (bass >= 0) {
+        const note = frequency(chord[bass]);
+        this.musicNote(time, 'sawtooth', note, note, interval * 0.95, 0.29, duel ? 650 : 430);
+      }
+      if (s === 0 || s === 8) {
+        for (const pitch of chord.slice(1)) {
+          const note = frequency(pitch);
+          this.musicNote(time, 'triangle', note, note, interval * 7.5, duel ? 0.035 : 0.055, 1600);
         }
+      }
+      const lead = track.lead[s];
+      if (lead >= 0) {
+        const note = frequency(chord[lead] + (duel ? 24 : 12));
+        this.musicNote(time, duel ? 'square' : 'triangle', note, note, interval * 1.55, 0.085, 2200);
+        if (!duel) this.musicNote(time + interval * 3, 'triangle', note, note, interval * 1.15, 0.028, 1600);
+      }
+    },
 
-        const bf = bassPattern[s];
-        if (bf > 0) {
-          const osc = this.ctx.createOscillator();
-          const flt = this.ctx.createBiquadFilter();
-          const g = this.ctx.createGain();
-          osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(bf, now);
-          flt.type = 'lowpass';
-          flt.frequency.setValueAtTime(420, now);
-          flt.frequency.exponentialRampToValueAtTime(160, now + 0.12);
-          g.gain.setValueAtTime(0.24, now);
-          g.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-          osc.connect(flt);
-          flt.connect(g);
-          g.connect(this.musicGain);
-          osc.start(now);
-          osc.stop(now + 0.13);
-        }
-
-        const af = arpPattern[s];
-        if (af > 0 && Math.floor(this.step / 16) % 2 === 1) {
-          const osc = this.ctx.createOscillator();
-          const g = this.ctx.createGain();
-          osc.type = 'square';
-          osc.frequency.setValueAtTime(af, now);
-          g.gain.setValueAtTime(0.07, now);
-          g.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-          osc.connect(g);
-          g.connect(this.musicGain);
-          osc.start(now);
-          osc.stop(now + 0.11);
-        }
-
-        this.step++;
-      }, stepMs);
+    musicNote(time, type, frequency, end, duration, volume, cutoff) {
+      const osc = this.ctx.createOscillator();
+      const envelope = this.ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(frequency, time);
+      if (end !== frequency) osc.frequency.exponentialRampToValueAtTime(end, time + duration * 0.65);
+      envelope.gain.setValueAtTime(0.001, time);
+      envelope.gain.exponentialRampToValueAtTime(volume, time + 0.009);
+      envelope.gain.exponentialRampToValueAtTime(0.001, time + duration);
+      if (cutoff) {
+        const filter = this.ctx.createBiquadFilter();
+        filter.frequency.value = cutoff;
+        osc.connect(filter).connect(envelope);
+      } else {
+        osc.connect(envelope);
+      }
+      envelope.connect(this.musicGain);
+      osc.start(time);
+      osc.stop(time + duration);
     },
 
     stopMusic() {
