@@ -20,10 +20,10 @@ export default defineConfig(() => {
           if (error) {
             return;
           }
-          const distDir = path.resolve(__dirname, 'dist');
+          const distDir = path.resolve(import.meta.dirname, 'dist');
           const folders = ['src/assets', 'css', 'js', 'cards', 'avatars', 'audio'];
           for (const folder of folders) {
-            const srcPath = path.resolve(__dirname, folder);
+            const srcPath = path.resolve(import.meta.dirname, folder);
             const destPath = path.resolve(distDir, folder);
             if (fs.existsSync(distDir) && fs.existsSync(srcPath)) {
               fs.cpSync(srcPath, destPath, {recursive: true, force: true});
@@ -34,7 +34,7 @@ export default defineConfig(() => {
     ],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve(import.meta.dirname, '.'),
       },
     },
     server: {

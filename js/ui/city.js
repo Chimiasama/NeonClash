@@ -4,7 +4,11 @@
   const { districts, stock, traces, sparringBoss, wagerBoss } = NB.CityData;
   const $ = id => document.getElementById(id);
   const symbols = ['▲', '●', '◆', '■'];
+  const previewMs = 3500;
+  const workMs = 12000;
+  const errorPenaltyMs = 2000;
   let job = null;
+  let jobTimer = null;
   let view = 'district';
 
   function access(district) {
@@ -25,7 +29,7 @@
     NB.Save.get().city.district = id;
     NB.Save.save();
     view = 'district';
-    job = null;
+    cancelJob();
     render();
   }
 
@@ -34,6 +38,9 @@
     const district = districtAtPosition();
     $('city-credits').textContent = `${save.city.credits} créditos`;
     $('city-name').textContent = district.name;
+    const portrait = $('city-portrait');
+    portrait.hidden = view === 'journal';
+    if (!portrait.hidden && portrait.getAttribute('src') !== district.portrait) portrait.src = district.portrait;
     $('city-npc').textContent = view === 'journal' ? 'Arquivo de Kairo' : district.npc;
     const cleared = NB.Save.isNodeDefeated(district.id);
     const lines = {
@@ -149,42 +156,111 @@
         addButton(content, 'Rastrear pista', () => startJob(lead.bossId), false, 'city-primary');
       }
       addButton(content, 'Trabalho de hacker · +20 créditos', () => startJob(null));
+      addText(content, 'Memorize 6 símbolos em 3,5 s. Você tem 12 s para repetir a sequência. Cada erro custa 2 s.');
       return;
     }
+
     addText(content, job.lead ? 'Rastreamento de pista' : 'Reparo de pacotes · +20 créditos', 'city-clue-title');
-    addText(content, 'Toque nos símbolos na ordem exibida.');
+    addText(content, job.lead ? 'Toque nos símbolos na ordem exibida.' :
+      (job.revealing ? 'Memorize a sequência.' : 'Repita a sequência de memória.'));
+    if (!job.lead) {
+      const clock = document.createElement('p');
+      clock.id = 'city-job-clock';
+      clock.setAttribute('role', 'timer');
+      content.append(clock);
+      updateClock();
+    }
+
     const sequence = document.createElement('div');
     sequence.className = 'city-sequence';
     job.sequence.forEach((symbol, index) => {
       const item = document.createElement('span');
-      item.textContent = symbol;
-      item.className = index < job.index ? 'city-done' : index === job.index ? 'city-next' : '';
+      const done = index < job.index;
+      item.textContent = job.lead || job.revealing || done ? symbol : '·';
+      item.className = done ? 'city-done' : index === job.index ? 'city-next' : '';
       sequence.append(item);
     });
     content.append(sequence);
     const controls = document.createElement('div');
     controls.className = 'city-symbols';
     for (const symbol of symbols) {
-      addButton(controls, symbol, () => selectSymbol(symbol));
+      addButton(controls, symbol, () => selectSymbol(symbol), job.revealing);
     }
     content.append(controls);
   }
 
+  function updateClock() {
+    const clock = $('city-job-clock');
+    if (!clock || !job) return;
+    const deadline = job.revealing ? job.revealUntil : job.deadline;
+    const seconds = Math.max(0, Math.ceil((deadline - performance.now()) / 1000));
+    clock.textContent = job.revealing ? `Memorização · ${seconds} s` : `Tempo de envio · ${seconds} s`;
+    clock.classList.toggle('city-notice', !job.revealing && seconds <= 4);
+  }
+
+  function tickJob() {
+    const now = performance.now();
+    if (now >= job.deadline) {
+      cancelJob();
+      render();
+      announce('Tempo esgotado. Nenhum crédito recebido.');
+      $('city-content').querySelector('button')?.focus();
+    } else if (job.revealing && now >= job.revealUntil) {
+      job.revealing = false;
+      render();
+      announce('Sequência oculta. Comece a digitar.');
+      $('city-content').querySelector('.city-symbols button')?.focus();
+    } else {
+      updateClock();
+    }
+  }
+
+  function cancelJob() {
+    clearInterval(jobTimer);
+    jobTimer = null;
+    job = null;
+  }
+
   function startJob(lead) {
-    job = { lead, index: 0, sequence: Array.from({ length: 4 }, () => symbols[Math.floor(Math.random() * symbols.length)]) };
+    const revealUntil = performance.now() + previewMs;
+    job = {
+      lead,
+      index: 0,
+      revealing: !lead,
+      revealUntil,
+      deadline: revealUntil + workMs,
+      sequence: Array.from({ length: lead ? 4 : 6 }, () => symbols[Math.floor(Math.random() * symbols.length)])
+    };
     announce('');
     render();
-    $('city-content').querySelector('.city-symbols button').focus();
+    if (lead) {
+      $('city-content').querySelector('.city-symbols button').focus();
+    } else {
+      jobTimer = setInterval(tickJob, 100);
+    }
   }
 
   function selectSymbol(symbol) {
+    if (!job || job.revealing) return;
+    if (!job.lead && performance.now() >= job.deadline) {
+      tickJob();
+      return;
+    }
     const jobFocus = symbols.indexOf(symbol);
     if (symbol !== job.sequence[job.index]) {
       job.index = 0;
-      announce('Sequência reiniciada. Comece pelo primeiro símbolo.');
+      if (!job.lead) {
+        job.deadline -= errorPenaltyMs;
+        if (performance.now() >= job.deadline) {
+          tickJob();
+          return;
+        }
+      }
+      announce(job.lead ? 'Sequência reiniciada. Comece pelo primeiro símbolo.' :
+        'Símbolo incorreto. Volte ao primeiro pacote. Penalidade de 2 s.');
     } else {
       job.index++;
-      announce(`Pacote ${job.index} de 4 confirmado.`);
+      announce(`Pacote ${job.index} de ${job.sequence.length} confirmado.`);
     }
 
     if (job.index === job.sequence.length) {
@@ -196,7 +272,7 @@
         save.city.credits += 20;
         announce('Trabalho concluído. Você recebeu 20 créditos.');
       }
-      job = null;
+      cancelJob();
       NB.Save.save();
     }
     render();
@@ -230,7 +306,7 @@
 
   function resetView() {
     view = 'district';
-    job = null;
+    cancelJob();
     announce('');
     render();
   }
@@ -258,11 +334,11 @@
     }
     $('city-journal').addEventListener('click', () => {
       view = view === 'journal' ? 'district' : 'journal';
-      job = null;
+      cancelJob();
       announce('');
       render();
     });
   }
 
-  NB.City = { open, resetView, bindEvents, finishArena, access };
+  NB.City = { open, resetView, bindEvents, finishArena, access, cancelJob };
 })(window.NB = window.NB || {});

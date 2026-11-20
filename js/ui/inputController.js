@@ -3,6 +3,7 @@
 
   /* Controlador de Entrada Touch, Navegação entre Telas, Campanha, Overclock e Save */
   function hideAllScreens() {
+    NB.City.cancelJob();
     ['title-modal', 'netmap-modal', 'dossier-modal', 'gameover-modal', 'settings-modal', 'deck-modal', 'card-inspector-modal'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.classList.remove('open');
@@ -376,6 +377,7 @@
     document.getElementById('btn-netmap-deck').addEventListener('click', () => {
       NB.Audio.playSelect();
       NB.Physics.vibrateCard();
+      NB.City.cancelJob();
       NB.DeckBuilder.open('netmap');
     });
     document.getElementById('btn-netmap-back').addEventListener('click', () => {

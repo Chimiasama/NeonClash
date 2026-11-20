@@ -18,7 +18,7 @@ npm test
 
 A [Action do Android](https://github.com/Chimiasama/NeonClash/actions/workflows/android.yml) testa o build web a cada push na `main` e disponibiliza o APK de teste em **Artifacts → NeonClash-debug** na execução concluída.
 
-Para gerar o mesmo APK localmente, instale JDK 17, Android SDK 35 e Build Tools 35.0.0 e configure `ANDROID_HOME`:
+Para gerar o mesmo APK localmente, instale JDK 17, Android SDK 35 e Build Tools 36.0.0 e configure `ANDROID_HOME`:
 
 ```sh
 npm ci

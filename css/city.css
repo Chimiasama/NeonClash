@@ -114,6 +114,10 @@
 }
 
 .city-detail { display: grid; gap: 7px; }
+.city-dialogue { display: flex; align-items: center; gap: 11px; }
+.city-dialogue #city-line { margin-top: 4px; }
+#city-portrait { flex: 0 0 72px; object-fit: cover; border: 1px solid #3c546a; border-radius: 6px; }
+#city-job-clock { font: 700 13px/1.45 var(--font-mono); font-variant-numeric: tabular-nums; }
 #city-name { font-size: 23px; line-height: 1.15; }
 #city-npc, .city-clue-title { font-weight: 800; color: #a8f5f3; }
 #city-line, #city-content p, #city-feedback { font-size: 13px; line-height: 1.45; }
@@ -142,6 +146,7 @@
 .city-sale { grid-template-columns: 42px 1fr auto; }
 .city-sale img { border-radius: 4px; object-fit: cover; }
 .city-sequence, .city-symbols { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.city-sequence { grid-template-columns: repeat(auto-fit, minmax(34px, 1fr)); }
 .city-sequence span { text-align: center; padding: 7px; border: 1px solid #344b64; border-radius: 4px; }
 .city-sequence .city-next { border-color: #ffcd76; color: #ffcd76; }
 .city-sequence .city-done { color: #9cf3ef; }

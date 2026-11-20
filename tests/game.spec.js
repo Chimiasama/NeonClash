@@ -4,10 +4,14 @@ test('earns credits, buys a card, and keeps the purchase after reloading', async
   await page.goto('/');
   await page.getByRole('button', { name: 'Entrar na cidade' }).click();
   await page.getByRole('button', { name: 'Antena Comunitária' }).click();
+  await page.clock.install();
   await page.getByRole('button', { name: 'Trabalho de hacker' }).click();
 
   const symbols = await page.locator('.city-sequence span').allTextContents();
-  expect(symbols).toHaveLength(4);
+  expect(symbols).toHaveLength(6);
+  await expect(page.getByRole('button', { name: symbols[0], exact: true })).toBeDisabled();
+  await page.clock.fastForward(3500);
+  await expect(page.locator('.city-sequence span')).toHaveText(Array(6).fill('·'));
   for (const symbol of symbols) {
     await page.getByRole('button', { name: symbol, exact: true }).click();
   }
@@ -21,6 +25,57 @@ test('earns credits, buys a card, and keeps the purchase after reloading', async
   await expect(page.getByRole('heading', { name: 'Feira do Viaduto' })).toBeVisible();
   await expect(page.locator('#city-credits')).toHaveText('10 créditos');
   await expect(page.getByRole('button', { name: 'Adquirida' })).toBeDisabled();
+});
+
+test('penalizes wrong symbols and ends a paid job when time runs out', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Entrar na cidade' }).click();
+  await page.getByRole('button', { name: 'Antena Comunitária' }).click();
+  await page.clock.install();
+  const start = page.getByRole('button', { name: 'Trabalho de hacker' });
+  await start.click();
+  const firstSymbol = await page.locator('.city-sequence span').first().textContent();
+  await page.clock.fastForward(3600);
+  const wrong = ['▲', '●', '◆', '■'].find(symbol => symbol !== firstSymbol);
+  await page.getByRole('button', { name: wrong, exact: true }).click();
+  await expect(page.locator('#city-feedback')).toContainText('Penalidade de 2 s');
+  await expect(page.getByRole('timer')).toHaveText(/Tempo de envio · (9|10) s/);
+  await page.clock.fastForward(10000);
+  await expect(page.locator('#city-feedback')).toContainText('Tempo esgotado');
+  await expect(page.locator('#city-credits')).toHaveText('35 créditos');
+  await expect(start).toBeEnabled();
+});
+
+test('keeps campaign clues untimed and unlocks the next district', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Entrar na cidade' }).click();
+  await page.evaluate(() => NB.Save.recordBossVictory(NB.Campaign.getNodeById('kira')));
+  await page.getByRole('button', { name: 'Antena Comunitária' }).click();
+  await page.getByRole('button', { name: 'Rastrear pista' }).click();
+  await expect(page.getByRole('timer')).toHaveCount(0);
+
+  const symbols = await page.locator('.city-sequence span').allTextContents();
+  expect(symbols).toHaveLength(4);
+  for (const symbol of symbols) {
+    await page.getByRole('button', { name: symbol, exact: true }).click();
+  }
+  await page.getByRole('button', { name: 'Muralha Setorial', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Abrir dossiê' })).toBeEnabled();
+});
+
+test('loads a distinct portrait at each city location', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Entrar na cidade' }).click();
+  const expected = {
+    market: 'lume.png', relay: 'nina.png', arena: 'risco.webp', kira: 'kira.png',
+    cipher: 'cipher.png', vex: 'vex.png', archon: 'archon.png',
+  };
+  const portrait = page.locator('#city-portrait');
+  for (const [district, filename] of Object.entries(expected)) {
+    await page.locator(`[data-district="${district}"]`).click();
+    await expect(portrait).toHaveAttribute('src', `./avatars/${filename}`);
+    await expect.poll(() => portrait.evaluate(image => image.naturalWidth)).toBeGreaterThan(0);
+  }
 });
 
 test('starts a campaign duel, deploys a unit, and advances the turn', async ({ page }) => {

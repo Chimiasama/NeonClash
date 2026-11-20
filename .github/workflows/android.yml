@@ -36,21 +36,23 @@ jobs:
       - name: Instalar SDK Android 35
         uses: android-actions/setup-android@v4.0.4
         with:
-          cmdline-tools-version: '11076708'
+          cmdline-tools-version: '15859902'
           log-accepted-android-sdk-licenses: false
-          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
+          packages: 'platform-tools platforms;android-35 build-tools;36.0.0'
       - name: Gerar APK de teste
         working-directory: android
         run: ./gradlew --no-daemon :app:assembleDebug
       - name: Verificar APK
         run: |
           apk=android/app/build/outputs/apk/debug/app-debug.apk
-          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify "$apk"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify "$apk"
           entries=$(unzip -Z -1 "$apk")
           grep -Fx 'assets/index.html' <<< "$entries"
           grep -Fx 'assets/js/ui/city.js' <<< "$entries"
-          grep -Fx 'assets/avatars/risco.webp' <<< "$entries"
-      - uses: actions/upload-artifact@v4
+          for portrait in lume.png nina.png risco.webp kira.png cipher.png vex.png archon.png; do
+            grep -Fx "assets/avatars/$portrait" <<< "$entries"
+          done
+      - uses: actions/upload-artifact@v7.0.2
         with:
           name: NeonClash-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk

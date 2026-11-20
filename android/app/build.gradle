@@ -1,5 +1,5 @@
 plugins {
-    id 'com.android.application' version '8.7.3'
+    id 'com.android.application' version '9.5.1'
 }
 
 def webBuild = rootProject.layout.projectDirectory.dir('../dist')
@@ -16,7 +16,7 @@ def verifyWebBuild = tasks.register('verifyWebBuild') {
 android {
     namespace 'io.github.chimiasama.neonclash'
     compileSdk 35
-    buildToolsVersion '35.0.0'
+    buildToolsVersion '36.0.0'
 
     defaultConfig {
         applicationId 'io.github.chimiasama.neonclash'
