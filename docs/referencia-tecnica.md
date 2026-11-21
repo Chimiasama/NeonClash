@@ -126,7 +126,7 @@ A normalização do save deriva aliados antigos da evidência da conclusão paci
 
 ## Combate, cartas e progressão
 
-O catálogo atual tem **46 cartas**, sendo 25 unidades e 16 Exploits. Cada deck do jogador tem 20 cartas e aceita até duas cópias de cada ID. Há 12 cartas inicialmente disponíveis. A coleção usa ID estável, metadados de arte, descrição e atributos. Cartas novas entram pelo catálogo em `cards.js` e pela respectiva rota de aquisição. IDs têm lacunas históricas e o sufixo maior não representa a contagem.
+O catálogo atual tem **48 cartas**, sendo 30 unidades e 18 Exploits. Cada deck do jogador tem 20 cartas e aceita até duas cópias de cada ID. Há 12 cartas inicialmente disponíveis. A coleção usa ID estável, metadados de arte, descrição e atributos. Cartas novas entram pelo catálogo em `cards.js` e pela respectiva rota de aquisição. IDs têm lacunas históricas e o sufixo maior não representa a contagem.
 
 1. Cada lado começa com 0 RAM. Kairo tem 20 HP. A partida distribui quatro cartas iniciais por lado. A mão comporta seis cartas, com descarte quando uma compra excede esse limite. Quando o deck fica vazio, o descarte é embaralhado para continuar comprando.
 2. Em seu turno, Kairo pode invocar uma unidade se houver posição livre, obter a RAM da carta e usar Exploits enquanto puder pagar. Uma unidade normalmente passa por boot antes de poder atacar. O turno seguinte libera as unidades e compra uma carta. A IA segue fluxo de compra, invocação, Exploits e ataque, com perfil do oponente.
@@ -163,6 +163,10 @@ O catálogo atual tem **46 cartas**, sendo 25 unidades e 16 Exploits. Cada deck 
 O **Novo Jogo+** aparece na tela inicial depois do epílogo. Reinicia história, prólogo e vida da cidade, preservando coleção, decks, afinidades, Galeria, estatísticas e recompensas já conquistadas no Ringue. O duelo rápido começa com Kira como oponente inicial e inclui os demais conforme os encontros são resolvidos. Archon entra nessa seleção no Novo Jogo+.
 
 Após atacar, uma unidade fica exausta e não bloqueia até o início do próximo turno do seu lado. A regra vale para os dois lados e para as unidades usadas no Overclock. Firewall só intercepta se puder bloquear. Unidades em boot podem bloquear se estiverem aptas. Com um único atacante, tocar na unidade aliada marca ou desmarca o bloqueio. Se houver apenas um defensor apto, o bloqueio começa marcado. Contra vários atacantes, um defensor único já vem selecionado e o jogador escolhe o alvo. Firewall inimigo conserva a prioridade obrigatória.
+
+A seleção de ataque mostra **+1** nas unidades adversárias que tomariam bônus de afinidade se bloqueassem. A linha tracejada e a prévia de DEF indicam o lado que recebe o bônus quando o bloqueio já está marcado.
+
+Muralhas com Bloqueio Múltiplo podem assumir mais de um atacante. Os choques usam uma única reserva de DEF na ordem do ataque. Depois que a muralha cai, os próximos ataques atribuídos a ela acertam o HP. **Biombo de Sucata** custa 38 créditos, tem 3 DEF e pode bloquear até dois atacantes. **Colosso do Viaduto** custa 145 créditos, aparece na Feira no capítulo 5, tem 12 DEF e intercepta até três. Os dois têm 0 ATK. O Colosso gera apenas 1 RAM.
 
 A Feira vende as cinco cartas que ampliam essa regra. **Vigia de Turno** (55 cr) tem Vigilância e bloqueia mesmo depois de atacar. **Estilhaço de Pulso** (46 cr) tem 4 ATK, zero DEF e é destruído quando seu ataque é bloqueado. **Anteparo de Rua** (60 cr) tem 6 DEF, zero ATK e bloqueia como Firewall sem contra-atacar. **Formação de Retaguarda** (65 cr, 3 RAM) permite que unidades exaustas aptas a defender bloqueiem até o próximo turno do dono. **Escudo de Emergência** (50 cr, 2 RAM) absorve até 4 de dano ao HP no mesmo intervalo, sem acumular.
 
@@ -211,7 +215,7 @@ A Galeria registra o quadro quando sua imagem termina de carregar e a moldura ap
 
 ## Conteúdo atual e metas
 
-O jogo disponível tem 46 cartas, 10 bairros, 23 locais, 34 personagens com função no jogo, quatro chefes, quatro desafios de arquétipo e 37 cenas da investigação. O [plano de expansão](plano-expansao.md) descreve a meta de 500 cartas, sendo 495 encontráveis e cinco secretas de missão. Os roteiros de construção e descrições de moradores nos demais arquivos de `docs/` registram escopo planejado além dos recursos já descritos aqui.
+O jogo disponível tem 48 cartas, 10 bairros, 23 locais, 34 personagens com função no jogo, quatro chefes, quatro desafios de arquétipo e 37 cenas da investigação. O [plano de expansão](plano-expansao.md) descreve a meta de 500 cartas, sendo 495 encontráveis e cinco secretas de missão. Os roteiros de construção e descrições de moradores nos demais arquivos de `docs/` registram escopo planejado além dos recursos já descritos aqui.
 
 O lote piloto usa arte procedural. Condensador Coral, Ímã de Núcleo e Janela Espectral são vendidos na Feira. Catadora de Ecos, Ferro de Pulso e Pressão de Sucata são prêmios das primeiras vitórias sobre Giba, Aline e Nanda, respectivamente. Os três adversários também usam cartas do lote.
 

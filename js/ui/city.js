@@ -704,7 +704,8 @@
   }
 
   function renderMarket(content, save) {
-    for (const { id, price } of stock) {
+    for (const { id, price, chapter = 0 } of stock) {
+      if (NB.Story.get().chapter < chapter) continue;
       const card = NB.Cards.CARD_DB[id];
       const owned = save.unlockedCards.includes(id);
       const row = document.createElement('div');

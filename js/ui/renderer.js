@@ -75,7 +75,9 @@
     preview.hidden = true;
     if (state.phase !== 'PLAYER_DEFENSE') return;
     const overclock = state.enemyOverclock;
-    for (const [attackSlot, defenseSlot] of Object.entries(state.defenseMap)) {
+    const remainingDef = new Map();
+    for (const attackSlot of state.enemyAttackers) {
+      const defenseSlot = state.defenseMap[attackSlot];
       const attacker = state.enemy.field[attackSlot];
       const defender = state.player.field[defenseSlot];
       if (!attacker || !defender) continue;
@@ -84,9 +86,14 @@
       const attack = partner ? overclock.combinedAtk + NB.Combat.overclockSynergy(attacker, partner)
         : NB.Combat.clashDamage(attacker, defender, state.enemy.field);
       const counter = partner ? defender.atk : NB.Combat.clashDamage(defender, attacker);
-      const pierce = partner ? Math.max(0, attack - defender.def) : 0;
+      const before = remainingDef.get(defenseSlot) ?? defender.def;
+      const bonuses = partner ? { attack: 0, counter: 0 } : NB.Combat.clashAffinity(attacker, defender, state.enemy.field);
+      const pierce = partner ? Math.max(0, attack - before) : 0;
+      const after = Math.max(0, before - attack);
+      remainingDef.set(defenseSlot, after);
       const clash = document.createElement('span');
-      clash.textContent = `Sua posição ${defenseSlot + 1} DEF ${defender.def}→${Math.max(0, defender.def - attack)} · Inimigo ${Number(attackSlot) + 1} DEF ${attacker.def}→${Math.max(0, attacker.def - counter)}${pierce ? ` · −${pierce} HP` : ''}`;
+      clash.textContent = before === 0 ? `Ataque ${attackSlot + 1} segue para o HP se a muralha cair.` :
+        `Sua posição ${defenseSlot + 1} DEF ${before}→${after} · Inimigo ${attackSlot + 1} DEF ${attacker.def}→${Math.max(0, attacker.def - counter)}${pierce ? ` · −${pierce} HP` : ''}${bonuses.attack ? ' · +1 afinidade (ataque)' : bonuses.counter ? ' · +1 afinidade (contra-ataque)' : ''}`;
       preview.appendChild(clash);
     }
     preview.hidden = preview.childElementCount === 0;
@@ -270,6 +277,18 @@
       const artWrap = document.createElement('div');
       artWrap.className = 'card-art-wrap';
       artWrap.appendChild(NB.Sprites.createArtMarkup(def.id, def.img, def.name));
+
+      if (side === 'enemy' && state.phase === 'PLAYER_ATTACK' && state.selectedAttackers.some(slot => {
+        const attacker = state.player.field[slot];
+        return attacker && NB.Combat.clashAffinity(attacker, unit, state.player.field).attack;
+      })) {
+        const bonus = document.createElement('span');
+        bonus.className = 'affinity-attack-bonus';
+        bonus.title = '+1 de dano por afinidade se esta unidade bloquear';
+        bonus.setAttribute('aria-label', bonus.title);
+        bonus.textContent = '+1';
+        artWrap.append(bonus);
+      }
 
       const sheen = document.createElement('div');
       sheen.className = 'holo-sheen';

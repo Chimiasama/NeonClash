@@ -236,6 +236,8 @@
           if (state.defenseDeclined) delete state.defenseMap[attacker];
           else state.defenseMap[attacker] = slotIdx;
           state.activeDefenderSlot = null;
+        } else if (NB.Combat.blockLimit(unit) > 1) {
+          state.activeDefenderSlot = state.activeDefenderSlot === slotIdx ? null : slotIdx;
         } else if (state.activeDefenderSlot === slotIdx) {
           if (existingEnemy !== undefined) delete state.defenseMap[existingEnemy];
           state.activeDefenderSlot = null;
@@ -254,13 +256,24 @@
 
       if (side === 'enemy' && unit && (state.enemyAttackers.includes(slotIdx) || isEnemyOcTarget)) {
         if (state.activeDefenderSlot !== null) {
-          for (const k of Object.keys(state.defenseMap)) {
-            if (state.defenseMap[k] === state.activeDefenderSlot) {
-              delete state.defenseMap[k];
+          const defenderSlot = state.activeDefenderSlot;
+          const defender = state.player.field[defenderSlot];
+          if (NB.Combat.blockLimit(defender) > 1) {
+            if (state.defenseMap[targetEnemyKey] === defenderSlot) {
+              delete state.defenseMap[targetEnemyKey];
+            } else if (NB.Combat.hasBlockRoom(defender, state.player, state.defenseMap, defenderSlot)) {
+              state.defenseMap[targetEnemyKey] = defenderSlot;
+            } else {
+              NB.Physics.showToast('LIMITE DE BLOQUEIOS ATINGIDO', 'var(--amber)');
+              return;
             }
+          } else {
+            for (const key of Object.keys(state.defenseMap)) {
+              if (state.defenseMap[key] === defenderSlot) delete state.defenseMap[key];
+            }
+            state.defenseMap[targetEnemyKey] = defenderSlot;
+            state.activeDefenderSlot = null;
           }
-          state.defenseMap[targetEnemyKey] = state.activeDefenderSlot;
-          state.activeDefenderSlot = null;
           NB.Audio.playSelect();
           NB.Physics.vibrateCard();
           NB.UI.renderAll();

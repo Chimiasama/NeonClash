@@ -1270,7 +1270,65 @@ test('limits repair, protects RAM on invalid targets and previews affinity damag
     return { invalid, unspent, valid, def: defender.def, ram: state.player.ram };
   });
   expect(repair).toEqual({ invalid: false, unspent: 4, valid: true, def: 5, ram: 3 });
-  await expect(page.locator('#defense-preview')).toHaveText('Sua posição 1 DEF 5→1 · Inimigo 2 DEF 5→3');
+  await expect(page.locator('#defense-preview')).toHaveText('Sua posição 1 DEF 5→1 · Inimigo 2 DEF 5→3 · +1 afinidade (ataque)');
+});
+
+test('marks affinity on attack targets and on real blocking lines', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    NB.Input.startMatch({ mode: 'quick' });
+    const state = NB.State.get();
+    state.player.field[0] = { ...NB.State.createFieldUnit('unit_05', 901, 'player'), booting: false };
+    state.enemy.field[0] = NB.State.createFieldUnit('unit_03', 902, 'enemy');
+    state.enemy.field[1] = NB.State.createFieldUnit('unit_05', 903, 'enemy');
+    state.phase = 'PLAYER_ATTACK';
+    NB.UI.renderAll();
+  });
+  await page.locator('.player-slot').first().click();
+  await expect(page.locator('.enemy-slot').nth(0).locator('.affinity-attack-bonus')).toHaveText('+1');
+  await expect(page.locator('.enemy-slot').nth(1).locator('.affinity-attack-bonus')).toHaveCount(0);
+  await page.evaluate(() => {
+    const state = NB.State.get();
+    [state.player.field[0], state.enemy.field[0]] = [state.enemy.field[0], state.player.field[0]];
+    NB.Combat.preparePlayerDefense([0]);
+    NB.UI.renderAll();
+  });
+  await expect(page.locator('#laser-svg .affinity-line-bonus')).toHaveAttribute('aria-label', '+1 de afinidade no ataque');
+});
+
+test('assigns several attacks to a wall and spends its defense in order', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    NB.Input.startMatch({ mode: 'quick' });
+    const state = NB.State.get();
+    state.player.field[0] = NB.State.createFieldUnit('unit_35', 910, 'player');
+    for (let slot = 0; slot < 3; slot++) {
+      state.enemy.field[slot] = { ...NB.State.createFieldUnit('unit_01', 920 + slot, 'enemy'), atk: 3, booting: false };
+    }
+    NB.Combat.preparePlayerDefense([0, 1, 2]);
+    NB.UI.renderAll();
+  });
+  for (const slot of [0, 1, 2]) await page.locator('.enemy-slot').nth(slot).click();
+  expect(await page.evaluate(() => NB.State.get().defenseMap)).toEqual({ 0: 0, 1: 0 });
+  await expect(page.locator('#defense-preview')).toContainText('Ataque 2 segue para o HP se a muralha cair.');
+  const outcome = await page.evaluate(async () => {
+    const state = NB.State.get();
+    NB.State.wait = async () => true;
+    const hp = state.player.hp;
+    await NB.Combat.confirmPlayerDefense();
+    const broken = [state.player.field[0], hp - state.player.hp];
+    state.player.field[0] = NB.State.createFieldUnit('unit_36', 911, 'player');
+    const nextHp = state.player.hp;
+    for (const unit of state.enemy.field) unit.attacked = false;
+    NB.Combat.preparePlayerDefense([0, 1, 2]);
+    const links = { ...state.defenseMap };
+    await NB.Combat.confirmPlayerDefense();
+    const colossus = [state.player.field[0].def, nextHp - state.player.hp];
+    state.enemy.field = [NB.State.createFieldUnit('unit_36', 950, 'enemy'), null, null];
+    state.player.field = [0, 1, 2].map(index => NB.State.createFieldUnit('unit_04', 960 + index, 'player'));
+    return { broken, links, colossus, ai: NB.AI.computeAiBlocks([0, 1, 2]) };
+  });
+  expect(outcome).toEqual({ broken: [null, 6], links: { 0: 0, 1: 0, 2: 0 }, colossus: [3, 0], ai: { 0: 0, 1: 0, 2: 0 } });
 });
 
 test('finishes a draw exploit before putting it into the discard pile', async ({ page }) => {

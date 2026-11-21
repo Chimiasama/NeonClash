@@ -257,6 +257,8 @@
     const arenaRect = document.getElementById('arena-container').getBoundingClientRect();
     const defenderSide = attackerSide === 'player' ? 'enemy' : 'player';
 
+    const state = NB.State.get();
+    const badges = [];
     Object.entries(blockMap).forEach(([atkSlotStr, defSlot]) => {
       const atkEl = NB.State.getSlotEl(attackerSide, Number(atkSlotStr));
       const defEl = NB.State.getSlotEl(defenderSide, Number(defSlot));
@@ -297,7 +299,23 @@
       dot.setAttribute('r', '5');
       dot.setAttribute('fill', '#FFB800');
       svg.appendChild(dot);
+
+      const attacker = state[attackerSide].field[atkSlotStr];
+      const defender = state[defenderSide].field[defSlot];
+      if (!attacker || !defender || (attackerSide === 'enemy' && state.enemyOverclock)) return;
+      const bonuses = NB.Combat.clashAffinity(attacker, defender, state[attackerSide].field);
+      if (bonuses.attack || bonuses.counter) {
+        const fraction = bonuses.attack ? .67 : .33;
+        const badge = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        badge.setAttribute('class', 'affinity-line-bonus');
+        badge.setAttribute('x', x1 + (x2 - x1) * fraction);
+        badge.setAttribute('y', y1 + (y2 - y1) * fraction);
+        badge.setAttribute('aria-label', bonuses.attack ? '+1 de afinidade no ataque' : '+1 de afinidade no contra-ataque');
+        badge.textContent = '+1';
+        badges.push(badge);
+      }
     });
+    svg.append(...badges);
   }
 
   /* Conecta 2 unidades aliadas com feixe de energia neon durante o Overclock (Unite Attack) */

@@ -445,3 +445,26 @@
 }
 
 .field-affinity { flex-shrink: 0; font-size: 10px; margin-left: 4px; }
+
+.affinity-line-bonus {
+  fill: #ffda83;
+  stroke: #101822;
+  stroke-width: 4px;
+  paint-order: stroke;
+  text-anchor: middle;
+  dominant-baseline: central;
+  font: 900 14px var(--font-mono);
+}
+.affinity-attack-bonus {
+  position: absolute;
+  top: 22px;
+  right: 4px;
+  z-index: 9;
+  padding: 2px 4px;
+  border: 1px solid #ffda83;
+  border-radius: 4px;
+  color: #ffda83;
+  background: #14111a;
+  font: 900 12px var(--font-mono);
+  pointer-events: none;
+}

@@ -43,8 +43,9 @@
       }
 
       if (pickIdx !== -1) {
-        const chosen = availableDefenders.splice(pickIdx, 1)[0];
+        const chosen = availableDefenders[pickIdx];
         blocks[pSlot] = chosen.idx;
+        if (!NB.Combat.hasBlockRoom(chosen.u, state.enemy, blocks, chosen.idx)) availableDefenders.splice(pickIdx, 1);
       }
     }
     return blocks;

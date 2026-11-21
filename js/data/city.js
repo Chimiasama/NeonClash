@@ -28,7 +28,9 @@
     { id: 'unit_33', price: 46 },
     { id: 'unit_34', price: 60 },
     { id: 'exploit_17', price: 65 },
-    { id: 'exploit_18', price: 50 }
+    { id: 'exploit_18', price: 50 },
+    { id: 'unit_35', price: 38 },
+    { id: 'unit_36', price: 145, chapter: 4 }
   ];
 
   const traces = {

@@ -11,6 +11,34 @@
       (!unit.attacked || actor.counterFormation || NB.Cards.hasKeyword(unit, 'VIGILANCE')));
   }
 
+  function blockLimit(unit) {
+    return NB.Cards.CARD_DB[unit?.cardId]?.blockLimit ?? 1;
+  }
+
+  function blocksAssigned(blockMap, slot) {
+    return Object.values(blockMap).filter(value => value === slot).length;
+  }
+
+  function hasBlockRoom(unit, actor, blockMap, slot) {
+    return canBlock(unit, actor) && blocksAssigned(blockMap, slot) < blockLimit(unit);
+  }
+
+  function legalBlocks(attackers, map, actor) {
+    const legal = {};
+    for (const attacker of attackers) {
+      const slot = map[attacker];
+      if (hasBlockRoom(actor.field[slot], actor, legal, slot)) legal[attacker] = slot;
+    }
+    return legal;
+  }
+
+  function clashAffinity(attacker, defender, field) {
+    return {
+      attack: affinityBonus({ ...attacker, atk: NB.CardEffects.attackPower(attacker, field) }, defender),
+      counter: affinityBonus(defender, attacker)
+    };
+  }
+
   function affinityBonus(attacker, defender) {
     return Number(attacker.atk > 0 && Boolean(defender.affinity)
       && NB.Cards.AFFINITIES[attacker.affinity]?.beats === defender.affinity);
@@ -34,13 +62,7 @@
     state.phase = 'COMBAT_ANIM';
     const defenderSide = attackerSide === 'player' ? 'enemy' : 'player';
     NB.UI.renderAll();
-    const assigned = new Set();
-    blockMap = Object.fromEntries(Object.entries(blockMap).filter(([attackSlot, defenseSlot]) => {
-      if (!attackerSlots.includes(Number(attackSlot)) || assigned.has(defenseSlot) ||
-          !canBlock(state[defenderSide].field[defenseSlot], state[defenderSide])) return false;
-      assigned.add(defenseSlot);
-      return true;
-    }));
+    blockMap = legalBlocks(attackerSlots, blockMap, state[defenderSide]);
     NB.Physics.drawDefenseLasers(attackerSide, blockMap);
 
     for (const atkSlot of attackerSlots) {
@@ -423,46 +445,42 @@
       if (attackers.length === 1) state.defenseMap[attackers[0]] = eligible[0];
       else state.activeDefenderSlot = eligible[0];
     }
+    assignFirewallBlocks(state);
     state.phase = 'PLAYER_DEFENSE';
+  }
+
+  function assignFirewallBlocks(state) {
+    if (state.defenseDeclined) return;
+    for (const attacker of state.enemyAttackers) {
+      if (state.defenseMap[attacker] !== undefined) continue;
+      const slot = state.player.field.findIndex((unit, index) => NB.Cards.hasKeyword(unit, 'FIREWALL') &&
+        hasBlockRoom(unit, state.player, state.defenseMap, index));
+      if (slot !== -1) state.defenseMap[attacker] = slot;
+    }
   }
 
   async function confirmPlayerDefense() {
     const state = NB.State.get();
     if (state.phase !== 'PLAYER_DEFENSE') return;
 
-    const usedDefenders = new Set();
-    for (const [attackSlot, defenseSlot] of Object.entries(state.defenseMap)) {
-      if (!state.enemyAttackers.includes(Number(attackSlot)) || usedDefenders.has(defenseSlot) ||
-          !canBlock(state.player.field[defenseSlot], state.player)) {
-        delete state.defenseMap[attackSlot];
-      } else {
-        usedDefenders.add(defenseSlot);
-      }
-    }
-    const freePlayerSlots = [];
-    state.player.field.forEach((u, idx) => {
-      if (canBlock(u, state.player) && !usedDefenders.has(idx)) freePlayerSlots.push(idx);
-    });
+    state.defenseMap = legalBlocks(state.enemyAttackers, state.defenseMap, state.player);
+    const hasFreeDefender = state.player.field.some((unit, slot) =>
+      hasBlockRoom(unit, state.player, state.defenseMap, slot));
 
     const unblockedEnemyFirewall = state.enemyAttackers.find(eSlot => {
       const eu = state.enemy.field[eSlot];
       return eu && NB.Cards.hasKeyword(eu, 'FIREWALL') && state.defenseMap[eSlot] === undefined;
     });
 
-    if (unblockedEnemyFirewall !== undefined && freePlayerSlots.length > 0) {
+    if (unblockedEnemyFirewall !== undefined && hasFreeDefender) {
       NB.Physics.showToast('🛡 BLOQUEIE O FIREWALL INIMIGO PRIMEIRO!', 'var(--amber)');
       NB.Physics.vibrateCard();
       return;
     }
 
-    const unblockedEnemies = state.enemyAttackers.filter(eSlot => state.defenseMap[eSlot] === undefined);
-    const idlePlayerFirewalls = freePlayerSlots.filter(pSlot => !state.defenseDeclined && NB.Cards.hasKeyword(state.player.field[pSlot], 'FIREWALL'));
-    if (unblockedEnemies.length > 0 && idlePlayerFirewalls.length > 0) {
-      idlePlayerFirewalls.forEach((pSlot, i) => {
-        if (unblockedEnemies[i] !== undefined) {
-          state.defenseMap[unblockedEnemies[i]] = pSlot;
-        }
-      });
+    const marked = Object.keys(state.defenseMap).length;
+    assignFirewallBlocks(state);
+    if (Object.keys(state.defenseMap).length > marked) {
       NB.Physics.showToast('🛡 SEU FIREWALL INTERCEPTOU O ATAQUE!', 'var(--cyan)');
       NB.Physics.drawDefenseLasers('enemy', state.defenseMap);
       if (!(await NB.State.wait(360))) return;
@@ -489,6 +507,9 @@
   NB.Combat = {
     canAttack,
     canBlock,
+    blockLimit,
+    hasBlockRoom,
+    clashAffinity,
     affinityBonus,
     clashDamage,
     overclockSynergy,

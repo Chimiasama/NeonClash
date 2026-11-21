@@ -25,6 +25,8 @@
 
   /* Metadados das palavras-chave com ícones e cores. */
   const KEYWORDS = {
+    MULTI_BLOCK: { tag: 'BLOQUEIO MÚLTIPLO', short: 'BM', icon: '⬡', color: '#8ef1d5',
+      desc: 'Pode bloquear vários ataques seguidos enquanto tiver DEF. O limite depende da carta.' },
     VIGILANCE: { tag: 'VIGILÂNCIA', short: 'VG', icon: '◈', color: '#a8f5f3',
       desc: 'Pode bloquear mesmo depois de atacar.' },
     ATTACK_ONLY: { tag: 'SÓ ATAQUE', short: 'AT', icon: '▲', color: '#ffad62',
@@ -498,6 +500,14 @@
   addExploit('exploit_18', 'Escudo de Emergência', 'Proteção', 2, 'none',
     'Absorve até 4 de dano ao seu HP até o início do seu próximo turno. O escudo não acumula.',
     [{ type: 'hpShield', value: 4 }]);
+
+  addUnit('unit_35', 'Biombo de Sucata', 'Muralha comum', 0, 3, 'malha', ['GUARD_ONLY', 'MULTI_BLOCK'],
+    'Sem ATK. Pode bloquear até dois atacantes. O dano do primeiro choque fica na unidade para o segundo.');
+  CARD_DB.unit_35.blockLimit = 2;
+  addUnit('unit_36', 'Colosso do Viaduto', 'Muralha rara', 0, 12, 'malha', ['GUARD_ONLY', 'MULTI_BLOCK', 'FIREWALL'],
+    'Sem ATK. Intercepta até três atacantes por fase. Cada choque consome a mesma reserva de DEF. Gera apenas 1 RAM.');
+  CARD_DB.unit_36.blockLimit = 3;
+  CARD_DB.unit_36.ramGain = 1;
 
   for (const id of ['unit_28', 'unit_29', 'unit_30', 'exploit_12', 'exploit_13', 'exploit_14', 'exploit_15', 'exploit_16', 'unit_31', 'unit_32', 'unit_33', 'unit_34', 'exploit_17', 'exploit_18']) {
     CARD_DB[id].proceduralOnly = true;
