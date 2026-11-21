@@ -33,3 +33,5 @@ Reserve as onomatopeias para sons que pontuam a ação, como o leitor da porta e
 Na Muralha, Raquel conecta o mesmo filtro que Íris calibrou. O quadro da Muralha mostra [a peça encaixada no leitor](../src/assets/comic/filtro-na-muralha.webp).
 
 Isa usa o retrato de repórter da [cena de entrega na Praça](../avatars/isa.webp). A [interceptação de rádio](../src/assets/comic/radio-meridiano.webp) mostra o receptor preparado na Muralha.
+
+O descanso forçado na rua tem dois quadros de consequência. [Descanso no beco](../src/assets/comic/descanso-no-beco.webp) mostra Kairo sob papelão junto a um tonel aceso. [Assalto no beco](../src/assets/comic/assalto-no-beco.webp) mostra Kairo observando as silhuetas do esconderijo. Os dois seguem o rosto, penteado e jaqueta da capa.

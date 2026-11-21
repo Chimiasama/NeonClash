@@ -47,6 +47,12 @@
     hotel: { minutes: 300, price: 26 }
   };
   const streetRest = { minutes: 300, energy: 60, robberyChance: 30, creditsLost: 60 };
+  const streetRestArt = {
+    safe: { source: './src/assets/comic/descanso-no-beco.webp', title: 'Descanso no beco',
+      description: 'Kairo dorme sob papelão num beco abrigado, perto do fogo de um tonel.' },
+    robbed: { source: './src/assets/comic/assalto-no-beco.webp', title: 'Assalto no beco',
+      description: 'Kairo observa de um esconderijo enquanto duas silhuetas deixam o beco.' }
+  };
   const bagLimit = 12;
   const implantPrice = 130;
   const city = () => NB.Save.get().city;
@@ -78,6 +84,10 @@
       (Array.isArray(raw?.ownedDecks) && raw.ownedDecks.includes(id)));
     return {
       minute,
+      streetRestEvent: typeof raw?.streetRestEvent?.robbed === 'boolean'
+        ? { robbed: raw.streetRestEvent.robbed,
+          creditsLost: raw.streetRestEvent.robbed ? integer(raw.streetRestEvent.creditsLost, 0, 0, Number.MAX_SAFE_INTEGER) : 0 }
+        : null,
       travelChallenge,
       routePact,
       routeMask: routePact === 4 && raw?.routeMask === true,
@@ -254,7 +264,9 @@
         sleep('home');
         life.notice = 'Você chegou no limite e dormiu em casa.';
       } else {
-        const lost = Math.random() * 100 < streetRest.robberyChance ? Math.ceil(state.credits * streetRest.creditsLost / 100) : 0;
+        const robbed = Math.random() * 100 < streetRest.robberyChance;
+        const lost = robbed ? Math.ceil(state.credits * streetRest.creditsLost / 100) : 0;
+        life.streetRestEvent = { robbed, creditsLost: lost };
         state.credits -= lost;
         life.minute += streetRest.minutes;
         life.awake = 0;
@@ -484,6 +496,11 @@
     return false;
   }
 
+  function acknowledgeStreetRest() {
+    city().life.streetRestEvent = null;
+    NB.Save.save();
+  }
+
   function takeNotice() {
     const life = city().life;
     const notice = life.notice;
@@ -494,7 +511,7 @@
     return notice;
   }
 
-  NB.CityLife = { items, transport, beds, streetRest, bagLimit, implantPrice, normalize, clock, maxEnergy, maxAwake,
+  NB.CityLife = { items, transport, beds, streetRest, streetRestArt, acknowledgeStreetRest, bagLimit, implantPrice, normalize, clock, maxEnergy, maxAwake,
     bagCount, routes, advance, travel, getTravelChallenge, requiredTravelChallenge, travelWithdrawalFee, settleTravelChallenge, finishTravelChallenge,
     advanceRoutePact, setRouteMask, cyberdecks, equipCyberdeck, sleep, buy, use, nightShift, workNightShift, helpContact, learnHillPath, hillPathLesson, takeNotice, consumablePrice, recoverEnergy,
     relayModes, demand, jobQuote, work, finishSignal, startDelivery, cancelDelivery };

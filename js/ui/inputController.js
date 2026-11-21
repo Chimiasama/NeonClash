@@ -4,7 +4,7 @@
   /* Controlador de Entrada Touch, Navegação entre Telas, Campanha, Overclock e Save */
   function hideAllScreens() {
     NB.City.cancelJob();
-    ['title-modal', 'netmap-modal', 'prologue-modal', 'abandon-modal', 'story-modal', 'dossier-modal', 'gameover-modal', 'settings-modal', 'deck-modal', 'card-inspector-modal'].forEach(id => {
+    ['title-modal', 'netmap-modal', 'prologue-modal', 'abandon-modal', 'street-rest-modal', 'story-modal', 'dossier-modal', 'gameover-modal', 'settings-modal', 'deck-modal', 'card-inspector-modal'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.classList.remove('open');
     });
@@ -351,6 +351,7 @@
     const isOpen = id => document.getElementById(id).classList.contains('open');
     const closeButtons = [
       ['abandon-modal', 'abandon-cancel'],
+      ['street-rest-modal', 'street-rest-close'],
       ['prologue-modal', 'prologue-close'],
       ['card-inspector-modal', 'btn-insp-close'],
       ['png-modal', 'btn-png-close'],

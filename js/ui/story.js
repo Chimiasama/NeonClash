@@ -228,6 +228,7 @@
     $('story-modal').classList.remove('open');
     document.querySelector('.city-panel').inert = false;
     if (origin?.isConnected) origin.focus();
+    queueMicrotask(NB.City.showStreetRest);
   }
 
   function finish(selected) {

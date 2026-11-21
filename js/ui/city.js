@@ -115,7 +115,42 @@
     if (challenge && !challenge.optional) document.querySelector('.city-travel-challenge button')?.focus();
   }
 
+  let streetRestOrigin = null;
+
+  function showStreetRest() {
+    const event = NB.Save.get().city.life.streetRestEvent;
+    const modal = $('street-rest-modal');
+    const cityPanel = document.querySelector('.city-panel');
+    if (!event || !$('netmap-modal').classList.contains('open') || modal.classList.contains('open') ||
+        cityPanel.inert) return;
+    const illustration = NB.CityLife.streetRestArt[event.robbed ? 'robbed' : 'safe'];
+    const art = $('street-rest-art');
+    art.alt = illustration.description;
+    art.src = illustration.source;
+    $('street-rest-title').textContent = event.robbed ? 'Assalto no beco' : 'Descanso no beco';
+    const hours = NB.CityLife.streetRest.minutes / 60;
+    const credits = event.creditsLost === 1 ? '1 crédito' : `${event.creditsLost} créditos`;
+    $('street-rest-message').textContent = event.robbed
+      ? `Kairo dormiu na rua por ${hours} horas. Ela foi assaltada e perdeu ${credits}.`
+      : `Kairo dormiu na rua por ${hours} horas. Ninguém mexeu com ela.`;
+    streetRestOrigin = document.activeElement;
+    cityPanel.inert = true;
+    modal.classList.add('open');
+    $('street-rest-close').focus();
+  }
+
+  function closeStreetRest() {
+    $('street-rest-modal').classList.remove('open');
+    NB.CityLife.acknowledgeStreetRest();
+    document.querySelector('.city-panel').inert = false;
+    const target = streetRestOrigin?.isConnected && streetRestOrigin !== document.body
+      ? streetRestOrigin : $('city-map-tab');
+    target.focus({ preventScroll: true });
+    streetRestOrigin = null;
+  }
+
   function render() {
+    queueMicrotask(showStreetRest);
     const save = NB.Save.get();
     const district = districtAtPosition();
     const life = save.city.life;
@@ -1060,6 +1095,7 @@
   }
 
   function bindEvents() {
+    $('street-rest-close').addEventListener('click', closeStreetRest);
     for (const district of districts) {
       const pin = addButton($('city-map'), '', () => selectDestination(district.id), false, 'city-pin');
       pin.dataset.district = district.id;
@@ -1147,5 +1183,5 @@
     $('city-content').querySelector('button')?.focus();
   }
 
-  NB.City = { refreshStory, open, resetView, bindEvents, finishArena, access, cancelJob, handleBack };
+  NB.City = { showStreetRest, refreshStory, open, resetView, bindEvents, finishArena, access, cancelJob, handleBack };
 })(window.NB = window.NB || {});

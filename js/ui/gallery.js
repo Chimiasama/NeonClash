@@ -40,6 +40,9 @@
     for (const [art, title, line] of NB.StoryUI.prologue) {
       add(`./src/assets/${art}.webp`, title, line, 'scenes');
     }
+    for (const art of Object.values(NB.CityLife.streetRestArt)) {
+      add(art.source, art.title, art.description, 'scenes');
+    }
     for (const district of NB.CityData.districts) {
       add(district.scene, district.name, scenery[district.id] || `${district.name}, ponto de encontro com ${district.npc.split(' · ')[0]}.`, 'scenes');
       add(district.portrait, district.npc, `Retrato de personagem em ${district.name}.`, 'people');

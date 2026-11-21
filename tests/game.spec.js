@@ -718,6 +718,12 @@ test('warns of exhaustion, resolves a street robbery and offers paid rest', asyn
   await expect(page.getByText(/Você vai precisar dormir ao chegar/).first()).toBeVisible();
   await page.getByRole('button', { name: 'A pé', exact: true }).click();
   await expect(page.locator('#city-feedback')).toContainText('Perdeu 60 créditos');
+  const rest = page.getByRole('dialog', { name: 'Assalto no beco' });
+  await expect(rest).toBeVisible();
+  await expect(rest).toContainText('Ela foi assaltada e perdeu 60 créditos.');
+  await expect(rest.locator('img')).toHaveAttribute('src', './src/assets/comic/assalto-no-beco.webp');
+  await expect.poll(() => page.evaluate(() => NB.Save.get().seenArt)).toContain('./src/assets/comic/assalto-no-beco.webp');
+  await rest.getByRole('button', { name: 'Continuar' }).click();
   await expect(page.locator('#city-credits')).toHaveText('40 créditos');
   await expect(page.locator('#city-energy')).toHaveAttribute('value', '60');
   await page.getByRole('button', { name: 'Dormir · 7 h · 12 créditos' }).click();
@@ -726,6 +732,25 @@ test('warns of exhaustion, resolves a street robbery and offers paid rest', asyn
   await walkTo(page, page.getByRole('button', { name: 'Hotel Espelho · bloqueado' }));
   await page.getByRole('button', { name: 'Dormir · 5 h · 26 créditos' }).click();
   await expect(page.locator('#city-credits')).toHaveText('2 créditos');
+});
+
+test('shows a quiet street rest and waits for acknowledgement across reload', async ({ page }) => {
+  await page.goto('/');
+  await enterCity(page);
+  await page.evaluate(() => { NB.Save.get().city.life.energy = 1; });
+  await walkTo(page, page.locator('[data-district="pension"]'), 0.99);
+  const rest = page.getByRole('dialog', { name: 'Descanso no beco' });
+  await expect(rest).toContainText('Kairo dormiu na rua por 5 horas. Ninguém mexeu com ela.');
+  await expect(rest.locator('img')).toHaveAttribute('src', './src/assets/comic/descanso-no-beco.webp');
+  expect(await page.evaluate(() => NB.Save.get().city.credits)).toBe(35);
+  await page.reload();
+  await enterCity(page);
+  await expect(rest).toBeVisible();
+  expect(await page.evaluate(() => NB.Input.handleBack())).toBe(true);
+  await expect(rest).toBeHidden();
+  await page.reload();
+  await enterCity(page);
+  await expect(rest).toBeHidden();
 });
 
 test('opens the kiosk job only in its night window and prevents duplicate pay', async ({ page }) => {
