@@ -100,7 +100,7 @@
 
     state.phase = 'ENEMY_TURN';
     state.selectedHandUid = null;
-    state.pendingExploit = null;
+    state.pendingTarget = null;
     state.overclockUnits = [];
     state.enemyOverclock = null;
     NB.UI.closeVisor();
@@ -130,7 +130,11 @@
       if (unitsInHand.length > 0) {
         unitsInHand.sort((a, b) => {
           const score = (x) => {
-            let s = attackingPower(x.def, state.enemy.field) * 1.4 + x.def.def + NB.CardEffects.score(state, x.def, 'enemy', freeSlot);
+            const effects = x.def.targetType === 'enemy_unit'
+              ? Math.max(0, ...NB.CardEffects.legalSlots(state, x.def, 'enemy')
+                .map(slot => NB.CardEffects.score(state, x.def, 'enemy', slot)))
+              : NB.CardEffects.score(state, x.def, 'enemy', freeSlot);
+            let s = attackingPower(x.def, state.enemy.field) * 1.4 + x.def.def + effects;
             if (NB.Cards.hasKeyword(x.def, 'ZERO_DAY')) s += (boss && boss.id === 'kira' ? 5.5 : 3.5);
             if (NB.Cards.hasKeyword(x.def, 'FIREWALL')) s += (boss && boss.id === 'cipher' ? 5.0 : (state.enemy.hp <= 12 ? 4.2 : 1.5));
             if (NB.Cards.hasKeyword(x.def, 'VIRUS')) s += (boss && boss.id === 'vex' ? 4.2 : 2.4);

@@ -79,6 +79,7 @@
       defeatedBosses: [],
       clues: [],
       unlockedCards: starter,
+      starterDeck: null,
       customDeck: buildBalancedDeck(starter, []),
       deckSlot: 0,
       deckSlots: {},
@@ -116,6 +117,8 @@
           defeatedBosses: Array.isArray(parsed.defeatedBosses) ? parsed.defeatedBosses : def.defeatedBosses,
           clues: Array.isArray(parsed.clues) ? parsed.clues : def.clues,
           unlockedCards,
+          starterDeck: Object.hasOwn(NB.Cards.STARTER_DECKS, parsed.starterDeck) ? parsed.starterDeck
+            : parsed.prologueSeen || parsed.story?.started ? 'balanced' : null,
           customDeck: finalDeck,
           deckSlot: Number.isInteger(parsed.deckSlot) && parsed.deckSlot >= 0 && parsed.deckSlot < 3 ? parsed.deckSlot : 0,
           deckSlots: Object.fromEntries([0, 1, 2].flatMap(slot => {
@@ -181,6 +184,18 @@
       progress.affinities[cardId] = affinity;
       progress.city.credits -= recalibrationPrice;
     }
+    save();
+    return true;
+  }
+
+  function chooseStarterDeck(id) {
+    const progress = get();
+    if (progress.starterDeck || progress.prologueSeen || !Object.hasOwn(NB.Cards.STARTER_DECKS, id)) return false;
+    const recipe = NB.Cards.STARTER_DECKS[id];
+    progress.starterDeck = id;
+    progress.unlockedCards = [...new Set([...progress.unlockedCards, ...(recipe.cards || [])])];
+    progress.customDeck = recipe.cards ? recipe.cards.flatMap(cardId => [cardId, cardId])
+      : buildBalancedDeck(NB.Cards.STARTER_CARD_IDS);
     save();
     return true;
   }
@@ -338,6 +353,7 @@
     save,
     get,
     getActiveDeck,
+    chooseStarterDeck,
     getAffinity,
     recalibrate,
     recalibrationPrice,

@@ -29,6 +29,9 @@
     { id: 'unit_34', price: 60 },
     { id: 'exploit_17', price: 65 },
     { id: 'exploit_18', price: 50 },
+    { id: 'unit_37', price: 32 },
+    { id: 'unit_38', price: 41 },
+    { id: 'exploit_19', price: 39 },
     { id: 'unit_35', price: 38 },
     { id: 'unit_36', price: 145, chapter: 4 }
   ];

@@ -423,7 +423,7 @@
 
   function addUnit(id, name, archetype, atk, def, affinity, keywords, desc, onDeploy) {
     CARD_DB[id] = { id, kind: 'unit', subtitle: archetype, name, archetype, atk, def, affinity,
-      keywords, ramGain: 2, img: `./cards/${id}.webp`, accent: AFFINITIES[affinity].color, desc, onDeploy };
+      keywords, ramGain: 2, img: `./cards/${id}.webp`, accent: AFFINITIES[affinity]?.color || '#a8f5f3', desc, onDeploy };
   }
 
   function addExploit(id, name, archetype, cost, targetType, desc, cardEffects) {
@@ -509,7 +509,20 @@
   CARD_DB.unit_36.blockLimit = 3;
   CARD_DB.unit_36.ramGain = 1;
 
-  for (const id of ['unit_28', 'unit_29', 'unit_30', 'exploit_12', 'exploit_13', 'exploit_14', 'exploit_15', 'exploit_16', 'unit_31', 'unit_32', 'unit_33', 'unit_34', 'exploit_17', 'exploit_18']) {
+  addUnit('unit_37', 'Sonda de Bancada', 'Dano de entrada', 2, 2, null, [],
+    'Ao entrar em campo, causa 1 de dano à unidade inimiga escolhida.',
+    [{ type: 'damage', target: 'selected', value: 1 }]);
+  CARD_DB.unit_37.targetType = 'enemy_unit';
+  addUnit('unit_38', 'Vigia de Brecha', 'Dano de entrada', 1, 2, 'sombra', [],
+    'Ao entrar em campo, causa 2 de dano à unidade inimiga escolhida. Gera apenas 1 RAM.',
+    [{ type: 'damage', target: 'selected', value: 2 }]);
+  CARD_DB.unit_38.targetType = 'enemy_unit';
+  CARD_DB.unit_38.ramGain = 1;
+  addExploit('exploit_19', 'Curto de Placa', 'Sabotagem', 2, 'enemy_unit',
+    'Causa 2 de dano à DEF de uma unidade inimiga. Pode destruí-la se ela tiver 2 DEF ou menos.',
+    [{ type: 'damage', target: 'selected', value: 2 }]);
+
+  for (const id of ['unit_28', 'unit_29', 'unit_30', 'exploit_12', 'exploit_13', 'exploit_14', 'exploit_15', 'exploit_16', 'unit_31', 'unit_32', 'unit_33', 'unit_34', 'exploit_17', 'exploit_18', 'unit_37', 'unit_38', 'exploit_19']) {
     CARD_DB[id].proceduralOnly = true;
   }
 
@@ -523,6 +536,14 @@
     'unit_08', 'unit_09', 'unit_11',
     'exploit_01', 'exploit_02', 'exploit_04'
   ];
+
+  const STARTER_DECKS = {
+    balanced: { name: 'Equilibrado', description: 'Ataque, defesa e Exploits de apoio. Uma abertura versátil.' },
+    tools: { name: 'Oficina Neutra', description: 'Mais unidades neutras, reparo e dano leve contra unidades.',
+      cards: ['unit_01', 'unit_02', 'unit_03', 'unit_04', 'unit_08', 'unit_11', 'unit_37', 'exploit_01', 'exploit_04', 'exploit_19'] },
+    breach: { name: 'Caça a Brechas', description: 'Pulso, Malha e Sombra para explorar afinidades e abrir a defesa.',
+      cards: ['unit_01', 'unit_02', 'unit_03', 'unit_04', 'unit_05', 'unit_09', 'unit_38', 'exploit_04', 'exploit_07', 'exploit_19'] }
+  };
 
   const AVATAR_ASSETS = {
     kira: { id: 'kira', name: 'KIRA // Rato de Sub-rede', img: './avatars/kira.png' },
@@ -559,6 +580,7 @@
     describeAffinity,
     CARD_DB,
     STARTER_CARD_IDS,
+    STARTER_DECKS,
     AVATAR_ASSETS,
     AVATAR_ASSET,
     ASSET_LIST,

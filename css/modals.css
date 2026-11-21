@@ -460,3 +460,17 @@
 .abandon-panel p { line-height: 1.5; }
 .abandon-panel .hud-btn { min-height: 44px; }
 .abandon-confirm { border-color: #ff8caf; color: #ffe0eb; }
+
+.starter-panel { width: 100%; max-width: 420px; overflow-y: auto; }
+#starter-options { display: grid; gap: 9px; }
+#starter-options section {
+  display: grid;
+  gap: 5px;
+  padding: 8px 10px;
+  background: #14202d;
+  border: 1px solid #38586a;
+  border-radius: 7px;
+}
+#starter-options h3 { color: #a8f5f3; font-size: 16px; }
+#starter-options p { font-size: 13px; line-height: 1.4; }
+#starter-options button { justify-self: start; min-height: 40px; }

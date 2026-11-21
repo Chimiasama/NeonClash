@@ -132,13 +132,13 @@
     } else if (state.phase === 'SELECT_TARGET') {
       strip.classList.add('mode-target');
       lbl.textContent = 'ESCOLHER ALVO';
-      hint.textContent = state.pendingExploit.targetSide === 'player'
+      hint.textContent = state.pendingTarget.targetSide === 'player'
         ? 'Toque numa Unidade ALIADA destacada'
         : 'Toque numa Unidade INIMIGA destacada';
       btnP.textContent = 'AGUARDANDO';
       btnP.disabled = true;
       btnS.style.display = 'block';
-      btnS.textContent = 'CANCELAR';
+      btnS.textContent = state.pendingTarget.kind === 'deploy' ? 'PULAR EFEITO' : 'CANCELAR';
     } else if (state.phase === 'PLAYER_ATTACK') {
       strip.classList.add('mode-attack');
       lbl.textContent = 'FASE DE ATAQUE';
@@ -270,7 +270,7 @@
         if (state.activeDefenderSlot === i) cardEl.classList.add('selected-blocker');
         if (Object.values(state.defenseMap).includes(i)) cardEl.classList.add('is-blocking');
       }
-      if (state.phase === 'SELECT_TARGET' && state.pendingExploit && state.pendingExploit.targetSide === side && state.pendingExploit.validSlots?.includes(i)) {
+      if (state.phase === 'SELECT_TARGET' && state.pendingTarget && state.pendingTarget.targetSide === side && state.pendingTarget.validSlots?.includes(i)) {
         cardEl.classList.add('targetable');
       }
 

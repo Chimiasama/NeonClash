@@ -5,15 +5,15 @@
   const selectedSide = (card, side) => card.targetType === 'enemy_unit' ? opposing(side) : side;
   const indexed = field => field.flatMap((unit, slot) => unit ? [{ unit, slot }] : []);
 
-  function targets(state, card, effect, side, slot) {
+  function targets(state, card, effect, side, slot, selectedSlot = slot) {
     if (effect.target === 'self') {
       const unit = state[side].field[slot];
       return unit ? [{ unit, slot, side }] : [];
     }
     if (effect.target === 'selected') {
       const targetSide = selectedSide(card, side);
-      const unit = state[targetSide].field[slot];
-      return unit ? [{ unit, slot, side: targetSide }] : [];
+      const unit = state[targetSide].field[selectedSlot];
+      return unit ? [{ unit, slot: selectedSlot, side: targetSide }] : [];
     }
     if (effect.target === 'strongestEnemy') {
       const enemy = opposing(side);
@@ -101,7 +101,7 @@
 
   const discardDamage = (actor, effect) => Math.min(effect.cap, Math.floor(actor.discard.length / effect.divisor));
 
-  function resolve(card, effects, side, slot = null) {
+  function resolve(card, effects, side, slot = null, selectedSlot = slot) {
     const state = NB.State.get();
     const actor = state[side];
     const enemy = opposing(side);
@@ -147,7 +147,7 @@
         const node = NB.State.getSlotEl(side, slot);
         if (node) NB.Physics.spawnFloatText(node, `+${value} RAM · SINERGIA`, '#39FF14');
       } else {
-        for (const target of targets(state, card, effect, side, slot)) {
+        for (const target of targets(state, card, effect, side, slot, selectedSlot)) {
           const appliesModifier = isModifier(effect);
           if (appliesModifier && alreadyModified(card, target.unit)) continue;
           const before = type === 'atk' ? target.unit.atk : target.unit.def;

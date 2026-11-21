@@ -128,7 +128,7 @@ A normalização do save deriva aliados antigos da evidência da conclusão paci
 
 ## Combate, cartas e progressão
 
-O catálogo atual tem **48 cartas**, sendo 30 unidades e 18 Exploits. Cada deck do jogador tem 20 cartas e aceita até duas cópias de cada ID. Há 12 cartas inicialmente disponíveis. A coleção usa ID estável, metadados de arte, descrição e atributos. Cartas novas entram pelo catálogo em `cards.js` e pela respectiva rota de aquisição. IDs têm lacunas históricas e o sufixo maior não representa a contagem.
+O catálogo atual tem **51 cartas**, sendo 32 unidades e 19 Exploits. Cada deck do jogador tem 20 cartas e aceita até duas cópias de cada ID. Há 12 cartas base antes da escolha do deck inicial. A coleção usa ID estável, metadados de arte, descrição e atributos. Cartas novas entram pelo catálogo em `cards.js` e pela respectiva rota de aquisição. IDs têm lacunas históricas e o sufixo maior não representa a contagem.
 
 1. Cada lado começa com 0 RAM. Kairo tem 20 HP. A partida distribui quatro cartas iniciais por lado. A mão comporta seis cartas, com descarte quando uma compra excede esse limite. Quando o deck fica vazio, o descarte é embaralhado para continuar comprando.
 2. Em seu turno, Kairo pode invocar uma unidade se houver posição livre, obter a RAM da carta e usar Exploits enquanto puder pagar. Uma unidade normalmente passa por boot antes de poder atacar. O turno seguinte libera as unidades e compra uma carta. A IA segue fluxo de compra, invocação, Exploits e ataque, com perfil do oponente.
@@ -176,6 +176,10 @@ Todo duelo sorteia quem começa com chances iguais. O lado que começa joga com 
 
 Bônus permanentes de ATK ou DEF da mesma carta são aplicados uma vez por unidade em campo. Bônus de cartas diferentes podem coexistir. O visor lista os modificadores e a seleção de alvos recusa repetição sem gastar carta ou RAM. Em efeitos coletivos, unidades já modificadas não ganham o bônus de novo, mas efeitos separados como cura de HP continuam funcionando.
 
+Antes do primeiro prólogo, o jogador escolhe **Equilibrado**, **Oficina Neutra** ou **Caça a Brechas**. Cada lista tem 14 unidades, 6 Exploits e até duas cópias por carta. A escolha acrescenta apenas as cartas da lista escolhida à coleção inicial. Saves com aventura iniciada preservam o baralho existente.
+
+**Curto de Placa** custa 2 RAM e causa 2 de dano à DEF de uma unidade inimiga. **Sonda de Bancada** e **Vigia de Brecha** causam respectivamente 1 e 2 de dano ao entrar. Quando há vários alvos, o jogador escolhe um, ou pula o efeito e mantém a unidade em campo. A IA prioriza alvos que consegue eliminar. As três cartas também estão à venda na Feira.
+
 Unidades são instâncias de campo com UID, ATK e DEF atuais, DEF máxima, afinidade e marcadores de boot e ataque. Exploits declarativos usam alvo próprio, inimigo ou nenhum alvo, com ações sobre uma unidade, aliados ou inimigos conforme a definição. As cartas emprestadas dos desafios não substituem o deck ativo. O limite de duas cópias vale para os decks do jogador. Os baralhos dos adversários são listas de dados próprias.
 
 | Desafio | Cartas da primeira vitória |
@@ -221,7 +225,7 @@ A Galeria registra o quadro quando sua imagem termina de carregar e a moldura ap
 
 ## Conteúdo atual e metas
 
-O jogo disponível tem 48 cartas, 10 bairros, 23 locais, 34 personagens com função no jogo, quatro chefes, quatro desafios de arquétipo e 37 cenas da investigação. O [plano de expansão](plano-expansao.md) descreve a meta de 500 cartas, sendo 495 encontráveis e cinco secretas de missão. Os roteiros de construção e descrições de moradores nos demais arquivos de `docs/` registram escopo planejado além dos recursos já descritos aqui.
+O jogo disponível tem 51 cartas, 10 bairros, 23 locais, 34 personagens com função no jogo, quatro chefes, quatro desafios de arquétipo e 37 cenas da investigação. O [plano de expansão](plano-expansao.md) descreve a meta de 500 cartas, sendo 495 encontráveis e cinco secretas de missão. Os roteiros de construção e descrições de moradores nos demais arquivos de `docs/` registram escopo planejado além dos recursos já descritos aqui.
 
 O lote piloto usa arte procedural. Condensador Coral, Ímã de Núcleo e Janela Espectral são vendidos na Feira. Catadora de Ecos, Ferro de Pulso e Pressão de Sucata são prêmios das primeiras vitórias sobre Giba, Aline e Nanda, respectivamente. Os três adversários também usam cartas do lote.
 

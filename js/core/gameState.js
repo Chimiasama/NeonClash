@@ -72,7 +72,7 @@
       },
       selectedHandUid: null,
       inspectFieldCard: null,
-      pendingExploit: null,
+      pendingTarget: null,
       selectedAttackers: [],
       overclockUnits: [],
       enemyAttackers: [],
@@ -258,10 +258,35 @@
     }
 
     if (card.onDeploy) {
-      NB.CardEffects.resolve(card, card.onDeploy, side, slot);
+      if (card.targetType === 'enemy_unit') {
+        const validSlots = NB.CardEffects.legalSlots(state, card, side);
+        if (side === 'player' && validSlots.length > 1) {
+          state.phase = 'SELECT_TARGET';
+          state.pendingTarget = { kind: 'deploy', cardId: card.id, sourceSlot: slot, targetSide: oppSide, validSlots };
+        } else if (validSlots.length) {
+          const target = side === 'player' ? validSlots[0] : validSlots.reduce((best, candidate) =>
+            NB.CardEffects.score(state, card, side, candidate) > NB.CardEffects.score(state, card, side, best) ? candidate : best);
+          NB.CardEffects.resolve(card, card.onDeploy, side, slot, target);
+        }
+      } else {
+        NB.CardEffects.resolve(card, card.onDeploy, side, slot);
+      }
       NB.UI.renderAll();
     }
     unit.justEntered = false;
+    checkWinCondition();
+    return true;
+  }
+
+  function resolveDeployTarget(targetSlot) {
+    const pending = state.pendingTarget;
+    if (pending?.kind !== 'deploy') return false;
+    const card = NB.Cards.CARD_DB[pending.cardId];
+    if (!NB.CardEffects.legalSlots(state, card, 'player').includes(targetSlot)) return false;
+    state.pendingTarget = null;
+    state.phase = 'PLAYER_MAIN';
+    NB.CardEffects.resolve(card, card.onDeploy, 'player', pending.sourceSlot, targetSlot);
+    NB.UI.renderAll();
     checkWinCondition();
     return true;
   }
@@ -409,6 +434,7 @@
     applyRamDrain,
     deployUnit,
     executeExploit,
+    resolveDeployTarget,
     applyDirectDamage,
     destroyUnit,
     checkWinCondition,

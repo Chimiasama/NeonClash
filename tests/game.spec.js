@@ -23,8 +23,14 @@ async function walkTo(page, pin, encounterRoll = 0.99) {
   }
 }
 
+async function openAdventure(page, starter = 'Equilibrado') {
+  await page.locator('#btn-start-campaign').click();
+  const select = page.getByRole('dialog', { name: 'Escolha seu deck inicial' });
+  if (await select.isVisible()) await select.getByRole('button', { name: `Escolher ${starter}`, exact: true }).click();
+}
+
 async function enterCity(page, { legacy = false } = {}) {
-  await page.getByRole('button', { name: 'Entrar na cidade' }).click();
+  await openAdventure(page);
   const skip = page.getByRole('button', { name: 'Pular prólogo' });
   if (await skip.isVisible()) await skip.click();
   if (legacy) await page.evaluate(() => {
@@ -353,11 +359,11 @@ test('Back clears combat selections before allowing an exit prompt', async ({ pa
   await page.evaluate(() => {
     const state = NB.State.get();
     state.phase = 'SELECT_TARGET';
-    state.pendingExploit = { targetSide: 'enemy', cardId: 'exploit_03' };
+    state.pendingTarget = { targetSide: 'enemy', cardId: 'exploit_03' };
     NB.UI.renderAll();
   });
   expect(await back()).toBe(true);
-  expect(await page.evaluate(() => NB.State.get().pendingExploit)).toBeNull();
+  expect(await page.evaluate(() => NB.State.get().pendingTarget)).toBeNull();
 
   await page.evaluate(() => {
     const state = NB.State.get();
@@ -1468,12 +1474,68 @@ test('finishes a draw exploit before putting it into the discard pile', async ({
   expect(piles).toEqual({ hand: [91], discard: [90] });
 });
 
+test('offers three balanced starter decks and remembers the chosen collection across sessions', async ({ page }) => {
+  await page.goto('/');
+  await openAdventure(page, 'Caça a Brechas');
+  await expect(page.getByRole('dialog', { name: 'Prólogo de Kairo' })).toBeVisible();
+  const deck = await page.evaluate(() => {
+    const save = NB.Save.get();
+    const options = Object.values(NB.Cards.STARTER_DECKS).map(recipe =>
+      recipe.cards ? recipe.cards.flatMap(id => [id, id]) : NB.Save.buildBalancedDeck(NB.Cards.STARTER_CARD_IDS));
+    return {
+      selected: save.starterDeck,
+      hasShadows: save.unlockedCards.includes('unit_38'),
+      hasOtherStarter: save.unlockedCards.includes('unit_37'),
+      decks: options.map(cards => [
+        cards.length, cards.filter(id => NB.Cards.CARD_DB[id].kind === 'unit').length,
+        Math.max(...cards.map(id => cards.filter(other => other === id).length))
+      ])
+    };
+  });
+  expect(deck).toEqual({ selected: 'breach', hasShadows: true, hasOtherStarter: false, decks: [
+    [20, 14, 2], [20, 14, 2], [20, 14, 2]
+  ] });
+  await page.reload();
+  await page.locator('#btn-start-campaign').click();
+  await expect(page.locator('#starter-modal')).toBeHidden();
+  await expect(page.locator('#prologue-modal')).toBeVisible();
+  expect(await page.evaluate(() => NB.Save.getActiveDeck().filter(id => id === 'unit_38').length)).toBe(2);
+});
+
+test('selects an enemy for entry damage and lets direct unit damage remove a blocker', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    NB.Input.startMatch({ mode: 'quick' });
+    const state = NB.State.get();
+    state.player.hand = [{ cardId: 'unit_37', uid: 701 }, { cardId: 'exploit_19', uid: 702 }];
+    state.player.ram = 3;
+    state.enemy.field = [
+      NB.State.createFieldUnit('unit_03', 703, 'enemy'),
+      NB.State.createFieldUnit('unit_37', 704, 'enemy'),
+      null
+    ];
+    NB.UI.renderAll();
+  });
+  await page.locator('.hand-card').filter({ hasText: 'Sonda de Bancada' }).click();
+  await page.getByRole('button', { name: 'Executar' }).click();
+  await expect(page.getByRole('button', { name: 'Pular efeito' })).toBeVisible();
+  await page.locator('.enemy-slot').nth(1).click();
+  expect(await page.evaluate(() => NB.State.get().enemy.field.slice(0, 2).map(unit => unit.def))).toEqual([7, 1]);
+  await page.locator('.hand-card').filter({ hasText: 'Curto de Placa' }).click();
+  await page.getByRole('button', { name: 'Executar' }).click();
+  await page.locator('.enemy-slot').nth(1).click();
+  expect(await page.evaluate(() => {
+    const state = NB.State.get();
+    return [state.enemy.field[1], state.enemy.hp === state.enemy.maxHp, state.player.field[0].cardId];
+  })).toEqual([null, true, 'unit_37']);
+});
+
 test('shows the illustrated prologue only when starting the adventure', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 600 });
   await page.goto('/');
   const prologue = page.getByRole('dialog', { name: 'Prólogo de Kairo' });
   await expect(prologue).toBeHidden();
-  await page.locator('#btn-start-campaign').click();
+  await openAdventure(page);
   await expect(prologue).toBeVisible();
   const art = page.locator('#prologue-art');
   await expect.poll(() => art.evaluate(img => img.naturalWidth)).toBeGreaterThan(0);
@@ -1484,7 +1546,7 @@ test('shows the illustrated prologue only when starting the adventure', async ({
   await expect(page.locator('#prologue-text')).toContainText('sua assinatura ajudou a fazer');
   await page.getByRole('button', { name: 'Entrar em Baixa Luz' }).click();
   await page.reload();
-  await page.locator('#btn-start-campaign').click();
+  await openAdventure(page);
   await expect(prologue).toBeHidden();
   await expect(page.locator('#city-story')).toHaveCSS('box-shadow', 'none');
   await expect(page.locator('#city-map [data-district="home"] .city-badge-clue')).toHaveCSS('animation-name', 'city-clue-pulse');
@@ -1500,7 +1562,7 @@ test('shows the illustrated prologue only when starting the adventure', async ({
 
 test('resumes suspended audio on a regular gesture and respects an explicit mute', async ({ page }) => {
   await page.goto('/?android=1');
-  await page.locator('#btn-start-campaign').click();
+  await openAdventure(page);
   await page.getByRole('button', { name: 'Próximo quadro' }).click();
   await expect.poll(() => page.evaluate(() => NB.Audio.ctx.state)).toBe('running');
   await page.evaluate(() => NB.Audio.ctx.suspend());
@@ -1509,7 +1571,7 @@ test('resumes suspended audio on a regular gesture and respects an explicit mute
   await page.locator('#prologue-close').click();
   await page.locator('#btn-title-sound').click();
   await page.reload();
-  await page.locator('#btn-start-campaign').click();
+  await openAdventure(page);
   await page.getByRole('button', { name: 'Próximo quadro' }).click();
   await page.locator('#prologue-close').click();
   await expect(page.locator('#btn-title-sound')).toHaveText('SOM: OFF');
@@ -1575,7 +1637,7 @@ test('archives only displayed artwork and reopens full art with its description 
   const before = () => page.evaluate(() => NB.Save.get().seenArt);
   await expect.poll(before).toContain('./src/assets/baixa-luz-cover.webp');
   expect(await before()).not.toContain('./src/assets/prologo-oficina.webp');
-  await page.locator('#btn-start-campaign').click();
+  await openAdventure(page);
   await expect.poll(before).toContain('./src/assets/prologo-oficina.webp');
   expect(await before()).not.toContain('./src/assets/prologo-estacao.webp');
   expect(await before()).not.toContain('./avatars/kira.png');
@@ -2102,13 +2164,13 @@ test('shows and archives the speaker portrait in early and late investigation sc
 test('reveals and saves comic beats with tactile key, wipe and radio controls', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 640 });
   await page.goto('/');
-  await page.locator('#btn-start-campaign').click();
+  await openAdventure(page);
   await page.locator('#prologue-comic .comic-panel--active').click();
   await expect(page.locator('#prologue-page')).toHaveText('2 / 3');
   await expect(page.locator('#prologue-comic .comic-panel--past')).toHaveCount(1);
   await expect(page.locator('#prologue-comic .comic-sfx')).toHaveCount(0);
   await page.reload();
-  await page.locator('#btn-start-campaign').click();
+  await openAdventure(page);
   await expect(page.locator('#prologue-page')).toHaveText('2 / 3');
   await page.getByRole('button', { name: 'Pular prólogo' }).click();
   await walkTo(page, page.locator('[data-district="home"]'));

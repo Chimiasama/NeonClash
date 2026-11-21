@@ -4,7 +4,7 @@
   /* Controlador de Entrada Touch, Navegação entre Telas, Campanha, Overclock e Save */
   function hideAllScreens() {
     NB.City.cancelJob();
-    ['title-modal', 'netmap-modal', 'prologue-modal', 'abandon-modal', 'street-rest-modal', 'story-modal', 'dossier-modal', 'gameover-modal', 'settings-modal', 'deck-modal', 'card-inspector-modal'].forEach(id => {
+    ['title-modal', 'netmap-modal', 'starter-modal', 'prologue-modal', 'abandon-modal', 'street-rest-modal', 'story-modal', 'dossier-modal', 'gameover-modal', 'settings-modal', 'deck-modal', 'card-inspector-modal'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.classList.remove('open');
     });
@@ -30,6 +30,38 @@
     NB.State.cancelPending();
     NB.Audio.setScene('city');
     NB.City.open(message);
+  }
+
+  function closeStarterChoice() {
+    document.getElementById('starter-modal').classList.remove('open');
+    document.getElementById('title-modal').inert = false;
+    document.getElementById('btn-start-campaign').focus();
+  }
+
+  function openStarterChoice() {
+    const options = document.getElementById('starter-options');
+    options.replaceChildren();
+    for (const [id, recipe] of Object.entries(NB.Cards.STARTER_DECKS)) {
+      const row = document.createElement('section');
+      const title = document.createElement('h3');
+      title.textContent = recipe.name;
+      const description = document.createElement('p');
+      description.textContent = recipe.description + ' 14 unidades · 6 Exploits.';
+      const choose = document.createElement('button');
+      choose.type = 'button';
+      choose.className = 'hud-btn';
+      choose.textContent = `Escolher ${recipe.name}`;
+      choose.addEventListener('click', () => {
+        if (!NB.Save.chooseStarterDeck(id)) return;
+        closeStarterChoice();
+        NB.StoryUI.openPrologue();
+      });
+      row.append(title, description, choose);
+      options.append(row);
+    }
+    document.getElementById('title-modal').inert = true;
+    document.getElementById('starter-modal').classList.add('open');
+    options.querySelector('button')?.focus();
   }
 
   function startMatch(options = {}) {
@@ -83,7 +115,7 @@
     state.overclockUnits = [];
     state.enemyOverclock = null;
     state.selectedHandUid = null;
-    state.pendingExploit = null;
+    state.pendingTarget = null;
     state.player.counterFormation = false;
     state.player.hpShield = 0;
     state.player.field.forEach(u => {
@@ -101,7 +133,7 @@
   function cancelTargetMode() {
     const state = NB.State.get();
     state.phase = 'PLAYER_MAIN';
-    state.pendingExploit = null;
+    state.pendingTarget = null;
     NB.UI.renderAll();
   }
 
@@ -163,7 +195,7 @@
       NB.State.executeExploit('player', item.uid, validSlots[0]);
     } else if (validSlots.length) {
       state.phase = 'SELECT_TARGET';
-      state.pendingExploit = { uid: item.uid, cardId: card.id, targetSide, validSlots };
+      state.pendingTarget = { uid: item.uid, cardId: card.id, targetSide, validSlots };
       state.selectedHandUid = null;
       NB.Physics.showToast('SELECIONE O ALVO NO CAMPO', 'var(--ram)');
       NB.UI.renderAll();
@@ -174,8 +206,8 @@
     const state = NB.State.get();
     const unit = state[side].field[slotIdx];
 
-    if (state.phase === 'SELECT_TARGET' && state.pendingExploit) {
-      const pending = state.pendingExploit;
+    if (state.phase === 'SELECT_TARGET' && state.pendingTarget) {
+      const pending = state.pendingTarget;
       if (side === pending.targetSide && unit) {
         const card = NB.Cards.CARD_DB[pending.cardId];
         if (NB.CardEffects.alreadyModified(card, unit)) {
@@ -183,7 +215,11 @@
           return;
         }
         if (pending.validSlots.includes(slotIdx)) {
-          state.pendingExploit = null;
+          if (pending.kind === 'deploy') {
+            NB.State.resolveDeployTarget(slotIdx);
+            return;
+          }
+          state.pendingTarget = null;
           state.phase = 'PLAYER_MAIN';
           NB.State.executeExploit('player', pending.uid, slotIdx);
         }
@@ -375,6 +411,7 @@
     const closeButtons = [
       ['abandon-modal', 'abandon-cancel'],
       ['street-rest-modal', 'street-rest-close'],
+      ['starter-modal', 'starter-close'],
       ['prologue-modal', 'prologue-close'],
       ['card-inspector-modal', 'btn-insp-close'],
       ['png-modal', 'btn-png-close'],
@@ -519,11 +556,14 @@
       if (document.visibilityState === 'visible' && NB.Audio.enabled) NB.Audio.resume();
     });
     // Navegação Tela Inicial
+    document.getElementById('starter-close').addEventListener('click', closeStarterChoice);
     document.getElementById('btn-start-campaign').addEventListener('click', () => {
       NB.Audio.activateOnEntry();
       NB.Audio.playSelect();
       NB.Physics.vibrateCard();
-      if (NB.Save.get().prologueSeen) openNetMap();
+      const progress = NB.Save.get();
+      if (progress.prologueSeen) openNetMap();
+      else if (!progress.starterDeck) openStarterChoice();
       else NB.StoryUI.openPrologue();
     });
     document.getElementById('btn-new-game-plus').addEventListener('click', () => {
