@@ -1426,6 +1426,12 @@ test('shows the illustrated prologue only when starting the adventure', async ({
   await expect(prologue).toBeHidden();
   await expect(page.locator('#city-story')).toHaveCSS('box-shadow', 'none');
   await expect(page.locator('#city-map [data-district="home"] .city-badge-clue')).toHaveCSS('animation-name', 'city-clue-pulse');
+  const missionPin = page.locator('#city-map [data-district="home"] .city-place-icon');
+  const haloAnimation = () => missionPin.evaluate(icon => getComputedStyle(icon, '::before').animationName);
+  await expect.poll(haloAnimation).toBe('city-mission-halo');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expect.poll(haloAnimation).toBe('none');
+  await expect.poll(() => missionPin.evaluate(icon => getComputedStyle(icon, '::before').borderWidth)).toBe('2px');
   await page.locator('#city-story').click();
   await expect(page.getByRole('button', { name: 'Ir para Casa de Kairo' })).toBeVisible();
 });

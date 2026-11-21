@@ -176,7 +176,6 @@
 .city-pin.city-locked .city-place-icon { border-style: dashed; }
 .city-pin[aria-current] .city-place-icon { outline: 2px solid #ffcb75; }
 .city-pin-selected .city-place-icon { outline: 2px solid #f9fcff; }
-.city-panel .city-pin:focus-visible { z-index: 3; }
 
 #city-marker {
   position: absolute;
@@ -338,14 +337,42 @@
   gap: 3px;
   pointer-events: none;
 }
+.city-panel .city-pin[data-markers~="clue"] { z-index: 3; }
+.city-panel .city-pin:focus-visible { z-index: 4; }
 .city-pin[data-markers~="clue"] .city-place-icon {
-  border-color: #7cfff1;
-  background: #16494b;
-  box-shadow: 0 0 11px #4fead6dd;
+  position: relative;
+  width: 28px;
+  height: 28px;
+  border: 2px solid #c3fff4;
+  background: #093232;
+  color: #edfffc;
+  box-shadow: 0 0 0 2px #06151d, 0 0 10px #4df6de;
 }
-.city-pin[data-markers~="clue"] .city-badge-clue { animation: city-clue-pulse 1.5s ease-in-out infinite alternate; }
-@keyframes city-clue-pulse { to { color: #ffdb87; text-shadow: 0 0 8px #ffc661; opacity: .7; } }
+.city-pin[data-markers~="clue"] .city-place-icon::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border: 2px solid #77ffe3;
+  border-radius: 50%;
+  box-shadow: 0 0 12px 3px #33ffe2cc, inset 0 0 6px #56ffda99;
+  opacity: .8;
+  pointer-events: none;
+  animation: city-mission-halo 2.6s ease-in-out infinite alternate;
+}
+.city-pin[data-markers~="clue"] .city-place-label {
+  border: 1px solid #59d9ca;
+  background: #061c26;
+  color: #e2fff8;
+  font-weight: 800;
+}
+.city-pin[data-markers~="clue"] .city-badge-clue { animation: city-clue-pulse 2.6s ease-in-out infinite alternate; }
+@keyframes city-mission-halo {
+  from { opacity: .65; transform: scale(.98); }
+  to { opacity: 1; transform: scale(1.08); }
+}
+@keyframes city-clue-pulse { to { color: #c8fff7; text-shadow: 0 0 6px #68ffe3; } }
 @media (prefers-reduced-motion: reduce) {
+  .city-pin[data-markers~="clue"] .city-place-icon::before,
   .city-pin[data-markers~="clue"] .city-badge-clue { animation: none; }
 }
 .city-active-destination { color: #89fff7; font-weight: 800; }
