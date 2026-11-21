@@ -24,12 +24,19 @@
   const travelChances = { walk: 35, bike: 25, bus: 15, motorbike: 5, ferry: 15 };
   const challengers = Object.values(NB.CityAtlas.encounters).flat();
   const travelTiers = [
-    { label: 'Iniciante', hp: 10, reward: 5, deck: ['unit_01', 'unit_02', 'unit_08', 'exploit_01'] },
-    { label: 'Praticante', hp: 13, reward: 8, deck: ['unit_01', 'unit_04', 'unit_05', 'unit_08', 'exploit_04'] },
-    { label: 'Experiente', hp: 16, reward: 12, deck: ['unit_03', 'unit_04', 'unit_09', 'unit_25', 'exploit_07'] },
-    { label: 'Veterano', hp: 19, reward: 16, deck: ['unit_04', 'unit_06', 'unit_25', 'unit_32', 'exploit_10', 'exploit_17'] },
-    { label: 'Elite', hp: 22, reward: 21, canOverclock: true, deck: ['unit_03', 'unit_26', 'unit_27', 'unit_30', 'unit_32', 'exploit_10', 'exploit_18'] }
+    { label: 'Iniciante', fee: 3, hp: 10, reward: 5, deck: ['unit_01', 'unit_02', 'unit_08', 'exploit_01'] },
+    { label: 'Praticante', fee: 4, hp: 13, reward: 8, deck: ['unit_01', 'unit_04', 'unit_05', 'unit_08', 'exploit_04'] },
+    { label: 'Experiente', fee: 5, hp: 16, reward: 12, deck: ['unit_03', 'unit_04', 'unit_09', 'unit_25', 'exploit_07'] },
+    { label: 'Veterano', fee: 7, hp: 19, reward: 16, deck: ['unit_04', 'unit_06', 'unit_25', 'unit_32', 'exploit_10', 'exploit_17'] },
+    { label: 'Elite', fee: 9, hp: 22, reward: 21, canOverclock: true, deck: ['unit_03', 'unit_26', 'unit_27', 'unit_30', 'unit_32', 'exploit_10', 'exploit_18'] }
   ];
+  const cyberdecks = {
+    stock: { name: 'Terminal de Campo', ram: 0 },
+    relay: { name: 'Relé de Bolso', ram: 1, price: 85, shop: 'market', chapter: 0 },
+    bridge: { name: 'Ponte de Fibra', ram: 2, price: 170, shop: 'garage', chapter: 1 },
+    backbone: { name: 'Espinha Óptica', ram: 3, price: 280, shop: 'garage', chapter: 3 }
+  };
+
   const beds = {
     home: { minutes: 480, price: 0 },
     pension: { minutes: 420, price: 12 },
@@ -62,9 +69,16 @@
     const travelChallenge = challenge && challengers.some(person => person.name === challenge.name) &&
       districts.some(place => place.id === challenge.destination) && Number.isInteger(challenge.tier) && travelTiers[challenge.tier]
       ? { name: challenge.name, destination: challenge.destination, tier: challenge.tier } : null;
+    const routePact = integer(raw?.routePact, 0, 0, 4);
+    const ownedDecks = Object.keys(cyberdecks).filter(id => id === 'stock' ||
+      (Array.isArray(raw?.ownedDecks) && raw.ownedDecks.includes(id)));
     return {
       minute,
       travelChallenge,
+      routePact,
+      routeMask: routePact === 4 && raw?.routeMask === true,
+      ownedDecks,
+      equippedDeck: ownedDecks.includes(raw?.equippedDeck) ? raw.equippedDeck : 'stock',
       dailyJobDay: day(minute),
       dailyJobCounts: raw?.dailyJobDay === day(minute) ? Object.fromEntries(jobIds.flatMap(id => {
         const count = integer(raw.dailyJobCounts?.[id], 0, 0, 3);
@@ -118,7 +132,7 @@
       const closed = id === 'ferry' && (dayMinute < 420 || dayMinute >= 1080);
       const energyAfter = Math.max(0, state.life.energy - energy);
       const willCollapse = state.life.energy <= energy || state.life.awake + minutes >= maxAwake(state.life);
-      const encounterChance = willCollapse ? 0 : travelChances[id] * (energyAfter <= maxEnergy(state.life) * 0.2 ? 2 : 1);
+      const encounterChance = willCollapse || state.life.routeMask ? 0 : travelChances[id] * (energyAfter <= maxEnergy(state.life) * 0.2 ? 2 : 1);
       return {
         id, name: mode.name, minutes, energy, fare: mode.fare,
         note: closed ? 'A balsa opera das 7h às 18h.' : usesShortcut ? 'Atalho da encosta ensinado por Aline.' : '',
@@ -253,6 +267,7 @@
   }
 
   function travel(destination, mode) {
+    if (requiredTravelChallenge()) return false;
     const route = routes(destination).find(option => option.id === mode);
     if (!route?.available) return false;
     const state = city();
@@ -278,12 +293,55 @@
     const challenge = state.life.travelChallenge;
     if (!challenge || challenge.destination !== state.district) return null;
     const person = challengers.find(item => item.name === challenge.name);
-    return { ...person, ...travelTiers[challenge.tier] };
+    return { ...person, ...travelTiers[challenge.tier], optional: state.life.routePact >= 3 };
   }
 
-  function dismissTravelChallenge() {
-    if (!getTravelChallenge()) return false;
-    city().life.travelChallenge = null;
+  function requiredTravelChallenge() {
+    const challenge = getTravelChallenge();
+    return challenge && !challenge.optional ? challenge : null;
+  }
+
+  function travelWithdrawalFee() {
+    const challenge = requiredTravelChallenge();
+    return challenge ? Math.min(challenge.fee, city().credits) : 0;
+  }
+
+  function settleTravelChallenge(withdraw = false) {
+    if (!getTravelChallenge()) return null;
+    const state = city();
+    const fee = withdraw ? travelWithdrawalFee() : 0;
+    state.credits -= fee;
+    state.life.travelChallenge = null;
+    NB.Save.save();
+    return fee;
+  }
+
+  function advanceRoutePact(step) {
+    const state = city();
+    if (state.life.routePact !== step) return false;
+    if (step === 0 && state.district !== 'terminal') return false;
+    if (step === 1 && state.district !== 'ringArchive') return false;
+    if (step === 2 && state.district !== 'depots') return false;
+    if (step === 3 && (state.district !== 'pump' || NB.Story.get().chapter < 2 ||
+        !state.life.favors.includes('pumpRelay'))) return false;
+    if (step < 0 || step > 3) return false;
+    state.life.routePact++;
+    NB.Save.save();
+    return true;
+  }
+
+  function setRouteMask(enabled) {
+    const state = city();
+    if (state.life.routePact !== 4 || typeof enabled !== 'boolean') return false;
+    state.life.routeMask = enabled;
+    if (enabled) state.life.travelChallenge = null;
+    NB.Save.save();
+    return true;
+  }
+
+  function equipCyberdeck(id) {
+    if (!city().life.ownedDecks.includes(id)) return false;
+    city().life.equippedDeck = id;
     NB.Save.save();
     return true;
   }
@@ -316,12 +374,18 @@
     const state = city();
     const item = items[id];
     const mode = transport[id];
+    const deck = cyberdecks[id];
     if (item && ['kiosk', 'market'].includes(state.district) && state.credits >= consumablePrice(id) && bagCount(state.life) < bagLimit) {
       state.credits -= consumablePrice(id);
       state.life.inventory[id]++;
     } else if (mode?.price && state.district === 'garage' && state.credits >= mode.price && !state.life.vehicles.includes(id)) {
       state.credits -= mode.price;
       state.life.vehicles.push(id);
+    } else if (deck?.price && state.district === deck.shop && state.credits >= deck.price &&
+        NB.Story.get().chapter >= deck.chapter && !state.life.ownedDecks.includes(id)) {
+      state.credits -= deck.price;
+      state.life.ownedDecks.push(id);
+      state.life.equippedDeck = id;
     } else if (id === 'implant' && state.district === 'garage' && state.credits >= implantPrice && !state.life.implant) {
       state.credits -= implantPrice;
       state.life.implant = true;
@@ -391,6 +455,7 @@
   }
 
   NB.CityLife = { items, transport, beds, streetRest, bagLimit, implantPrice, normalize, clock, maxEnergy, maxAwake,
-    bagCount, routes, advance, travel, getTravelChallenge, dismissTravelChallenge, sleep, buy, use, nightShift, workNightShift, helpContact, takeNotice, consumablePrice, recoverEnergy,
+    bagCount, routes, advance, travel, getTravelChallenge, requiredTravelChallenge, travelWithdrawalFee, settleTravelChallenge,
+    advanceRoutePact, setRouteMask, cyberdecks, equipCyberdeck, sleep, buy, use, nightShift, workNightShift, helpContact, takeNotice, consumablePrice, recoverEnergy,
     relayModes, demand, jobQuote, work, finishSignal, startDelivery, cancelDelivery };
 })(window.NB = window.NB || {});

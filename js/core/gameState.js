@@ -48,7 +48,7 @@
       player: {
         hp: playerMaxHp,
         maxHp: playerMaxHp,
-        ram: 0,
+        ram: mode === 'challenge' ? 0 : NB.CityLife.cyberdecks[NB.Save.get().city.life.equippedDeck].ram,
         deck: options.challenge ? shuffle(options.challenge.deck.map(cardId => ({ uid: uidCounter++, cardId }))) : buildPlayerDeck(),
         hand: [],
         discard: [],

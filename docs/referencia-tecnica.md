@@ -53,7 +53,11 @@ A distância é `max(2, ceil(hypot(Δx, Δy) / 10))` com as coordenadas do mapa.
 
 A cotação também descreve o que há no destino e mostra a tarifa de descanso quando aplicável. A Feira, o Quiosque e a Garagem abrem catálogos por serviço. Cartas que o jogador ainda não possui aparecem em cinza na coleção e não abrem o inspetor.
 
-Um desafiante pode aparecer ao concluir a viagem. A chance base é de 35% a pé, 25% de bicicleta, 15% de ônibus ou balsa e 5% de moto. Ela dobra quando a energia prevista na chegada está nos 20% finais. Trajetos que terminam em colapso não oferecem duelo. A oferta fica salva até ser aceita, recusada ou substituída por outra viagem. A dificuldade usa o capítulo atual, com cinco níveis de 10 a 22 HP e vitórias de 5 a 21 créditos. Aceitar usa o fluxo normal de um duelo urbano.
+Um desafiante pode aparecer ao concluir a viagem. A chance base é de 35% a pé, 25% de bicicleta, 15% de ônibus ou balsa e 5% de moto. Ela dobra quando a energia prevista na chegada está nos 20% finais. Trajetos que terminam em colapso não oferecem duelo. A abordagem bloqueia a navegação até o duelo terminar ou o jogador desistir. O estado fica salvo entre sessões. A desistência custa 3, 4, 5, 7 ou 9 créditos conforme o nível, limitada ao saldo. Perder lutando segue o custo normal de tempo e energia do duelo. A dificuldade usa o capítulo atual, com cinco níveis de 10 a 22 HP e vitórias de 5 a 21 créditos. Aceitar usa o fluxo normal de um duelo urbano.
+
+**Acordo das Rotas** começa no Terminal com Mara, passa pelo registro de Leila no Arquivo do Ringue e termina em duelo com Sinal no Depósito de Peças. Vencer Sinal torna as abordagens opcionais, sem cobrança para recusar ou abandonar. A partir do capítulo 3, após ajudar Maíra na Casa de Bombas, o jogador pode receber o Módulo de Rota Cega. Quando equipado na Mochila, ele desativa abordagens novas, sem afetar duelos locais.
+
+A Feira vende o **Relé de Bolso** (+1 RAM inicial por 85 créditos). A Garagem vende a **Ponte de Fibra** (+2 por 170 a partir do capítulo 2) e a **Espinha Óptica** (+3 por 280 a partir do capítulo 4). Comprar equipa o modelo. A Mochila permite trocar entre os modelos adquiridos e o Terminal de Campo (+0). Desafios de arquétipo usam equipamento padrão com seus baralhos emprestados.
 
 | Transporte | Tempo | Energia | Créditos e condição |
 | --- | --- | --- | --- |

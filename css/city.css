@@ -387,3 +387,5 @@
 .city-local-duels h4 { color: #bce4ed; font-size: 14px; }
 .city-local-duel { display: grid; gap: 5px; }
 .city-local-duel button { justify-self: start; }
+
+#city-map[inert], #city-map-legend[inert], .city-nav[inert] { opacity: .48; }

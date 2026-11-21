@@ -1,9 +1,17 @@
 import { expect, test } from '@playwright/test';
 
-async function walkTo(page, pin) {
+async function walkTo(page, pin, encounterRoll = 0.99) {
   await pin.click();
   const walking = page.getByRole('button', { name: 'A pé', exact: true });
-  if (await walking.isVisible()) await walking.click();
+  if (!await walking.isVisible()) return;
+  const originalRandom = await page.evaluateHandle(() => Math.random);
+  await page.evaluate(roll => { Math.random = () => roll; }, encounterRoll);
+  try {
+    await walking.click();
+  } finally {
+    await page.evaluate(random => { Math.random = random; }, originalRandom);
+    await originalRandom.dispose();
+  }
 }
 
 async function enterCity(page, { legacy = false } = {}) {
@@ -294,8 +302,8 @@ test('Back unwinds the inspector, deck, city overlays and dossier one at a time'
   expect(await back()).toBe(true);
   await expect(page.getByRole('button', { name: 'Sinal Criptografado' })).toBeVisible();
 
-  await page.evaluate(() => { Math.random = () => 0; });
-  await walkTo(page, page.getByRole('button', { name: 'Estação Fantasma' }));
+  await page.evaluate(() => { NB.Save.get().city.life.routePact = 3; });
+  await walkTo(page, page.getByRole('button', { name: 'Estação Fantasma' }), 0);
   await page.getByRole('button', { name: 'Abrir dossiê' }).click();
   const dossier = page.getByRole('dialog', { name: 'Dossiê do Alvo' });
   await expect(dossier.getByRole('button', { name: 'VOLTAR', exact: true })).toBeInViewport({ ratio: 1 });
@@ -507,6 +515,7 @@ test('quotes travel without charging, then spends time, energy and only the chos
   await expect(page.locator('#city-clock')).toHaveText('Dia 1 · 08:00 · Dia');
 
   await home.click();
+  await page.evaluate(() => { Math.random = () => 0.99; });
   await page.getByRole('button', { name: 'Ônibus', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Casa de Kairo' })).toBeVisible();
   await expect(page.locator('#city-credits')).toHaveText('31 créditos');
@@ -538,20 +547,24 @@ test('previews hotel services and rolls lasting travel offers by vehicle, fatigu
     const bus = NB.CityLife.getTravelChallenge();
     NB.CityLife.travel('kira', 'bike');
     const rookie = NB.CityLife.getTravelChallenge();
+    const blocked = !NB.CityLife.travel('vex', 'bus');
+    const withdrawal = NB.CityLife.settleTravelChallenge(true);
     save.story.chapter = 4;
     Math.random = () => 0.04;
     NB.CityLife.travel('vex', 'motorbike');
     Math.random = roll;
-    return { rested, tired, collapsed, bus, rookie, late: NB.CityLife.getTravelChallenge() };
+    return { rested, tired, collapsed, bus, rookie, blocked, withdrawal, late: NB.CityLife.getTravelChallenge() };
   });
   expect(chances).toMatchObject({
     rested: [35, 25, 15, 5], tired: [70, 50, 30, 10], collapsed: [0, 0, 0, 0],
-    bus: null, rookie: { hp: 10, reward: 5 }, late: { hp: 22, reward: 21 }
+    bus: null, rookie: { hp: 10, reward: 5 }, blocked: true, withdrawal: 3, late: { hp: 22, reward: 21 }
   });
   await page.reload();
   await enterCity(page);
   const offer = page.getByRole('region', { name: 'Desafio de viagem' });
   await expect(offer).toContainText('Elite · 22 HP · vitória paga 21 créditos');
+  await expect(offer.getByRole('button', { name: 'Desistir · perder 9 créditos' })).toBeVisible();
+  await expect(page.locator('.city-nav')).toHaveJSProperty('inert', true);
   const credits = await page.evaluate(() => NB.Save.get().city.credits);
   await offer.getByRole('button', { name: /Aceitar desafio/ }).click();
   await page.evaluate(() => {
@@ -560,6 +573,73 @@ test('previews hotel services and rolls lasting travel offers by vehicle, fatigu
   });
   await expect(page.locator('#gameover-modal')).toContainText('VITÓRIA · +21 CRÉDITOS');
   expect(await page.evaluate(() => [NB.Save.get().city.credits, NB.CityLife.getTravelChallenge()])).toEqual([credits + 21, null]);
+
+  await page.getByRole('button', { name: 'Voltar à cidade' }).click();
+  await walkTo(page, page.locator('[data-district="kira"]'), 0);
+  await offer.getByRole('button', { name: /Aceitar desafio/ }).click();
+  await page.getByRole('button', { name: 'Sair do duelo' }).click();
+  const abandon = page.getByRole('alertdialog');
+  await expect(abandon).toContainText('Você perde 9 créditos.');
+  await abandon.getByRole('button', { name: 'Abandonar duelo', exact: true }).click();
+  expect(await page.evaluate(() => [NB.Save.get().city.credits, NB.CityLife.getTravelChallenge()])).toEqual([credits + 12, null]);
+});
+
+test('wins the route pact, equips a suppression module and buys starting RAM', async ({ page }) => {
+  await page.goto('/');
+  await enterCity(page);
+  const go = async id => walkTo(page, page.locator(`[data-district="${id}"]`));
+  await go('terminal');
+  await page.getByRole('button', { name: 'Anotar o relato de Mara' }).click();
+  await go('ringArchive');
+  await page.getByRole('button', { name: 'Buscar Sinal com o registro de Leila' }).click();
+  await go('depots');
+  await page.getByRole('button', { name: 'Duelar com Sinal' }).click();
+  await expect(page.locator('#enemy-avatar-box img[src="./avatars/sinal.webp"]')).toBeVisible();
+  await page.evaluate(() => {
+    NB.State.get().enemy.hp = 0;
+    NB.State.checkWinCondition();
+  });
+  await expect(page.locator('#go-clue-title')).toHaveText('ACORDO DAS ROTAS');
+  await page.getByRole('button', { name: 'Voltar à cidade' }).click();
+  await walkTo(page, page.locator('[data-district="pump"]'), 0);
+  const offer = page.getByRole('region', { name: 'Desafio de viagem' });
+  await expect(offer.getByRole('button', { name: 'Recusar desafio' })).toBeVisible();
+  const before = await page.evaluate(() => NB.Save.get().city.credits);
+  await offer.getByRole('button', { name: 'Recusar desafio' }).click();
+  expect(await page.evaluate(() => NB.Save.get().city.credits)).toBe(before);
+  const module = page.getByRole('button', { name: 'Receber Módulo de Rota Cega' });
+  await expect(module).toBeDisabled();
+  await page.evaluate(() => {
+    NB.Story.get().chapter = 2;
+    NB.Save.get().city.life.energy = 100;
+    NB.City.resetView();
+  });
+  await page.getByRole('button', { name: /Ajudar Maíra na bomba/ }).click();
+  await module.click();
+  await page.locator('#city-bag').click();
+  await page.getByRole('button', { name: 'Ativar Rota Cega' }).click();
+  await page.reload();
+  await enterCity(page);
+  expect(await page.evaluate(() => NB.CityLife.routes('market').every(route => route.encounterChance === 0))).toBe(true);
+  await walkTo(page, page.locator('[data-district="market"]'), 0);
+  await expect(offer).toHaveCount(0);
+
+  await page.evaluate(() => { NB.Save.get().city.credits = 100; });
+  await page.getByRole('button', { name: 'Ver cyberdecks' }).click();
+  await page.getByRole('button', { name: 'Comprar · 85 créditos' }).click();
+  await expect(page.getByRole('button', { name: 'Adquirido' })).toBeDisabled();
+  await page.reload();
+  const ram = await page.evaluate(() => {
+    NB.Input.startMatch({ mode: 'quick' });
+    return { equipped: NB.Save.get().city.life.equippedDeck, ram: NB.State.get().player.ram };
+  });
+  expect(ram).toEqual({ equipped: 'relay', ram: 1 });
+  await page.evaluate(() => NB.Input.openNetMap());
+  await page.locator('#city-bag').click();
+  await page.getByRole('button', { name: 'Desativar Rota Cega' }).click();
+  expect(await page.evaluate(() => NB.CityLife.routes('terminal').find(route => route.id === 'walk').encounterChance)).toBe(35);
+  await page.getByRole('button', { name: /Equipar · Terminal de Campo/ }).click();
+  expect(await page.evaluate(() => NB.Save.get().city.life.equippedDeck)).toBe('stock');
 });
 
 test('stores supplies and vehicles, restores the backpack and uses its contents', async ({ page }) => {
@@ -1464,6 +1544,7 @@ test('persists one Correio Expresso package and awards the speed bonus after ord
   await enterCity(page);
   await expect(page.getByRole('button', { name: 'Iniciar Correio Expresso' })).toHaveCount(0);
   await page.getByRole('button', { name: `Ir para ${listing.name} (entrega)` }).click();
+  await page.evaluate(() => { Math.random = () => 0.99; });
   await page.getByRole('button', { name: 'Moto', exact: true }).click();
   await expect(page.locator('#city-feedback')).toContainText('bônus de velocidade: +7');
   await expect(page.locator('#city-credits')).toHaveText(`${35 + 6 + 2 * listing.distance + 7} créditos`);

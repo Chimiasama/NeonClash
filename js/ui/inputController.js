@@ -299,6 +299,7 @@
 
   const abandonFee = 3;
   function abandonmentCost(state) {
+    if (state.boss?.travelReward) return NB.CityLife.travelWithdrawalFee();
     return state.mode === 'quick' || state.stake ? 0 : Math.min(abandonFee, NB.Save.get().city.credits);
   }
 
@@ -333,7 +334,8 @@
     const fee = abandonmentCost(state);
     state.phase = 'GAME_OVER';
     state.winner = 'enemy';
-    NB.Save.get().city.credits -= fee;
+    if (state.boss?.travelReward) NB.CityLife.settleTravelChallenge(true);
+    else NB.Save.get().city.credits -= fee;
     NB.Save.recordMatchLoss();
     if (state.mode === 'quick') openTitleScreen();
     else {

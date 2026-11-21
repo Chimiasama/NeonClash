@@ -37,7 +37,7 @@
     const hasDuel = place.id === 'arena' || encounter?.location === place.id ||
       (NB.Campaign.NODES.some(boss => boss.id === place.id) && !access(place)) ||
       NB.CityAtlas.residents.some(person => person.location === place.id && residentDuels[person.id]);
-    const hasSecret = (place.id === 'garage' && !save.city.life.favors.includes('hillPath')) ||
+    const hasSecret = place.id === routePactDestination(save.city.life) || (place.id === 'garage' && !save.city.life.favors.includes('hillPath')) ||
       (place.id === 'pump' && !save.city.life.favors.includes('pumpRelay'));
     return [clueLocations.has(place.id) && 'clue', hasDuel && 'duel', hasSecret && 'secret'].filter(Boolean);
   }
@@ -102,6 +102,7 @@
     announce([`Destino alcançado: ${district.name}.`, notice,
       challenge && `${challenge.name} ofereceu um duelo no trajeto.`].filter(Boolean).join(' '));
     $('city-feedback').scrollIntoView({ block: 'center' });
+    if (challenge && !challenge.optional) document.querySelector('.city-travel-challenge button')?.focus();
   }
 
   function render() {
@@ -174,6 +175,15 @@
     if (!$('city-map').querySelector('button:not([hidden])')) $('city-map-objectives').textContent = 'Nenhum local corresponde aos filtros.';
     const content = $('city-content');
     content.replaceChildren();
+    const mandatory = NB.CityLife.requiredTravelChallenge();
+    for (const panel of [$('city-map'), $('city-map-legend'), document.querySelector('.city-nav')]) {
+      panel.inert = Boolean(mandatory);
+    }
+    if (mandatory) {
+      $('city-name').textContent = 'Abordagem no caminho';
+      renderTravelChallenge(content, mandatory);
+      return;
+    }
     if (view === 'story') {
       $('city-name').textContent = 'Investigação';
       NB.StoryUI.journal(content, district, selectDestination);
@@ -190,6 +200,7 @@
       const category = view.slice(5);
       addButton(content, 'Voltar aos serviços', resetView);
       if (category === 'cards') renderMarket(content, save);
+      else if (category === 'cyberdecks') renderCyberdecks(content, save.city);
       else renderSupplies(content, save.city, category);
     } else if (district.id === 'home' || district.id === 'pension') {
       renderRest(content, save.city, district.rest);
@@ -198,6 +209,7 @@
         shopButton(content, 'Ver cartas à venda', 'cards');
         renderWorkshop(content, save);
       }
+      if (district.id !== 'kiosk') shopButton(content, 'Ver cyberdecks', 'cyberdecks');
       if (district.id === 'garage') {
         shopButton(content, 'Ver veículos', 'vehicles');
         shopButton(content, 'Ver implante', 'implant');
@@ -223,6 +235,7 @@
       if (challenge) renderTravelChallenge(content, challenge);
       NB.StoryUI.local(content, district);
       renderContactServices(content, district.id);
+      renderRoutePact(content, district.id, life);
       renderJobs(content, district.id, life);
       if (encounter?.location === district.id) renderEncounter(content, encounter);
       if (district.id !== 'arena') renderLocalDuels(content, district.id);
@@ -278,6 +291,55 @@
       }, !quote.open || !quote.available);
       content.append(row);
     }
+  }
+
+  function routePactDestination(life) {
+    return ['terminal', 'ringArchive', 'depots', 'pump'][life.routePact];
+  }
+
+  function renderRoutePact(content, location, life) {
+    const step = life.routePact;
+    if (location !== routePactDestination(life)) return;
+    const section = document.createElement('section');
+    section.className = 'city-local-duels';
+    section.setAttribute('aria-label', 'Acordo das Rotas');
+    addText(section, 'Acordo das Rotas', 'city-clue-title');
+
+    const mediator = NB.CityAtlas.residents.find(person => person.id === 45);
+    const speakers = [
+      ['Mara', './avatars/mara.webp', 'Os duelistas começaram a cobrar passagem depois que tiraram os vigias das estações. Leila guardou o caderno de quem travou quais linhas.'],
+      ['Leila', './avatars/leila.webp', 'Aqui estão as cobranças. Sinal tenta fazer valer um acordo de passagem no Depósito. Leva o caderno pra ela.'],
+      [mediator.name, mediator.portrait, 'Quem cobra diz que está protegendo a rua. Me enfrenta na frente deles e eu consigo pôr teu nome no acordo. Daí a escolha de duelar fica contigo.'],
+      ['Maíra', './avatars/maira.webp', 'Posso configurar o filtro da balsa para usar o acordo de Sinal. Se você equipar o módulo, deixa de aparecer na lista de quem pode ser abordada.']
+    ];
+    const [name, portrait, line] = speakers[step];
+    const dialogue = document.createElement('div');
+    dialogue.className = 'city-dialogue';
+    const image = document.createElement('img');
+    image.src = portrait;
+    image.alt = '';
+    image.width = image.height = 52;
+    dialogue.append(image);
+    addText(dialogue, `${name} — ${line}`);
+    section.append(dialogue);
+
+    if (step === 2) {
+      addButton(section, 'Duelar com Sinal', () => {
+        NB.Input.startMatch({ mode: 'arena', boss: {
+          ...wagerBoss, name: mediator.name, fullTitle: 'Sinal // Acordo das Rotas', avatar: mediator.portrait,
+          hp: 18, canOverclock: false, routeMediator: true, lines: { start: [line] }
+        } });
+      });
+    } else {
+      const labels = ['Anotar o relato de Mara', 'Buscar Sinal com o registro de Leila', 'Receber Módulo de Rota Cega'];
+      addButton(section, labels[step === 3 ? 2 : step], () => {
+        if (!NB.CityLife.advanceRoutePact(step)) return;
+        const next = ['Leila está no Arquivo do Ringue.', 'Procure Sinal no Depósito de Peças.'];
+        refreshStory(next[step] || 'Módulo de Rota Cega recebido. Equipe-o na Mochila.');
+      }, step === 3 && (NB.Story.get().chapter < 2 || !life.favors.includes('pumpRelay')));
+      if (step === 3) addText(section, 'Disponível a partir do capítulo 3, depois de ajudar Maíra na bomba.');
+    }
+    content.append(section);
   }
 
   function renderContactServices(content, location) {
@@ -361,9 +423,9 @@
   }
 
   const destinationServices = {
-    market: 'Cartas, consumíveis e ajustes de afinidade na banca da Lume.',
+    market: 'Cartas, consumíveis, cyberdecks e ajustes de afinidade na banca da Lume.',
     kiosk: 'Café, energéticos e um turno de atendimento noturno.',
-    garage: 'Bicicleta, moto e implante de vigília à venda.',
+    garage: 'Bicicleta, moto, cyberdecks e implante de vigília à venda.',
     relay: 'Trabalhos de sinal na Antena Comunitária.',
     arena: 'Duelos de treino, apostas e desafios de arquétipo conforme a aventura.',
     kira: 'Estação de passagem e ponto de partida do Correio Expresso.',
@@ -450,6 +512,20 @@
     }
     if (!NB.CityLife.bagCount(life)) addText(content, 'Mochila vazia.');
     if (life.implant) addText(content, 'Implante de vigília instalado.');
+    if (life.routePact === 4) {
+      addText(content, 'Módulo de Rota Cega · evita abordagens no trajeto enquanto equipado.');
+      addButton(content, life.routeMask ? 'Desativar Rota Cega' : 'Ativar Rota Cega', () => {
+        if (NB.CityLife.setRouteMask(!life.routeMask)) render();
+      });
+    }
+    addText(content, 'Cyberdeck equipado', 'city-clue-title');
+    for (const id of life.ownedDecks) {
+      const deck = NB.CityLife.cyberdecks[id];
+      const equipped = id === life.equippedDeck;
+      addButton(content, `${equipped ? 'Equipado' : 'Equipar'} · ${deck.name} · +${deck.ram} RAM inicial`, () => {
+        if (NB.CityLife.equipCyberdeck(id)) render();
+      }, equipped);
+    }
   }
 
   function shopButton(content, label, category) {
@@ -459,6 +535,22 @@
       render();
       $('city-content').querySelector('button')?.focus();
     });
+  }
+
+  function renderCyberdecks(content, state) {
+    for (const [id, deck] of Object.entries(NB.CityLife.cyberdecks)) {
+      if (deck.shop !== state.district) continue;
+      const owned = state.life.ownedDecks.includes(id);
+      const available = NB.Story.get().chapter >= deck.chapter;
+      const row = document.createElement('div');
+      row.className = 'city-life-row';
+      addText(row, `${deck.name} · +${deck.ram} RAM inicial`, 'city-clue-title');
+      if (!available) addText(row, `Disponível a partir do capítulo ${deck.chapter + 1}.`);
+      addButton(row, owned ? 'Adquirido' : `Comprar · ${deck.price} créditos`, () => {
+        if (NB.CityLife.buy(id)) refreshStory(`${deck.name} adquirido e equipado.`);
+      }, owned || !available || state.credits < deck.price);
+      content.append(row);
+    }
   }
 
   function renderSupplies(content, state, category) {
@@ -827,7 +919,7 @@
     addText(offer, `${challenge.name} abordou Kairo no trajeto.`, 'city-clue-title');
     addText(offer, `${challenge.label} · ${challenge.hp} HP · vitória paga ${challenge.reward} créditos`);
     addButton(offer, `Aceitar desafio de ${challenge.name}`, () => {
-      if (!NB.CityLife.dismissTravelChallenge()) return;
+      if (!NB.CityLife.getTravelChallenge()) return;
       NB.Input.startMatch({ mode: 'arena', boss: {
         ...sparringBoss, name: challenge.name, fullTitle: `${challenge.name} // Desafio de viagem`,
         avatar: challenge.portrait, hp: challenge.hp, canOverclock: Boolean(challenge.canOverclock),
@@ -835,21 +927,29 @@
         travelReward: challenge.reward
       } });
     });
-    addButton(offer, 'Recusar desafio', () => {
-      if (!NB.CityLife.dismissTravelChallenge()) return;
+    const fee = NB.CityLife.travelWithdrawalFee();
+    if (!challenge.optional) addText(offer, 'Resolva a abordagem para recuperar acesso à cidade.');
+    const actionLabel = challenge.optional ? 'Recusar desafio' : `Desistir · perder ${fee} créditos`;
+    addButton(offer, actionLabel, () => {
+      const paid = NB.CityLife.settleTravelChallenge(true);
+      if (paid === null) return;
       render();
-      announce('Você recusou o duelo.');
+      announce(paid ? `Você desistiu do desafio e perdeu ${paid} créditos.` : 'Você deixou a abordagem sem duelar.');
     });
     content.append(offer);
   }
 
   function finishArena(state, winner) {
     const save = NB.Save.get();
+    if (state.boss.travelReward) NB.CityLife.settleTravelChallenge();
+    if (winner === 'player' && state.boss.routeMediator && NB.CityLife.advanceRoutePact(2)) {
+      state.routePactWon = true;
+    }
     const residentId = state.boss.residentId;
     const duel = residentDuels[residentId];
     const encounter = state.boss.encounterKey;
     const payout = winner === 'player'
-      ? (state.boss.travelReward ?? (encounter ? state.boss.encounterReward : duel ? duel.credits : state.stake ? 60 : 15)) : 0;
+      ? (state.boss.travelReward ?? (state.boss.routeMediator ? 12 : encounter ? state.boss.encounterReward : duel ? duel.credits : state.stake ? 60 : 15)) : 0;
     if (winner === 'player' && encounter) save.city.encounterWins = [...save.city.encounterWins, encounter].slice(-4);
     state.payout = payout;
     if (winner === 'player' && duel && !save.city.residentWins.includes(residentId)) {
@@ -879,7 +979,8 @@
     $('game-ui').inert = true;
     document.querySelector('.city-scroll').scrollTop = 0;
     if (message) $('city-feedback').scrollIntoView({ block: 'center' });
-    $('city-map').querySelector('[aria-current]')?.focus({ preventScroll: true });
+    if (NB.CityLife.requiredTravelChallenge()) document.querySelector('.city-travel-challenge button')?.focus();
+    else $('city-map').querySelector('[aria-current]')?.focus({ preventScroll: true });
   }
 
   function bindEvents() {
@@ -946,6 +1047,7 @@
   }
 
   function handleBack() {
+    if (NB.CityLife.requiredTravelChallenge()) return false;
     if (view === 'journal') {
       toggleJournal();
       $('city-journal').focus();

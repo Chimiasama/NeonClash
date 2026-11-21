@@ -613,7 +613,11 @@
       kicker.style.color = won ? 'var(--ram)' : 'var(--magenta)';
       title.textContent = won ? `VITÓRIA · +${state.payout} CRÉDITOS` : (state.stake ? 'DERROTA · APOSTA PERDIDA' : 'DERROTA NO TREINO');
       title.style.color = kicker.style.color;
-      if (state.residentReward) {
+      if (state.routePactWon) {
+        clueBox.style.display = 'flex';
+        document.getElementById('go-clue-title').textContent = 'ACORDO DAS ROTAS';
+        document.getElementById('go-clue-text').textContent = 'As abordagens agora são opcionais. Maíra pode preparar um módulo para evitá-las na Casa de Bombas.';
+      } else if (state.residentReward) {
         clueBox.style.display = 'flex';
         document.getElementById('go-clue-title').textContent = 'CARTA CONQUISTADA';
         document.getElementById('go-clue-text').textContent = NB.Cards.CARD_DB[state.residentReward].name;
