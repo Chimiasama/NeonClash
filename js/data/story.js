@@ -302,10 +302,27 @@
   const ringLedger = evidenceArt('livro-do-ringue', 'O livro de apostas e o segundo recibo');
   const theatreProof = evidenceArt('conferencia-no-teatro', 'A conferência nos bastidores do Teatro');
 
+  const meterVersions = evidenceArt('medidores-da-iris', 'As duas versões do medidor na bancada de Íris');
+
   const beats = {
     mara: [undefined, evidenceArt('itinerario-de-mara', 'O itinerário corrigido de Mara')],
     kiraAudit: [ringLedger],
     ringLedger: [ringLedger],
+    iris: [
+      { ...meterVersions, camera: 'wide', bubbleType: 'speech' },
+      undefined,
+      { ...meterVersions, camera: 'focus-detail', focus: 'center', bubbleType: 'speech' }
+    ],
+    ada: [
+      { art: './src/assets/comic/visita-da-ada.webp', artTitle: 'A visita de Ada à casa no Morro',
+        camera: 'wide', mood: 'tense' },
+      undefined,
+      evidenceArt('horarios-da-clinica', 'Os horários da troca de programa')
+    ],
+    tellingNair: [
+      { art: './src/assets/comic/mesa-da-nair.webp', artTitle: 'Os recibos na mesa de Dona Nair',
+        camera: 'wide', mood: 'memory' }
+    ],
     renan: [{ ...evidenceArt('paineis-do-cais', 'Os dois painéis da Subestação do Cais'), camera: 'wide' }],
     reserve: [{ art: './src/assets/comic/bateria-da-clinica.webp', artTitle: 'A bateria de reserva da Clínica',
       camera: 'zoom-in', mood: 'tense' }],
