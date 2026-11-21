@@ -737,6 +737,7 @@ test('rolls either side for initiative and equips only one permanent starter ite
   await enterCity(page);
   await page.evaluate(() => { NB.Save.get().city.credits = 120; });
   await walkTo(page, page.locator('[data-district="market"]'));
+  await page.getByRole('button', { name: 'Ver melhorias' }).click();
   await page.getByRole('button', { name: 'Ver itens de iniciativa' }).click();
   await page.getByRole('button', { name: 'Comprar · 65 créditos' }).click();
   await page.getByRole('button', { name: 'Comprar · 45 créditos' }).click();
@@ -788,6 +789,7 @@ test('stores supplies and vehicles, restores the backpack and uses its contents'
   await page.getByRole('button', { name: 'Comprar · 100 créditos' }).click();
   await page.getByRole('button', { name: 'Comprar · 450 créditos' }).click();
   await page.getByRole('button', { name: 'Voltar aos serviços' }).click();
+  await page.getByRole('button', { name: 'Ver melhorias' }).click();
   await page.getByRole('button', { name: 'Ver implante' }).click();
   await page.getByRole('button', { name: 'Comprar · 130 créditos' }).click();
   await expect(page.locator('#city-energy')).toHaveAttribute('max', '120');
