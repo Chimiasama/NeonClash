@@ -941,7 +941,12 @@
 
   function finishArena(state, winner) {
     const save = NB.Save.get();
-    if (state.boss.travelReward) NB.CityLife.settleTravelChallenge();
+    if (state.boss.travelReward) {
+      const reward = NB.CityLife.finishTravelChallenge(winner === 'player');
+      state.payout = reward.credits;
+      state.travelBonus = reward.bonus;
+      return;
+    }
     if (winner === 'player' && state.boss.routeMediator && NB.CityLife.advanceRoutePact(2)) {
       state.routePactWon = true;
     }
@@ -949,7 +954,7 @@
     const duel = residentDuels[residentId];
     const encounter = state.boss.encounterKey;
     const payout = winner === 'player'
-      ? (state.boss.travelReward ?? (state.boss.routeMediator ? 12 : encounter ? state.boss.encounterReward : duel ? duel.credits : state.stake ? 60 : 15)) : 0;
+      ? (state.boss.routeMediator ? 12 : encounter ? state.boss.encounterReward : duel ? duel.credits : state.stake ? 60 : 15) : 0;
     if (winner === 'player' && encounter) save.city.encounterWins = [...save.city.encounterWins, encounter].slice(-4);
     state.payout = payout;
     if (winner === 'player' && duel && !save.city.residentWins.includes(residentId)) {

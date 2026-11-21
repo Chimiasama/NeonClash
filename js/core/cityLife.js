@@ -30,6 +30,10 @@
     { label: 'Veterano', fee: 7, hp: 19, reward: 16, deck: ['unit_04', 'unit_06', 'unit_25', 'unit_32', 'exploit_10', 'exploit_17'] },
     { label: 'Elite', fee: 9, hp: 22, reward: 21, canOverclock: true, deck: ['unit_03', 'unit_26', 'unit_27', 'unit_30', 'unit_32', 'exploit_10', 'exploit_18'] }
   ];
+  const travelCards = {
+    rare: ['unit_22', 'unit_23', 'unit_32', 'exploit_17'],
+    common: ['unit_07', 'unit_21', 'unit_28', 'exploit_07']
+  };
   const cyberdecks = {
     stock: { name: 'Terminal de Campo', ram: 0 },
     relay: { name: 'Relé de Bolso', ram: 1, price: 85, shop: 'market', chapter: 0 },
@@ -316,6 +320,37 @@
     return fee;
   }
 
+  function finishTravelChallenge(won) {
+    const challenge = getTravelChallenge();
+    if (!challenge) return { credits: 0, bonus: null };
+    const save = NB.Save.get();
+    const life = save.city.life;
+    life.travelChallenge = null;
+    let credits = won ? challenge.reward : 0;
+    let bonus = null;
+    if (won) {
+      const roll = Math.random();
+      if (roll < 0.40) {
+        const pool = roll < 0.03 ? travelCards.rare : roll < 0.15 ? travelCards.common : [];
+        const eligible = pool.filter(id => !save.unlockedCards.includes(id));
+        if (eligible.length) {
+          const cardId = eligible[Math.floor(Math.random() * eligible.length)];
+          save.unlockedCards.push(cardId);
+          bonus = { type: 'card', id: cardId };
+        } else if (bagCount(life) < bagLimit) {
+          life.inventory.energyDrink++;
+          bonus = { type: 'item', id: 'energyDrink' };
+        } else {
+          credits += 4;
+          bonus = { type: 'credits', amount: 4 };
+        }
+      }
+    }
+    save.city.credits += credits;
+    NB.Save.save();
+    return { credits, bonus };
+  }
+
   function advanceRoutePact(step) {
     const state = city();
     if (state.life.routePact !== step) return false;
@@ -455,7 +490,7 @@
   }
 
   NB.CityLife = { items, transport, beds, streetRest, bagLimit, implantPrice, normalize, clock, maxEnergy, maxAwake,
-    bagCount, routes, advance, travel, getTravelChallenge, requiredTravelChallenge, travelWithdrawalFee, settleTravelChallenge,
+    bagCount, routes, advance, travel, getTravelChallenge, requiredTravelChallenge, travelWithdrawalFee, settleTravelChallenge, finishTravelChallenge,
     advanceRoutePact, setRouteMask, cyberdecks, equipCyberdeck, sleep, buy, use, nightShift, workNightShift, helpContact, takeNotice, consumablePrice, recoverEnergy,
     relayModes, demand, jobQuote, work, finishSignal, startDelivery, cancelDelivery };
 })(window.NB = window.NB || {});

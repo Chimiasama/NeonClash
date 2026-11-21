@@ -617,6 +617,14 @@
         clueBox.style.display = 'flex';
         document.getElementById('go-clue-title').textContent = 'ACORDO DAS ROTAS';
         document.getElementById('go-clue-text').textContent = 'As abordagens agora são opcionais. Maíra pode preparar um módulo para evitá-las na Casa de Bombas.';
+      } else if (state.travelBonus) {
+        const { type, id, amount } = state.travelBonus;
+        clueBox.style.display = 'flex';
+        document.getElementById('go-clue-title').textContent = 'PRÊMIO EXTRA';
+        document.getElementById('go-clue-text').textContent = type === 'card'
+          ? `${NB.Cards.CARD_DB[id].name} adicionada à coleção.`
+          : type === 'item' ? `${NB.CityLife.items[id].name} guardado na Mochila.`
+            : `Mochila cheia. +${amount} créditos incluídos no prêmio.`;
       } else if (state.residentReward) {
         clueBox.style.display = 'flex';
         document.getElementById('go-clue-title').textContent = 'CARTA CONQUISTADA';

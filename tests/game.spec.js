@@ -568,10 +568,13 @@ test('previews hotel services and rolls lasting travel offers by vehicle, fatigu
   const credits = await page.evaluate(() => NB.Save.get().city.credits);
   await offer.getByRole('button', { name: /Aceitar desafio/ }).click();
   await page.evaluate(() => {
+    Math.random = () => 0.2;
     NB.State.get().enemy.hp = 0;
     NB.State.checkWinCondition();
   });
   await expect(page.locator('#gameover-modal')).toContainText('VITÓRIA · +21 CRÉDITOS');
+  await expect(page.locator('#go-clue-text')).toHaveText('Energético guardado na Mochila.');
+  expect(await page.evaluate(() => NB.Save.get().city.life.inventory.energyDrink)).toBe(1);
   expect(await page.evaluate(() => [NB.Save.get().city.credits, NB.CityLife.getTravelChallenge()])).toEqual([credits + 21, null]);
 
   await page.getByRole('button', { name: 'Voltar à cidade' }).click();
@@ -582,6 +585,38 @@ test('previews hotel services and rolls lasting travel offers by vehicle, fatigu
   await expect(abandon).toContainText('Você perde 9 créditos.');
   await abandon.getByRole('button', { name: 'Abandonar duelo', exact: true }).click();
   expect(await page.evaluate(() => [NB.Save.get().city.credits, NB.CityLife.getTravelChallenge()])).toEqual([credits + 12, null]);
+});
+
+test('pays travel credits once and awards only unowned cards or a fitting bonus', async ({ page }) => {
+  await page.goto('/');
+  const rewards = await page.evaluate(() => {
+    const save = NB.Save.get();
+    const battle = (roll, win = true) => {
+      save.city.life.travelChallenge = { name: 'Nexo', destination: save.city.district, tier: 0 };
+      Math.random = () => roll;
+      return NB.CityLife.finishTravelChallenge(win);
+    };
+    const first = battle(0.01);
+    const replay = NB.CityLife.finishTravelChallenge(true);
+    const second = battle(0.01);
+    const common = battle(0.1);
+    const creditsOnly = battle(0.6);
+    const loss = battle(0.01, false);
+    save.city.life.inventory.energyDrink = NB.CityLife.bagLimit;
+    const full = battle(0.2);
+    return { first, second, common, creditsOnly, loss, full, replay };
+  });
+  expect(rewards).toEqual({
+    first: { credits: 5, bonus: { type: 'card', id: 'unit_22' } },
+    second: { credits: 5, bonus: { type: 'card', id: 'unit_23' } },
+    common: { credits: 5, bonus: { type: 'card', id: 'unit_07' } },
+    creditsOnly: { credits: 5, bonus: null },
+    loss: { credits: 0, bonus: null },
+    full: { credits: 9, bonus: { type: 'credits', amount: 4 } },
+    replay: { credits: 0, bonus: null }
+  });
+  await page.reload();
+  expect(await page.evaluate(() => NB.Save.get().unlockedCards)).toEqual(expect.arrayContaining(['unit_22', 'unit_23', 'unit_07']));
 });
 
 test('wins the route pact, equips a suppression module and buys starting RAM', async ({ page }) => {
