@@ -608,7 +608,8 @@
     } else if (state.mode === 'arena') {
       const won = winner === 'player';
       panel.classList.add(won ? 'victory' : 'defeat');
-      kicker.textContent = boss.residentId ? `DUELO DE BAIRRO · ${boss.name}` : 'RINGUE BAIXA TENSÃO';
+      kicker.textContent = boss.travelReward ? `DESAFIO DE VIAGEM · ${boss.name}`
+        : boss.residentId ? `DUELO DE BAIRRO · ${boss.name}` : 'RINGUE BAIXA TENSÃO';
       kicker.style.color = won ? 'var(--ram)' : 'var(--magenta)';
       title.textContent = won ? `VITÓRIA · +${state.payout} CRÉDITOS` : (state.stake ? 'DERROTA · APOSTA PERDIDA' : 'DERROTA NO TREINO');
       title.style.color = kicker.style.color;

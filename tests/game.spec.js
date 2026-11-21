@@ -35,6 +35,7 @@ test('earns credits, buys a card, and keeps the purchase after reloading', async
   }
   await expect(page.locator('#city-credits')).toHaveText('57 créditos');
   await walkTo(page, page.getByRole('button', { name: 'Feira do Viaduto' }));
+  await page.getByRole('button', { name: 'Ver cartas à venda' }).click();
   await page.getByRole('button', { name: 'Comprar · 45' }).click();
   await expect(page.locator('#city-credits')).toHaveText('12 créditos');
 
@@ -42,6 +43,8 @@ test('earns credits, buys a card, and keeps the purchase after reloading', async
   await enterCity(page);
   await expect(page.getByRole('heading', { name: 'Feira do Viaduto' })).toBeVisible();
   await expect(page.locator('#city-credits')).toHaveText('12 créditos');
+  await expect(page.getByRole('button', { name: 'Adquirida' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Ver cartas à venda' }).click();
   await expect(page.getByRole('button', { name: 'Adquirida' })).toBeDisabled();
 });
 
@@ -239,18 +242,21 @@ test('shows each deck copy in a square, separate tile and keeps the same art fra
   expect(combatFrame.height).toBeCloseTo(frame.height, 0);
 });
 
-test('previews locked cards without making them available to edit', async ({ page }) => {
+test('keeps locked stats secret on direct taps and when browsing the inspector', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: /Meu Deck/i }).click();
   const lockedCard = page.getByRole('button', { name: 'Bastion-Core · bloqueada' });
   await expect(lockedCard.locator('.col-card-art img').first()).toHaveCSS('filter', 'grayscale(1)');
   await lockedCard.click();
-  const inspector = page.getByRole('dialog', { name: 'BASTION-CORE' });
-  await expect(inspector).toBeVisible();
-  await expect(inspector).toContainText('Recompensa de um encontro da aventura.');
-  await expect(inspector.locator('.inspector-deck-controls')).toBeHidden();
-  await inspector.getByRole('button', { name: 'Fechar' }).click();
-  await expect(page.getByRole('button', { name: 'Bastion-Core · bloqueada' })).toBeFocused();
+  await expect(page.locator('#card-inspector-modal')).toBeHidden();
+  await expect(page.locator('#toast-banner')).toContainText('Obtenha esta carta');
+  await page.getByRole('button', { name: 'Kuroi-01', exact: true }).click();
+  const inspector = page.locator('#card-inspector-modal');
+  const names = await page.evaluate(() => NB.Save.get().unlockedCards.map(id => NB.Cards.CARD_DB[id].name.toUpperCase()));
+  for (const _ of names) {
+    expect(names).toContain(await inspector.locator('#insp-name').textContent());
+    await inspector.getByRole('button', { name: 'Próxima carta' }).click();
+  }
 });
 
 test('Back unwinds the inspector, deck, city overlays and dossier one at a time', async ({ page }) => {
@@ -288,6 +294,7 @@ test('Back unwinds the inspector, deck, city overlays and dossier one at a time'
   expect(await back()).toBe(true);
   await expect(page.getByRole('button', { name: 'Sinal Criptografado' })).toBeVisible();
 
+  await page.evaluate(() => { Math.random = () => 0; });
   await walkTo(page, page.getByRole('button', { name: 'Estação Fantasma' }));
   await page.getByRole('button', { name: 'Abrir dossiê' }).click();
   const dossier = page.getByRole('dialog', { name: 'Dossiê do Alvo' });
@@ -445,6 +452,7 @@ test('applies affinity in a clash and a mixed Overclock, and recompiles a unit i
   await page.goto('/');
   await enterCity(page);
   await walkTo(page, page.getByRole('button', { name: 'Feira do Viaduto' }));
+  await page.getByRole('button', { name: 'Ver cartas à venda' }).click();
   await page.getByRole('button', { name: 'Comprar · 30' }).click();
   await expect(page.locator('#city-credits')).toHaveText('5 créditos');
 
@@ -509,10 +517,56 @@ test('quotes travel without charging, then spends time, energy and only the chos
   await expect(page.locator('#city-energy')).toHaveAttribute('value', '100');
 });
 
+test('previews hotel services and rolls lasting travel offers by vehicle, fatigue and story progress', async ({ page }) => {
+  await page.goto('/');
+  await enterCity(page);
+  await page.locator('[data-district="vex"]').click();
+  await expect(page.locator('#city-content')).toContainText('Descanso · 5 h · 26 créditos');
+  const chances = await page.evaluate(() => {
+    const save = NB.Save.get();
+    save.city.life.vehicles = ['bike', 'motorbike'];
+    const getChances = () => NB.CityLife.routes('vex').map(route => route.encounterChance);
+    const rested = getChances();
+    save.city.life.energy = 21;
+    const tired = getChances();
+    save.city.life.energy = 1;
+    const collapsed = getChances();
+    save.city.life.energy = 100;
+    const roll = Math.random;
+    Math.random = () => 0.20;
+    NB.CityLife.travel('vex', 'bus');
+    const bus = NB.CityLife.getTravelChallenge();
+    NB.CityLife.travel('kira', 'bike');
+    const rookie = NB.CityLife.getTravelChallenge();
+    save.story.chapter = 4;
+    Math.random = () => 0.04;
+    NB.CityLife.travel('vex', 'motorbike');
+    Math.random = roll;
+    return { rested, tired, collapsed, bus, rookie, late: NB.CityLife.getTravelChallenge() };
+  });
+  expect(chances).toMatchObject({
+    rested: [35, 25, 15, 5], tired: [70, 50, 30, 10], collapsed: [0, 0, 0, 0],
+    bus: null, rookie: { hp: 10, reward: 5 }, late: { hp: 22, reward: 21 }
+  });
+  await page.reload();
+  await enterCity(page);
+  const offer = page.getByRole('region', { name: 'Desafio de viagem' });
+  await expect(offer).toContainText('Elite · 22 HP · vitória paga 21 créditos');
+  const credits = await page.evaluate(() => NB.Save.get().city.credits);
+  await offer.getByRole('button', { name: /Aceitar desafio/ }).click();
+  await page.evaluate(() => {
+    NB.State.get().enemy.hp = 0;
+    NB.State.checkWinCondition();
+  });
+  await expect(page.locator('#gameover-modal')).toContainText('VITÓRIA · +21 CRÉDITOS');
+  expect(await page.evaluate(() => [NB.Save.get().city.credits, NB.CityLife.getTravelChallenge()])).toEqual([credits + 21, null]);
+});
+
 test('stores supplies and vehicles, restores the backpack and uses its contents', async ({ page }) => {
   await page.goto('/');
   await enterCity(page);
   await walkTo(page, page.getByRole('button', { name: 'Quiosque 24h' }));
+  await page.getByRole('button', { name: 'Ver consumíveis' }).click();
   await page.getByRole('button', { name: 'Comprar · 4 créditos', exact: true }).click();
   await page.reload();
   await enterCity(page);
@@ -525,8 +579,11 @@ test('stores supplies and vehicles, restores the backpack and uses its contents'
 
   await page.evaluate(() => { NB.Save.get().city.credits = 800; });
   await walkTo(page, page.getByRole('button', { name: 'Garagem da Íris' }));
+  await page.getByRole('button', { name: 'Ver veículos' }).click();
   await page.getByRole('button', { name: 'Comprar · 100 créditos' }).click();
   await page.getByRole('button', { name: 'Comprar · 450 créditos' }).click();
+  await page.getByRole('button', { name: 'Voltar aos serviços' }).click();
+  await page.getByRole('button', { name: 'Ver implante' }).click();
   await page.getByRole('button', { name: 'Comprar · 130 créditos' }).click();
   await expect(page.locator('#city-energy')).toHaveAttribute('max', '120');
   await page.getByRole('button', { name: 'Casa de Kairo' }).click();
@@ -1206,6 +1263,14 @@ test('counts card images in view without archiving offscreen or locked collectio
   await expect(page.getByRole('button', { name: 'Escudo de Emergência · bloqueada' })).toBeVisible();
   expect(await seen('./cards/exploit_18.webp')).toBe(false);
   await page.getByRole('button', { name: 'Escudo de Emergência · bloqueada' }).click();
+  await expect(page.locator('#card-inspector-modal')).toBeHidden();
+  expect(await seen('./cards/exploit_18.webp')).toBe(false);
+  await page.evaluate(() => {
+    NB.Save.get().unlockedCards.push('exploit_18');
+    NB.Save.save();
+    NB.DeckBuilder.renderAll();
+  });
+  await page.getByRole('button', { name: 'Escudo de Emergência', exact: true }).click();
   await expect.poll(() => seen('./cards/exploit_18.webp')).toBe(true);
   await page.locator('#btn-insp-close').click();
   await page.locator('#btn-deck-close').click();

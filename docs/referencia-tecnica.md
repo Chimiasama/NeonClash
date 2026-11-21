@@ -51,6 +51,10 @@ O atlas contém 10 bairros, 23 locais e um elenco ligado a cenas, serviços e du
 
 A distância é `max(2, ceil(hypot(Δx, Δy) / 10))` com as coordenadas do mapa. Na tabela, `d` representa essa distância.
 
+A cotação também descreve o que há no destino e mostra a tarifa de descanso quando aplicável. A Feira, o Quiosque e a Garagem abrem catálogos por serviço. Cartas que o jogador ainda não possui aparecem em cinza na coleção e não abrem o inspetor.
+
+Um desafiante pode aparecer ao concluir a viagem. A chance base é de 35% a pé, 25% de bicicleta, 15% de ônibus ou balsa e 5% de moto. Ela dobra quando a energia prevista na chegada está nos 20% finais. Trajetos que terminam em colapso não oferecem duelo. A oferta fica salva até ser aceita, recusada ou substituída por outra viagem. A dificuldade usa o capítulo atual, com cinco níveis de 10 a 22 HP e vitórias de 5 a 21 créditos. Aceitar usa o fluxo normal de um duelo urbano.
+
 | Transporte | Tempo | Energia | Créditos e condição |
 | --- | --- | --- | --- |
 | A pé | 7 × d min | 2 × d | Grátis. |

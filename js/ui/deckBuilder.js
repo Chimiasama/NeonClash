@@ -25,29 +25,6 @@
     return n;
   }
 
-  function getUnlockSourceText(cardId) {
-    const nodes = NB.Campaign ? NB.Campaign.NODES : [];
-    for (const node of nodes) {
-      if (Array.isArray(node.rewardCards) && node.rewardCards.includes(cardId)) {
-        if (!NB.Save.isArchetypeUnlocked(node.id)) return 'Recompensa de um encontro da aventura.';
-        return `Derrote ${node.name} (${node.nodeCode}) para desbloquear esta carta.`;
-      }
-    }
-    if (NB.CityData.stock.some(item => item.id === cardId)) return 'Disponível na Feira do Viaduto.';
-    const scene = Object.values(NB.Story.sceneById).find(item => item.reward?.card === cardId);
-    if (scene) return `Conclua a rota pacifista: ${scene.title}.`;
-    const resident = NB.CityAtlas.residents.find(person => NB.CityAtlas.residentDuels[person.id]?.card === cardId);
-    if (resident) {
-      const place = NB.CityData.districts.find(district => district.id === resident.location);
-      return `Vença ${resident.name} em ${place.name}.`;
-    }
-    const challenge = NB.Challenges.find(entry => entry.cards.includes(cardId));
-    if (challenge) return NB.Save.isArchetypeUnlocked(challenge.opponent)
-      ? `Vença ${challenge.name} no Ringue Baixa Tensão.`
-      : 'Recompensa de um desafio que será liberado ao avançar na aventura.';
-    return 'Avance na campanha para desbloquear esta carta.';
-  }
-
   function getDeckBreakdown() {
     let units = 0;
     let exploits = 0;
@@ -113,10 +90,12 @@
   }
 
   function getFilteredCards() {
+    const owned = getUnlockedSet();
     return getAllCardDefs().filter(card => {
       if ((currentFilter === 'unit' || currentFilter === 'exploit') && card.kind !== currentFilter) return false;
       if (currentFilter === 'indeck' && countCopies(card.id) === 0) return false;
       if (searchWords.length === 0) return true;
+      if (!owned.has(card.id)) return searchWords.every(word => normalizeSearch(card.name).includes(word));
       const affinity = card.kind === 'unit' ? NB.Cards.affinityLabel(NB.Save.getAffinity(card.id)) : '';
       const keywords = card.keywords.map(id => NB.Cards.KEYWORDS[id]?.tag);
       const text = normalizeSearch([card.name, card.subtitle, card.desc, affinity, ...keywords].join(' '));
@@ -153,7 +132,7 @@
       tile.type = 'button';
       tile.dataset.cardId = card.id;
       tile.dataset.copy = copy;
-      tile.setAttribute('aria-haspopup', 'dialog');
+      if (isUnlocked) tile.setAttribute('aria-haspopup', 'dialog');
       tile.setAttribute('aria-label', card.name + (copy ? ` · cópia ${copy} de ${copies}` : isUnlocked ? '' : ' · bloqueada'));
       tile.className = 'col-card' +
         (card.kind === 'exploit' ? ' type-exploit' : '') +
@@ -240,7 +219,10 @@
 
   /* Inspetor em Tela Cheia */
   function openInspector(cardId, copy = 0) {
-    if (!NB.Cards.CARD_DB[cardId]) return;
+    if (!getUnlockedSet().has(cardId)) {
+      NB.Physics.showToast('Obtenha esta carta para consultar os detalhes.', 'var(--amber)');
+      return;
+    }
     inspectorOrigin = `[data-card-id="${cardId}"][data-copy="${copy}"]`;
     inspectedCardId = cardId;
     renderInspector();
@@ -260,9 +242,14 @@
     inspectorOrigin = null;
   }
 
+  function getInspectableCards() {
+    const owned = getUnlockedSet();
+    return getFilteredCards().filter(card => owned.has(card.id));
+  }
+
   function stepInspector(delta) {
     if (!inspectedCardId) return;
-    const cards = getFilteredCards();
+    const cards = getInspectableCards();
     if (!cards.length) return;
     const current = cards.findIndex(card => card.id === inspectedCardId);
     const next = current < 0 ? (delta > 0 ? 0 : cards.length - 1)
@@ -287,12 +274,7 @@
     const artStage = document.getElementById('insp-art-stage');
     artStage.innerHTML = '';
     artStage.appendChild(NB.Sprites.createArtMarkup(card.id, card.img, card.name));
-    const isUnlocked = getUnlockedSet().has(card.id);
-    const unlockNote = document.getElementById('insp-unlock-note');
-    unlockNote.hidden = isUnlocked;
-    unlockNote.textContent = isUnlocked ? '' : getUnlockSourceText(card.id);
-    document.querySelector('.inspector-deck-controls').hidden = !isUnlocked;
-    const canStep = getFilteredCards().some(item => item.id !== card.id);
+    const canStep = getInspectableCards().some(item => item.id !== card.id);
     document.getElementById('btn-insp-prev').disabled = !canStep;
     document.getElementById('btn-insp-next').disabled = !canStep;
 

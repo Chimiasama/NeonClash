@@ -98,7 +98,9 @@
     NB.Audio.setScene(district.music || district.id);
     render();
     const notice = NB.CityLife.takeNotice();
-    announce([`Destino alcançado: ${district.name}.`, notice].filter(Boolean).join(' '));
+    const challenge = NB.CityLife.getTravelChallenge();
+    announce([`Destino alcançado: ${district.name}.`, notice,
+      challenge && `${challenge.name} ofereceu um duelo no trajeto.`].filter(Boolean).join(' '));
     $('city-feedback').scrollIntoView({ block: 'center' });
   }
 
@@ -184,13 +186,25 @@
     } else if (view === 'journal') {
       if (NB.Story.active()) NB.StoryUI.journal(content, district, selectDestination);
       else renderJournal(content, save);
+    } else if (view.startsWith('shop-')) {
+      const category = view.slice(5);
+      addButton(content, 'Voltar aos serviços', resetView);
+      if (category === 'cards') renderMarket(content, save);
+      else renderSupplies(content, save.city, category);
     } else if (district.id === 'home' || district.id === 'pension') {
       renderRest(content, save.city, district.rest);
-    } else if (district.id === 'kiosk' || district.id === 'garage') {
-      renderSupplies(content, save.city, district.id);
-    } else if (district.id === 'market') {
-      renderMarket(content, save);
-      renderSupplies(content, save.city, district.id);
+    } else if (['market', 'kiosk', 'garage'].includes(district.id)) {
+      if (district.id === 'market') {
+        shopButton(content, 'Ver cartas à venda', 'cards');
+        renderWorkshop(content, save);
+      }
+      if (district.id === 'garage') {
+        shopButton(content, 'Ver veículos', 'vehicles');
+        shopButton(content, 'Ver implante', 'implant');
+      } else {
+        shopButton(content, 'Ver consumíveis', 'items');
+        if (district.id === 'kiosk') renderKioskShift(content);
+      }
     } else if (district.id === 'relay') {
       renderRelay(content, save);
     } else if (district.id === 'arena') {
@@ -205,6 +219,8 @@
       }
     }
     if (view === 'district') {
+      const challenge = NB.CityLife.getTravelChallenge();
+      if (challenge) renderTravelChallenge(content, challenge);
       NB.StoryUI.local(content, district);
       renderContactServices(content, district.id);
       renderJobs(content, district.id, life);
@@ -344,11 +360,39 @@
     return `${Math.floor(minutes / 60)} h${minutes % 60 ? ` ${minutes % 60} min` : ''}`;
   }
 
+  const destinationServices = {
+    market: 'Cartas, consumíveis e ajustes de afinidade na banca da Lume.',
+    kiosk: 'Café, energéticos e um turno de atendimento noturno.',
+    garage: 'Bicicleta, moto e implante de vigília à venda.',
+    relay: 'Trabalhos de sinal na Antena Comunitária.',
+    arena: 'Duelos de treino, apostas e desafios de arquétipo conforme a aventura.',
+    kira: 'Estação de passagem e ponto de partida do Correio Expresso.',
+    terminal: 'Terminal de ônibus com entregas e bicos de registros.',
+    depots: 'Depósito de peças com entregas, triagem de sucata e duelos locais.',
+    docks: 'Subestação no Cais com entregas e ronda de carga.',
+    ferry: 'Embarque para a travessia da Ressaca.',
+    pump: 'Casa de Bombas do Canal e acesso à travessia.',
+    ringArchive: 'Arquivo dos recibos de entrada e apostas do Ringue.',
+    cipher: 'Posto de segurança e manutenção da Muralha.',
+    archive: 'Corredor de acesso para a equipe de manutenção.',
+    theatre: 'Teatro com salas de ensaio e bastidores.',
+    clinic: 'Clínica comunitária e atendimento do Morro.',
+    morroKitchen: 'Cozinha do bairro e ponto de trabalho noturno.',
+    archon: 'Sede da concessionária Vértice.',
+    registry: 'Balcão de cadastros, protocolos e entregas.',
+    square: 'Praça do Centro e ponto de encontro do jornal de bairro.'
+  };
+
   function renderTravel(content, save) {
     const place = districts.find(item => item.id === destination);
     const life = save.city.life;
     const { streetRest, beds } = NB.CityLife;
     $('city-name').textContent = `Ir para ${place.name}`;
+    if (destinationServices[place.id]) addText(content, destinationServices[place.id]);
+    if (place.rest) {
+      const bed = beds[place.rest];
+      addText(content, `Descanso · ${duration(bed.minutes)} · ${bed.price ? `${bed.price} créditos` : 'Grátis'} · recupera toda a energia.`);
+    }
     for (const scene of NB.Story.getScenes(place.id)) addText(content, `◆ Ao chegar: ${scene.title}`, 'city-active-destination');
     if (NB.Story.pendingDuel(place.id)) addText(content, '◆ Ao chegar: abrir o dossiê da investigação', 'city-active-destination');
     if (place.id === 'archon' && NB.Story.archonWarning()) addText(content, NB.Story.archonWarning(), 'city-notice');
@@ -362,6 +406,7 @@
       } else {
         addText(row, `${duration(route.minutes)} · ${route.fare ? `${route.fare} créditos` : 'Grátis'} · −${route.energy} energia`);
         addText(row, `Chegada: ${NB.CityLife.clock(life.minute + route.minutes)} · Energia ao chegar: ${route.energyAfter}/${NB.CityLife.maxEnergy(life)}`);
+        if (route.encounterChance) addText(row, `Chance de desafio: ${route.encounterChance}%`);
         if (route.note) addText(row, route.note);
         if (route.willCollapse) addText(row, place.id === 'home'
           ? `Você vai dormir em casa ao chegar: ${duration(beds.home.minutes)} grátis e energia cheia.`
@@ -407,17 +452,25 @@
     if (life.implant) addText(content, 'Implante de vigília instalado.');
   }
 
-  function renderSupplies(content, state, districtId) {
+  function shopButton(content, label, category) {
+    addButton(content, label, () => {
+      view = `shop-${category}`;
+      announce('');
+      render();
+      $('city-content').querySelector('button')?.focus();
+    });
+  }
+
+  function renderSupplies(content, state, category) {
     const life = state.life;
-    const sellsConsumables = districtId === 'kiosk' || districtId === 'market';
+    const sellsConsumables = category === 'items';
     if (sellsConsumables && NB.Story.get().nairTruthEarly === true) addText(content, 'Rede de Dona Nair · 20% de desconto em consumíveis.', 'city-notice');
     const goods = sellsConsumables
       ? Object.entries(NB.CityLife.items).map(([id, item]) => ({ id, ...item, price: NB.CityLife.consumablePrice(id), detail: `+${item.energy} de energia`, owned: false }))
-      : [
-        ...['bike', 'motorbike'].map(id => ({ id, ...NB.CityLife.transport[id], owned: life.vehicles.includes(id) })),
-        { id: 'implant', name: 'Implante de vigília', price: NB.CityLife.implantPrice, owned: life.implant,
-          detail: '+20 de energia máxima · +4 h acordado' }
-      ];
+      : category === 'vehicles'
+        ? ['bike', 'motorbike'].map(id => ({ id, ...NB.CityLife.transport[id], owned: life.vehicles.includes(id) }))
+        : [{ id: 'implant', name: 'Implante de vigília', price: NB.CityLife.implantPrice, owned: life.implant,
+          detail: '+20 de energia máxima · +4 h acordado' }];
     for (const item of goods) {
       const row = document.createElement('div');
       row.className = 'city-life-row';
@@ -430,15 +483,16 @@
       }, item.owned || state.credits < item.price || (sellsConsumables && NB.CityLife.bagCount(life) >= NB.CityLife.bagLimit));
       content.append(row);
     }
-    if (districtId === 'kiosk') {
-      const shift = NB.CityLife.nightShift();
-      addText(content, 'Turno de atendimento entre 19h e 2h. Último início à 1h.');
-      addButton(content, shift.done ? 'Turno já concluído' : 'Trabalhar no quiosque · 1 h · +14 créditos', () => {
-        if (!NB.CityLife.workNightShift()) return;
-        render();
-        announce(['Turno concluído. +14 créditos.', NB.CityLife.takeNotice()].filter(Boolean).join(' '));
-      }, !shift.open || shift.done);
-    }
+  }
+
+  function renderKioskShift(content) {
+    const shift = NB.CityLife.nightShift();
+    addText(content, 'Turno de atendimento entre 19h e 2h. Último início à 1h.');
+    addButton(content, shift.done ? 'Turno já concluído' : 'Trabalhar no quiosque · 1 h · +14 créditos', () => {
+      if (!NB.CityLife.workNightShift()) return;
+      render();
+      announce(['Turno concluído. +14 créditos.', NB.CityLife.takeNotice()].filter(Boolean).join(' '));
+    }, !shift.open || shift.done);
   }
 
   function renderJournal(content, save) {
@@ -464,12 +518,14 @@
       row.append(art);
       const details = document.createElement('div');
       addText(details, card.name, 'city-clue-title');
-      addText(details, card.kind === 'unit'
-        ? `${card.atk} ATK · ${card.def} DEF · +${card.ramGain} RAM · ${NB.Cards.affinityLabel(NB.Save.getAffinity(id))}`
-        : `Exploit · ${card.cost} RAM`);
-      if (card.keywords.length) addText(details, card.keywords.map(keyword => NB.Cards.KEYWORDS[keyword].tag).join(' · '));
+      addText(details, card.kind === 'unit' ? 'Unidade' : 'Exploit');
+      if (owned) {
+        addText(details, card.kind === 'unit'
+          ? `${card.atk} ATK · ${card.def} DEF · +${card.ramGain} RAM · ${NB.Cards.affinityLabel(NB.Save.getAffinity(id))}`
+          : `${card.cost} RAM`);
+      }
       row.append(details);
-      const buy = addButton(row, owned ? 'Adquirida' : `Comprar · ${price}`, () => {
+      addButton(row, owned ? 'Adquirida' : `Comprar · ${price}`, () => {
         if (save.city.credits < price || save.unlockedCards.includes(id)) return;
         save.city.credits -= price;
         save.unlockedCards.push(id);
@@ -477,10 +533,8 @@
         render();
         announce(`${card.name} disponível em Meu Deck.`);
       }, owned || save.city.credits < price);
-      if (!owned) buy.dataset.stockPrice = price;
       content.append(row);
     }
-    renderWorkshop(content, save);
   }
 
   function renderWorkshop(content, save) {
@@ -528,9 +582,6 @@
         if (!affinities.value || !NB.Save.recalibrate(card.id, type)) return;
         announce(`${card.name} agora usa afinidade ${NB.Cards.affinityLabel(type)}.`);
         $('city-credits').textContent = `${save.city.credits} créditos`;
-        for (const buy of content.querySelectorAll('[data-stock-price]')) {
-          buy.disabled = save.city.credits < Number(buy.dataset.stockPrice);
-        }
         updateOptions();
         affinities.focus();
       });
@@ -769,13 +820,36 @@
     });
   }
 
+  function renderTravelChallenge(content, challenge) {
+    const offer = document.createElement('section');
+    offer.className = 'city-local-duels city-travel-challenge';
+    offer.setAttribute('aria-label', 'Desafio de viagem');
+    addText(offer, `${challenge.name} abordou Kairo no trajeto.`, 'city-clue-title');
+    addText(offer, `${challenge.label} · ${challenge.hp} HP · vitória paga ${challenge.reward} créditos`);
+    addButton(offer, `Aceitar desafio de ${challenge.name}`, () => {
+      if (!NB.CityLife.dismissTravelChallenge()) return;
+      NB.Input.startMatch({ mode: 'arena', boss: {
+        ...sparringBoss, name: challenge.name, fullTitle: `${challenge.name} // Desafio de viagem`,
+        avatar: challenge.portrait, hp: challenge.hp, canOverclock: Boolean(challenge.canOverclock),
+        deckList: Array.from({ length: 20 }, (_, index) => challenge.deck[index % challenge.deck.length]),
+        travelReward: challenge.reward
+      } });
+    });
+    addButton(offer, 'Recusar desafio', () => {
+      if (!NB.CityLife.dismissTravelChallenge()) return;
+      render();
+      announce('Você recusou o duelo.');
+    });
+    content.append(offer);
+  }
+
   function finishArena(state, winner) {
     const save = NB.Save.get();
     const residentId = state.boss.residentId;
     const duel = residentDuels[residentId];
     const encounter = state.boss.encounterKey;
     const payout = winner === 'player'
-      ? (encounter ? state.boss.encounterReward : duel ? duel.credits : state.stake ? 60 : 15) : 0;
+      ? (state.boss.travelReward ?? (encounter ? state.boss.encounterReward : duel ? duel.credits : state.stake ? 60 : 15)) : 0;
     if (winner === 'player' && encounter) save.city.encounterWins = [...save.city.encounterWins, encounter].slice(-4);
     state.payout = payout;
     if (winner === 'player' && duel && !save.city.residentWins.includes(residentId)) {

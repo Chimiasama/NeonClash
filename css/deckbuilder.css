@@ -423,7 +423,6 @@
 .inspector-art-stage .art-fallback { z-index: 1; }
 .inspector-art-stage img:not(.art-fallback) { z-index: 2; }
 
-.inspector-unlock-note { color: var(--amber); font-size: 13px; }
 .inspector-deck-controls[hidden] { display: none; }
 
 .inspector-lore {

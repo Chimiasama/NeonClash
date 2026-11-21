@@ -187,7 +187,8 @@
     $('gallery-library').hidden = true;
     $('gallery-detail').hidden = false;
     $('gallery-art-title').textContent = entry.title;
-    $('gallery-description').textContent = entry.description;
+    $('gallery-description').textContent = entry.card && !NB.Save.get().unlockedCards.includes(entry.card.id)
+      ? 'Obtenha esta carta para consultar seus detalhes.' : entry.description;
     const artwork = entry.card
       ? NB.Sprites.createArtMarkup(entry.card.id, entry.source, entry.title)
       : image(entry);

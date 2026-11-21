@@ -21,6 +21,15 @@
     bus: { name: 'Ônibus', minutes: 3, effort: 1, fare: 4 },
     motorbike: { name: 'Moto', minutes: 2, effort: 1, fare: 0, price: 450 }
   };
+  const travelChances = { walk: 35, bike: 25, bus: 15, motorbike: 5, ferry: 15 };
+  const challengers = Object.values(NB.CityAtlas.encounters).flat();
+  const travelTiers = [
+    { label: 'Iniciante', hp: 10, reward: 5, deck: ['unit_01', 'unit_02', 'unit_08', 'exploit_01'] },
+    { label: 'Praticante', hp: 13, reward: 8, deck: ['unit_01', 'unit_04', 'unit_05', 'unit_08', 'exploit_04'] },
+    { label: 'Experiente', hp: 16, reward: 12, deck: ['unit_03', 'unit_04', 'unit_09', 'unit_25', 'exploit_07'] },
+    { label: 'Veterano', hp: 19, reward: 16, deck: ['unit_04', 'unit_06', 'unit_25', 'unit_32', 'exploit_10', 'exploit_17'] },
+    { label: 'Elite', hp: 22, reward: 21, canOverclock: true, deck: ['unit_03', 'unit_26', 'unit_27', 'unit_30', 'unit_32', 'exploit_10', 'exploit_18'] }
+  ];
   const beds = {
     home: { minutes: 480, price: 0 },
     pension: { minutes: 420, price: 12 },
@@ -49,8 +58,13 @@
       Number.isSafeInteger(delivery.startMinute) && delivery.startMinute >= 0 && delivery.startMinute <= minute &&
       Number.isSafeInteger(delivery.distance) && delivery.distance >= 4 && delivery.distance <= 15
       ? { targetId: delivery.targetId, startMinute: delivery.startMinute, distance: delivery.distance } : null;
+    const challenge = raw?.travelChallenge;
+    const travelChallenge = challenge && challengers.some(person => person.name === challenge.name) &&
+      districts.some(place => place.id === challenge.destination) && Number.isInteger(challenge.tier) && travelTiers[challenge.tier]
+      ? { name: challenge.name, destination: challenge.destination, tier: challenge.tier } : null;
     return {
       minute,
+      travelChallenge,
       dailyJobDay: day(minute),
       dailyJobCounts: raw?.dailyJobDay === day(minute) ? Object.fromEntries(jobIds.flatMap(id => {
         const count = integer(raw.dailyJobCounts?.[id], 0, 0, 3);
@@ -102,13 +116,15 @@
       const energy = length * mode.effort;
       const dayMinute = state.life.minute % 1440;
       const closed = id === 'ferry' && (dayMinute < 420 || dayMinute >= 1080);
+      const energyAfter = Math.max(0, state.life.energy - energy);
+      const willCollapse = state.life.energy <= energy || state.life.awake + minutes >= maxAwake(state.life);
+      const encounterChance = willCollapse ? 0 : travelChances[id] * (energyAfter <= maxEnergy(state.life) * 0.2 ? 2 : 1);
       return {
         id, name: mode.name, minutes, energy, fare: mode.fare,
         note: closed ? 'A balsa opera das 7h às 18h.' : usesShortcut ? 'Atalho da encosta ensinado por Aline.' : '',
         available: !closed && (!mode.price || state.life.vehicles.includes(id)) && state.credits >= mode.fare,
         needsVehicle: Boolean(mode.price && !state.life.vehicles.includes(id)),
-        energyAfter: Math.max(0, state.life.energy - energy),
-        willCollapse: state.life.energy <= energy || state.life.awake + minutes >= maxAwake(state.life)
+        energyAfter, willCollapse, encounterChance
       };
     });
   }
@@ -243,11 +259,32 @@
     state.credits -= route.fare;
     state.district = destination;
     const deliveryNotice = finishDelivery(destination, route.minutes);
+    state.life.travelChallenge = null;
+    if (route.encounterChance && Math.random() * 100 < route.encounterChance) {
+      const person = challengers[Math.floor(Math.random() * challengers.length)];
+      const tier = Math.min(NB.Story.get().chapter, travelTiers.length - 1);
+      state.life.travelChallenge = { name: person.name, destination, tier };
+    }
     advance(route.minutes, route.energy);
     if (deliveryNotice) {
       state.life.notice = [deliveryNotice, state.life.notice].filter(Boolean).join(' ');
       NB.Save.save();
     }
+    return true;
+  }
+
+  function getTravelChallenge() {
+    const state = city();
+    const challenge = state.life.travelChallenge;
+    if (!challenge || challenge.destination !== state.district) return null;
+    const person = challengers.find(item => item.name === challenge.name);
+    return { ...person, ...travelTiers[challenge.tier] };
+  }
+
+  function dismissTravelChallenge() {
+    if (!getTravelChallenge()) return false;
+    city().life.travelChallenge = null;
+    NB.Save.save();
     return true;
   }
 
@@ -354,6 +391,6 @@
   }
 
   NB.CityLife = { items, transport, beds, streetRest, bagLimit, implantPrice, normalize, clock, maxEnergy, maxAwake,
-    bagCount, routes, advance, travel, sleep, buy, use, nightShift, workNightShift, helpContact, takeNotice, consumablePrice, recoverEnergy,
+    bagCount, routes, advance, travel, getTravelChallenge, dismissTravelChallenge, sleep, buy, use, nightShift, workNightShift, helpContact, takeNotice, consumablePrice, recoverEnergy,
     relayModes, demand, jobQuote, work, finishSignal, startDelivery, cancelDelivery };
 })(window.NB = window.NB || {});
