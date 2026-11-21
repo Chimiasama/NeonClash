@@ -290,7 +290,10 @@
     } else if (!district.atlasOnly) {
       if (district.rest) renderRest(content, save.city, district.rest);
       const requirement = access(district);
-      if (requirement) {
+      if (NB.Story.pendingDuel(district.id)) {
+        serviceButton(content, 'Duelar pela investigação', () => NB.Input.startStoryDuel(district.id),
+          district.npc.split(' · ')[0], { portrait: district.portrait });
+      } else if (requirement) {
         addText(content, requirement, 'city-notice');
       } else {
         const label = cleared ? 'Abrir dossiê · revanche' : 'Abrir dossiê';
@@ -547,7 +550,7 @@
       addText(content, `Descanso · ${duration(bed.minutes)} · ${bed.price ? `${bed.price} créditos` : 'Grátis'} · recupera toda a energia.`);
     }
     for (const scene of NB.Story.getScenes(place.id)) addText(content, `◆ Ao chegar: ${scene.title}`, 'city-active-destination');
-    if (NB.Story.pendingDuel(place.id)) addText(content, '◆ Ao chegar: abrir o dossiê da investigação', 'city-active-destination');
+    if (NB.Story.pendingDuel(place.id)) addText(content, '◆ Ao chegar: duelar pela investigação', 'city-active-destination');
     const schedule = NB.Story.unavailableSchedule(place.id);
     if (schedule) addText(content, schedule, 'city-notice');
     if (place.id === 'archon' && NB.Story.archonWarning()) addText(content, NB.Story.archonWarning(), 'city-notice');

@@ -105,6 +105,13 @@
     else NB.Physics.showToast('KAIRO COMEÇA · TURNO 1', 'var(--cyan)');
   }
 
+  function startStoryDuel(id) {
+    if (NB.Save.get().city.district !== id || !NB.Story.pendingDuel(id) ||
+        NB.CityLife.requiredTravelChallenge() || NB.Save.get().city.life.streetRestEvent) return false;
+    startMatch({ mode: 'campaign', boss: NB.Campaign.getNodeById(id) });
+    return true;
+  }
+
   function startPlayerTurn() {
     if (NB.State.checkWinCondition()) return;
     const state = NB.State.get();
@@ -717,6 +724,7 @@
   }
 
   NB.Input = {
+    startStoryDuel,
     bindEvents,
     handleBack,
     closeAbandon,

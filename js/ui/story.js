@@ -244,6 +244,8 @@
     const reward = scene.reward && `+ ${scene.reward.credits} créditos e ${NB.Cards.CARD_DB[scene.reward.card].name}.`;
     const recovered = scene.id === 'archonPrep' ? NB.Save.get().city.life.energy - energyBefore : 0;
     close();
+    const duel = NB.Story.pendingDuel(scene.location);
+    if (duel?.[1].deal === scene.grants && NB.Input.startStoryDuel(scene.location)) return;
     NB.City.refreshStory([reaction || (scene.evidence ? 'Prova registrada no diário.' : 'Investigação atualizada.'), reward,
       recovered ? `Kira abriu o caminho. +${recovered} de energia.` : ''].filter(Boolean).join(' '));
     if (scene.followup) open(scene.followup);
@@ -285,7 +287,7 @@
         button(options, option.label, () => finish(option.id));
       }
     } else {
-      button(options, reading.replay ? 'Concluir leitura' : 'Registrar e sair', () => finish()).classList.add('story-primary');
+      button(options, reading.replay ? 'Concluir leitura' : scene.finishLabel || 'Registrar e sair', () => finish()).classList.add('story-primary');
     }
     if (locked) options.querySelectorAll('button:not(.story-prev)').forEach(control => { control.disabled = true; });
   }
@@ -321,13 +323,7 @@
       action.classList.add('city-investigate');
       action.disabled = blocked;
     }
-    if (blocked && duel) button(section, 'Abrir dossiê da investigação', () => {}).disabled = true;
-    if (!blocked && duel?.[1].route && NB.Story.choice(duel[1].deal) !== duel[1].route) {
-      button(section, duel[1].label, () => {
-        NB.Story.alternate(duel[0]);
-        NB.City.refreshStory('Rota alternativa registrada no diário.');
-      });
-    }
+    if (duel) text(section, 'Duelo pendente. Vença para prosseguir com a investigação.');
     content.prepend(section);
   }
 
@@ -367,7 +363,7 @@
       if (duel) {
         const place = NB.CityData.districts.find(item => item.id === duel[0]);
         text(content, `Dispute a prova em ${place.name} com ${place.npc.split(' · ')[0]}.`);
-        if (place.id === district.id) button(content, 'Abrir dossiê da investigação', () => NB.UI.openDossier(place.id));
+        if (place.id === district.id) button(content, 'Duelar pela investigação', () => NB.Input.startStoryDuel(place.id));
         else button(content, `Ir para ${place.name}`, () => travel(place.id));
       } else if (NB.Story.has('epilogue')) {
         text(content, 'Campanha concluída. Baixa Luz continua aberta para revisitas.');

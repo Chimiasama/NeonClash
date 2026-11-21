@@ -929,6 +929,8 @@ test('resumes the prologue after reload and earns Kira’s proof by doing a favo
   await expect(page.getByText('A investigação ainda não chegou a este duelo.', { exact: false })).toBeVisible();
   await read('Conferir a entrada com Severino');
   await read('Ouvir Kira sobre a rota vendida', 'Aceitar o favor de conferir o recibo na Feira');
+  await expect(page.locator('#city-content').getByRole('button', { name: /duelar pela investigação|abrir dossiê/i })).toHaveCount(0);
+  expect(await page.evaluate(() => Boolean(NB.Story.matchAccess('kira')))).toBe(true);
   await walkTo(page, page.getByRole('button', { name: 'Feira do Viaduto' }));
   await read('Conferir o recibo anonimizado com Beto');
   await walkTo(page, page.locator('[data-district="ringArchive"]'));
@@ -2066,16 +2068,12 @@ test('gives Kira only one recovery and starts the final Eclipse battle at 18 HP 
   await expect(page.locator('#story-line')).toContainText('Os drones');
   await page.getByRole('button', { name: 'Registrar e sair' }).click();
   await expect(page.locator('#city-energy')).toHaveAttribute('value', '85');
-  await page.evaluate(() => {
-    const scene = NB.Story.sceneById.archonDeal;
-    NB.Story.remember(scene.id, NB.Story.getLines(scene).length - 1);
-    NB.Story.finish(scene.id);
-    NB.City.resetView();
-  });
-  await page.getByRole('button', { name: 'Abrir dossiê', exact: true }).click();
-  await expect(page.locator('#dossier-node-code')).toContainText('18 HP');
-  await expect(page.locator('#dossier-title')).toHaveText('ARCHON // Núcleo Eclipse');
-  await page.getByRole('button', { name: 'Conectar e duelar' }).click();
+  await page.getByRole('button', { name: 'Confrontar Archon com os documentos' }).click();
+  const confrontation = page.getByRole('dialog', { name: 'Confrontar Archon com os documentos' });
+  const next = confrontation.getByRole('button', { name: 'Continuar', exact: true });
+  while (await next.isVisible()) await next.click();
+  await confrontation.getByRole('button', { name: 'Conectar e duelar' }).click();
+  await expect(page.locator('#dossier-modal')).toBeHidden();
   await expect(page.locator('#enemy-hp-text')).toHaveText('18/18 HP');
   await expect(page.locator('#enemy-interference')).toHaveText('Interferência de Cipher: Firewall primário desativado');
   const comparison = await page.evaluate(() => {
@@ -2266,3 +2264,46 @@ test('shows both sides of the duel history and keeps removed cards out of recycl
   await log.getByRole('button', { name: 'Removidas (1)', exact: true }).click();
   await expect(cards.getByRole('button')).toHaveText(['Aegis-Wall']);
 });
+
+for (const [id, decision, proof, alternative] of [
+  ['kira', 'Disputar a cópia em duelo', 'Registrar a prova da Estação', 'Seguir a cadeia de Beto e Leila'],
+  ['cipher', 'Disputar o acesso no terminal', 'Registrar as duas versões da ordem', 'Pedir a extração isolada a Raquel'],
+  ['vex', 'Disputar a entrega em duelo', 'Ler a ordem original com Vex', 'Preparar a entrega com Cris e Bia']
+]) {
+  test(`starts ${id}'s story duel from the decision and keeps the route after abandoning`, async ({ page }) => {
+    await page.goto('/');
+    await enterCity(page);
+    const title = await page.evaluate(id => {
+      const scene = NB.Story.sceneById[id + 'Deal'];
+      const save = NB.Save.get();
+      save.city.district = id;
+      save.story = NB.Story.normalize({ started: true, chapter: scene.chapter, flags: scene.requires });
+      NB.Input.openNetMap();
+      return scene.title;
+    }, id);
+    await page.getByRole('button', { name: title, exact: true }).click();
+    const scene = page.getByRole('dialog', { name: title });
+    const next = scene.getByRole('button', { name: 'Continuar', exact: true });
+    while (await next.isVisible()) await next.click();
+    await scene.getByRole('button', { name: decision, exact: true }).click();
+    await expect(page.locator('#netmap-modal')).toBeHidden();
+    await expect(page.locator('#dossier-modal')).toBeHidden();
+    expect(await page.evaluate(() => [NB.State.get().mode, NB.State.get().boss.id])).toEqual(['campaign', id]);
+
+    await page.getByRole('button', { name: 'Sair do duelo' }).click();
+    await page.getByRole('button', { name: 'Abandonar duelo', exact: true }).click();
+    await page.reload();
+    await enterCity(page);
+    await expect(page.getByRole('button', { name: alternative, exact: true })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: title, exact: true })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: proof, exact: true })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Duelar pela investigação', exact: true }).click();
+    expect(await page.evaluate(() => NB.State.get().boss.id)).toBe(id);
+    await page.evaluate(() => {
+      NB.State.get().enemy.hp = 0;
+      NB.State.checkWinCondition();
+    });
+    await page.locator('#btn-go-primary').click();
+    await expect(page.getByRole('button', { name: proof, exact: true })).toBeVisible();
+  });
+}

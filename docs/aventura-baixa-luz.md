@@ -35,7 +35,7 @@ As tabelas indicam a ordem necessária, os caminhos equivalentes e os efeitos, a
 
 | Escolha | O que fazer | Efeito |
 | --- | --- | --- |
-| **Disputar a cópia em duelo** | Abra o dossiê na Estação e vença Kira. | Habilita a cena da prova e dá os prêmios normais de vitória. |
+| **Disputar a cópia em duelo** | A escolha inicia o duelo contra Kira na Estação. | Habilita a cena da prova e dá os prêmios normais de vitória. |
 | **Aceitar o favor de conferir o recibo na Feira** | Vá à Feira e escolha **Conferir o recibo anonimizado com Beto**. | Custa 25 min e 4 de energia. Beto encontra o carimbo de um terminal antigo do Ringue e explica que Kira precisava pagar o tratamento do irmão na Clínica do Morro. |
 
 Na rota de duelo, volte à Estação e use **Registrar a prova da Estação**. Na rota pacifista, depois da Feira vá ao **Arquivo do Ringue** e use **Cruzar o código do terminal com Leila** (20 min, 4 de energia). Leila confirma que a dívida do irmão já estava quitada antes da cobrança feita por fora do caixa. Volte à **Estação Fantasma** e use **Entregar o dossiê auditado a Kira** para registrar a prova, receber **35 créditos**, desbloquear **Rastreador de Lote** e ganhar a ajuda de Kira. As duas rotas abrem **Quem pagou duas vezes**.
@@ -56,7 +56,7 @@ Na rota de duelo, volte à Estação e use **Registrar a prova da Estação**. N
 
 | Escolha | O que fazer | Efeito |
 | --- | --- | --- |
-| **Disputar o acesso no terminal** | Abra o dossiê e vença Cipher. | Habilita a cena da prova e dá os prêmios normais de vitória. |
+| **Disputar o acesso no terminal** | A escolha inicia o duelo contra Cipher na Muralha. | Habilita a cena da prova e dá os prêmios normais de vitória. |
 | **Combinar retirada supervisionada com Raquel** | Volte ao **Corredor de Serviço** e use **Solicitar a janela de manutenção isolada**. | Custa 25 min e 4 de energia. Raquel indica que falta o token óptico. |
 
 Na rota de duelo, volte à Muralha e use **Registrar as duas versões da ordem**. Para seguir sem duelo, vá à **Garagem da Íris** e use **Calibrar o filtro de isolamento com Íris** (25 min, 4 de energia). Na **Muralha Setorial**, use **Executar a extração isolada**. A mesma ação protege as credenciais dos técnicos das enchentes, registra as versões da ordem e rende **50 créditos**, **Filtro de Isolamento** e a ajuda de Cipher. Nas duas rotas, registrar a prova abre imediatamente a **Interceptação de Rádio**. Archon conta que a Holding Meridiano exigiu os cortes até sexta-feira sob ameaça de cancelar a concessão inteira. Conclua a chamada para abrir o capítulo seguinte.
@@ -68,7 +68,7 @@ Na rota de duelo, volte à Muralha e use **Registrar as duas versões da ordem**
 
 | Escolha | O que fazer | Efeito |
 | --- | --- | --- |
-| **Disputar a entrega em duelo** | Abra o dossiê e vença Vex. | Habilita a cena da prova e dá os prêmios normais de vitória. |
+| **Disputar a entrega em duelo** | A escolha inicia o duelo contra Vex no Hotel. | Habilita a cena da prova e dá os prêmios normais de vitória. |
 | **Pedir uma entrega testemunhada no Teatro** | Na **Pensão do Canal**, escolha **Levantar o canhoto da reserva com Cris**. | Custa 20 min e 4 de energia. Cris separa a evidência do registro de hóspedes. |
 
 Na rota de duelo, volte ao Hotel e use **Ler a ordem original com Vex**. Na alternativa pacifista, do canhoto siga para o **Teatro do Espelho** e use **Conferir o horário do arquivo com Bia** (25 min, 4 de energia). Nos bastidores, conheça Helena, a ex-auditora que Vex protegeu. Ela autentica o registro com Bia e entrega uma chave complementar. Volte ao **Hotel Espelho** e escolha **Apresentar a conferência testemunhada a Vex**. A leitura comprova a assinatura de Archon e rende **65 créditos**, **Auditora de Rede** e o acesso à prova de Helena. As duas rotas abrem a preparação da transição.
@@ -82,8 +82,8 @@ Na rota de duelo, volte ao Hotel e use **Ler a ordem original com Vex**. Na alte
 | 2b | Antena Comunitária → **Reservar o canal com Nina**, ou Praça do Centro → **Entregar a cópia de transição à Isa** | São alternativas para a mesma confirmação. A Antena não tem custo de cena. A Praça custa 20 min e 4 de energia. Faça 2a e uma rota de 2b em qualquer ordem. |
 | 3 | Balcão Cívico → **Pedir a Nalva o histórico do cadastro** | Guarda o protocolo original, com a ordem de corte e a pressão da Holding Meridiano registradas. |
 | 4 | Torre Vértice → **Confirmar preparação para a Torre** | O diário e o local avisam que o duelo é obrigatório e recomendam revisar o deck de 20 cartas e a energia. Registre a leitura para liberar a conversa. Se Kira for aliada, ela desvia os drones pelo rádio e Kairo recupera até 10 de energia, uma vez por save. |
-| 5 | Torre Vértice → **Confrontar Archon com os documentos** | Kairo conecta o terminal e Archon aciona a IA de contenção. O dossiê identifica **ARCHON // Núcleo Eclipse**. |
-| 6 | Torre Vértice → **Abrir dossiê** → vencer Archon | O Eclipse começa com 20 HP, ou 18 HP se Cipher desativou a defesa primária. A vitória libera **Decidir como divulgar as provas**. |
+| 5 | Torre Vértice → **Confrontar Archon com os documentos** | Kairo conecta o terminal e Archon aciona a IA de contenção. O botão **Conectar e duelar** inicia o combate com **ARCHON // Núcleo Eclipse**. |
+| 6 | Torre Vértice → vencer Archon | O Eclipse começa com 20 HP, ou 18 HP se Cipher desativou a defesa primária. A vitória libera **Decidir como divulgar as provas**. |
 | 7 | Torre Vértice → **Decidir como divulgar as provas** | Escolha um dos três finais. Todos liberam o epílogo. |
 
 ### Os três finais
@@ -103,7 +103,7 @@ Na **Casa de Kairo**, escolha **Voltar à Casa e falar com Dona Nair**. A cena c
 ## Provas, atalhos e recompensas de combate
 
 - A vitória é o atalho de cada confronto. Ela libera a cena de registro e entrega os prêmios de combate. Cada cadeia pacifista leva a prova ao mesmo capítulo seguinte, por meio de um registro próprio e de uma recompensa exclusiva. Completar as três rende 150 créditos e três cartas antes de Archon.
-- Após escolher duelo, a ação alternativa fica disponível no local do chefe enquanto o confronto estiver pendente. Trocar a rota só registra a decisão. A recompensa exige concluir a última etapa do favor. O dossiê de combate permanece acessível para quem decidir lutar.
+- A rota é registrada ao fechar a negociação. Se Kairo perder ou abandonar o duelo, o local do chefe e o diário oferecem **Duelar pela investigação** até a vitória. A cadeia pacifista fica disponível apenas quando escolhida na negociação, e sua recompensa exige concluir a última etapa.
 - A investigação não exige rastrear as pistas clássicas da Antena. Com a investigação desativada, os dossiês seguem o fluxo **Kira → rastrear Kira → Cipher → rastrear Cipher → Vex → rastrear Vex → Archon**. A mesa de apostas exige a marca de vitória sobre Kira, mesmo que sua prova narrativa já tenha sido obtida por Beto.
 
 | Chefe | Local | Primeira vitória |

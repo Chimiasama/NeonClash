@@ -4,9 +4,9 @@
   const { chapters, scenes, alliedLines } = NB.StoryData;
   const sceneById = Object.fromEntries(scenes.map(scene => [scene.id, scene]));
   const duels = {
-    kira: { chapter: 1, deal: 'kiraDeal', route: 'delivery', label: 'Seguir a cadeia de Beto e Leila' },
-    cipher: { chapter: 3, deal: 'cipherDeal', route: 'supervised', label: 'Pedir a extração isolada a Raquel' },
-    vex: { chapter: 4, deal: 'vexDeal', route: 'witness', label: 'Preparar a entrega com Cris e Bia' },
+    kira: { chapter: 1, deal: 'kiraDeal', route: 'delivery' },
+    cipher: { chapter: 3, deal: 'cipherDeal', route: 'supervised' },
+    vex: { chapter: 4, deal: 'vexDeal', route: 'witness' },
     archon: { chapter: 5, deal: 'archonDeal' }
   };
 
@@ -145,19 +145,14 @@
   function matchAccess(id) {
     const gate = duels[id];
     if (!gate || !active()) return null;
-    return has(gate.deal) ? null : 'A investigação ainda não chegou a este duelo. Veja o próximo passo no diário.';
+    if (won(id)) return null;
+    if (gate.route && choice(gate.deal) === gate.route) return 'Rota pacifista registrada. Veja o próximo passo no diário.';
+    return pendingDuel(id) ? null : 'A investigação ainda não chegou a este duelo. Veja o próximo passo no diário.';
   }
 
   function pendingDuel(location) {
     return Object.entries(duels).find(([id, gate]) => (!location || id === location) &&
       active() && gate.chapter === get().chapter && has(gate.deal) && !won(id) && (!gate.route || choice(gate.deal) !== gate.route));
-  }
-
-  function alternate(id) {
-    const gate = duels[id];
-    if (!gate?.route || pendingDuel(id)?.[0] !== id) return;
-    get().choices[gate.deal] = gate.route;
-    NB.Save.save();
   }
 
   function aftermath(location) {
@@ -177,6 +172,6 @@
     return '';
   }
 
-  NB.Story = { normalize, get, start, active, matchAccess, pendingDuel, alternate, getScenes, available, unavailableSchedule, finish,
+  NB.Story = { normalize, get, start, active, matchAccess, pendingDuel, getScenes, available, unavailableSchedule, finish,
     remember, getLines, aftermath, applyKiraSupport, finalBattle, eclipseInterference, archonWarning: () => active() && get().chapter === 5 && has('protocol') && !won('archon') ? NB.StoryData.archonWarning : '', has, choice, sceneById, chapters };
 })(window.NB = window.NB || {});

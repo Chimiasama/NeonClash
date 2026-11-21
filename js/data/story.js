@@ -234,7 +234,7 @@
     'Kairo conecta seu Terminal Portátil de Diagnóstico ao barramento central. Renan aguarda no Cais para receber o controle da rede elétrica.',
     'No console mestre da diretoria, Archon aciona o Núcleo Eclipse, a IA Autônoma de Contenção Corporativa. A máquina trava a transferência e assume a defesa do barramento.',
     'Archon — Você está usando o protocolo de campo que eu te ensinei contra a própria malha central, Kairo!'
-  ], { aside: { label: 'Perguntar quanto vale uma rua no balanço',
+  ], { finishLabel: 'Conectar e duelar', aside: { label: 'Perguntar quanto vale uma rua no balanço',
     reply: 'Kairo — Qual era a cotação de uma rua no seu balanço? Archon — Menos que uma concessão na sexta. Mais do que consigo admitir olhando para você.' } });
 
   scene('ending', 5, 'archon', 'Decidir como divulgar as provas', ['archonDeal'], 'ending', [
