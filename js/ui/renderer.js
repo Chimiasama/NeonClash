@@ -309,6 +309,14 @@
         mark.title = affinity.name;
         hdr.appendChild(mark);
       }
+      if (unit.appliedModifiers?.length) {
+        const modifiers = document.createElement('span');
+        modifiers.className = 'field-modifier-mark';
+        modifiers.textContent = '+';
+        modifiers.title = unit.appliedModifiers.map(id => NB.Cards.CARD_DB[id].name).join(', ');
+        modifiers.setAttribute('aria-label', `Modificadores: ${modifiers.title}`);
+        hdr.appendChild(modifiers);
+      }
       artWrap.appendChild(hdr);
 
       let ribText = '';
@@ -796,7 +804,9 @@
       <span style="color:${u.booting ? 'var(--amber)' : 'var(--ram)'}">${u.booting ? 'BOOTING' : 'PRONTO'}</span>
     `;
     renderVisorKeywords(card);
-    document.getElementById('visor-desc').textContent = card.desc + NB.Cards.describeAffinity(u.affinity);
+    const modifiers = (u.appliedModifiers || []).map(id => NB.Cards.CARD_DB[id].name);
+    document.getElementById('visor-desc').textContent = card.desc + NB.Cards.describeAffinity(u.affinity) +
+      (modifiers.length ? ` Modificadores aplicados: ${modifiers.join(', ')}.` : '');
     document.getElementById('visor-warning').style.display = 'none';
 
     const actionsEl = document.getElementById('visor-actions');

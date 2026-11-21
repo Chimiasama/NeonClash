@@ -149,6 +149,7 @@
       maxDef: def.def,
       booting: !isZeroDay,
       attacked: false,
+      appliedModifiers: [],
       justEntered: true
     };
   }
@@ -173,6 +174,9 @@
       return { ok: false, reason: 'Não há nenhuma Unidade inimiga no campo.' };
     }
     if (!NB.CardEffects.legalSlots(state, card, side).length) {
+      if (NB.CardEffects.hasModifiedTarget(state, card, side)) {
+        return { ok: false, reason: 'Os alvos compatíveis já têm esse modificador.' };
+      }
       return { ok: false, reason: card.targetAffinities ? 'Nenhuma unidade aliada tem a afinidade exigida.' : 'Não há Unidades inimigas para atingir.' };
     }
     return { ok: true };

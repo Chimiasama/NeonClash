@@ -158,10 +158,10 @@
     const targetSide = card.targetType === 'ally_unit' ? 'player' : 'enemy';
     const validSlots = NB.CardEffects.legalSlots(state, card, 'player');
 
-    if (validSlots.length === 1) {
+    if (validSlots.length === 1 && !NB.CardEffects.hasModifiedTarget(state, card, 'player')) {
       state.selectedHandUid = null;
       NB.State.executeExploit('player', item.uid, validSlots[0]);
-    } else if (validSlots.length > 1) {
+    } else if (validSlots.length) {
       state.phase = 'SELECT_TARGET';
       state.pendingExploit = { uid: item.uid, cardId: card.id, targetSide, validSlots };
       state.selectedHandUid = null;
@@ -175,11 +175,18 @@
     const unit = state[side].field[slotIdx];
 
     if (state.phase === 'SELECT_TARGET' && state.pendingExploit) {
-      if (side === state.pendingExploit.targetSide && unit && state.pendingExploit.validSlots?.includes(slotIdx)) {
-        const { uid } = state.pendingExploit;
-        state.pendingExploit = null;
-        state.phase = 'PLAYER_MAIN';
-        NB.State.executeExploit('player', uid, slotIdx);
+      const pending = state.pendingExploit;
+      if (side === pending.targetSide && unit) {
+        const card = NB.Cards.CARD_DB[pending.cardId];
+        if (NB.CardEffects.alreadyModified(card, unit)) {
+          NB.Physics.showToast('ESTA UNIDADE JÁ TEM ESSE MODIFICADOR', 'var(--amber)');
+          return;
+        }
+        if (pending.validSlots.includes(slotIdx)) {
+          state.pendingExploit = null;
+          state.phase = 'PLAYER_MAIN';
+          NB.State.executeExploit('player', pending.uid, slotIdx);
+        }
       }
       return;
     }

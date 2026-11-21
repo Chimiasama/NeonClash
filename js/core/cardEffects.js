@@ -27,11 +27,22 @@
     return [];
   }
 
+  const isModifier = effect => (effect.type === 'atk' || effect.type === 'def') && effect.value > 0;
+  const alreadyModified = (card, unit) => unit?.appliedModifiers?.includes(card.id) ?? false;
+
+  function targetSlots(state, card, side) {
+    return indexed(state[selectedSide(card, side)].field)
+      .filter(({ unit }) => !card.targetAffinities || card.targetAffinities.includes(unit.affinity));
+  }
+
+  function hasModifiedTarget(state, card, side) {
+    return (card.targetType === 'ally_unit' || card.targetType === 'enemy_unit') &&
+      targetSlots(state, card, side).some(({ unit }) => alreadyModified(card, unit));
+  }
+
   function legalSlots(state, card, side) {
     if (card.targetType === 'ally_unit' || card.targetType === 'enemy_unit') {
-      return indexed(state[selectedSide(card, side)].field)
-        .filter(({ unit }) => !card.targetAffinities || card.targetAffinities.includes(unit.affinity))
-        .map(target => target.slot);
+      return targetSlots(state, card, side).filter(({ unit }) => !alreadyModified(card, unit)).map(target => target.slot);
     }
     return !card.requiresEnemy || state[opposing(side)].field.some(Boolean) ? [null] : [];
   }
@@ -95,6 +106,7 @@
     const actor = state[side];
     const enemy = opposing(side);
     const caster = actorPanel(side);
+    const modified = new Set();
     for (const effect of effects) {
       const { type, value } = effect;
       if (effect.resonance && !resonates(actor.field, actor.field[slot])) continue;
@@ -136,8 +148,12 @@
         if (node) NB.Physics.spawnFloatText(node, `+${value} RAM · SINERGIA`, '#39FF14');
       } else {
         for (const target of targets(state, card, effect, side, slot)) {
+          const appliesModifier = isModifier(effect);
+          if (appliesModifier && alreadyModified(card, target.unit)) continue;
+          const before = type === 'atk' ? target.unit.atk : target.unit.def;
           const node = NB.State.getSlotEl(target.side, target.slot);
           const label = adjustUnit(type, target.unit, value);
+          if (appliesModifier && (type === 'atk' ? target.unit.atk : target.unit.def) > before) modified.add(target.unit);
           if (type === 'destroy' || (type === 'damage' && target.unit.def <= 0)) NB.State.destroyUnit(target.side, target.slot, side === 'player' && target.side !== side);
           if (node) {
             NB.Physics.fireLaserBeam(caster, node, card.accent, 5);
@@ -146,6 +162,7 @@
         }
       }
     }
+    for (const unit of modified) (unit.appliedModifiers ??= []).push(card.id);
   }
 
   function score(state, card, side, slot) {
@@ -174,6 +191,7 @@
       if (type === 'draw') return sum + Math.min(value, NB.Cards.MAX_HAND - actor.hand.length + 1,
         actor.deck.length + actor.discard.length) * 2;
       return targets(state, card, effect, side, slot).reduce((total, { unit }) => {
+        if (isModifier(effect) && alreadyModified(card, unit)) return total;
         if (type === 'destroy') return total + 2 + (unit.atk + unit.def) * 0.6;
         if (type === 'damage') return total + Math.min(value, unit.def) + (value >= unit.def ? 3 : 0);
         if (type === 'repair') return total + Math.min(value, Math.max(0, unit.maxDef - unit.def));
@@ -191,5 +209,5 @@
     }, 0);
   }
 
-  NB.CardEffects = { legalSlots, resolve, score, attackPower };
+  NB.CardEffects = { legalSlots, hasModifiedTarget, alreadyModified, resolve, score, attackPower };
 })(window.NB = window.NB || {});

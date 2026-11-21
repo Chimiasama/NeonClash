@@ -1339,6 +1339,62 @@ test('limits repair, protects RAM on invalid targets and previews affinity damag
   await expect(page.locator('#defense-preview')).toHaveText('Sua posição 1 DEF 5→1 · Inimigo 2 DEF 5→3 · +1 afinidade (ataque)');
 });
 
+test('rejects a repeat modifier without spending the card and lets Kairo pick another unit', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    NB.Input.startMatch({ mode: 'quick' });
+    const state = NB.State.get();
+    state.player.ram = 12;
+    state.player.field = [NB.State.createFieldUnit('unit_01', 981, 'player'),
+      NB.State.createFieldUnit('unit_01', 982, 'player'), null];
+    state.player.hand = [{ cardId: 'exploit_01', uid: 983 }, { cardId: 'exploit_01', uid: 984 }];
+    NB.UI.renderAll();
+  });
+  const playChip = async () => {
+    await page.locator('.hand-card').filter({ hasText: 'Chip Overclock' }).first().click();
+    await page.getByRole('button', { name: 'Executar' }).click();
+  };
+  const first = page.locator('.player-slot').nth(0);
+  const second = page.locator('.player-slot').nth(1);
+  await playChip();
+  await first.click();
+  await expect(first.locator('.field-modifier-mark')).toHaveAttribute('title', 'Chip Overclock');
+  const spent = await page.evaluate(() => NB.State.get().player.ram);
+  await playChip();
+  await first.click();
+  await expect(page.locator('#toast-banner')).toContainText('JÁ TEM ESSE MODIFICADOR');
+  expect(await page.evaluate(() => {
+    const state = NB.State.get();
+    return [state.phase, state.player.ram, state.player.hand.length, state.player.field[0].atk];
+  })).toEqual(['SELECT_TARGET', spent, 1, 7]);
+  await page.keyboard.press('Escape');
+  expect(await page.evaluate(() => NB.State.get().player.hand.length)).toBe(1);
+  await playChip();
+  await second.click();
+  expect(await page.evaluate(() => NB.State.get().player.field.slice(0, 2).map(unit => unit.atk))).toEqual([7, 7]);
+  await first.click();
+  await expect(page.locator('#visor-desc')).toContainText('Modificadores aplicados: Chip Overclock');
+});
+
+test('keeps group buffs unique per unit while repeatable healing still works', async ({ page }) => {
+  await page.goto('/');
+  const result = await page.evaluate(() => {
+    NB.Input.startMatch({ mode: 'quick' });
+    const state = NB.State.get();
+    const player = state.player;
+    player.hp = 10;
+    player.ram = 20;
+    player.field[0] = NB.State.createFieldUnit('unit_01', 990, 'player');
+    player.hand = [991, 992, 993].map(uid => ({ cardId: 'exploit_04', uid }));
+    NB.State.executeExploit('player', 991);
+    player.field[1] = NB.State.createFieldUnit('unit_01', 994, 'player');
+    NB.State.executeExploit('player', 992);
+    NB.State.executeExploit('player', 993);
+    return [player.hp, player.field[0].def, player.field[1].def, player.field[0].appliedModifiers];
+  });
+  expect(result).toEqual([20, 6, 6, ['exploit_04']]);
+});
+
 test('marks affinity on attack targets and on real blocking lines', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => {

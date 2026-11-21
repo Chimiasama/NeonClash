@@ -174,6 +174,8 @@ A Feira vende as cinco cartas que ampliam essa regra. **Vigia de Turno** (55 cr)
 
 Todo duelo sorteia quem começa com chances iguais. O lado que começa joga com quatro cartas. O segundo lado compra uma quinta carta ao receber seu primeiro turno, dentro da rodada 1. A Feira vende dois itens permanentes de iniciativa. Pulso de Partida (65 créditos) dá a abertura a Kairo e Relé de Espera (45 créditos) dá a abertura ao adversário. A Mochila mantém um único item de iniciativa ativo e permite desligá-lo para retomar o sorteio. A compra e a seleção persistem após fechar o app e no Novo Jogo+.
 
+Bônus permanentes de ATK ou DEF da mesma carta são aplicados uma vez por unidade em campo. Bônus de cartas diferentes podem coexistir. O visor lista os modificadores e a seleção de alvos recusa repetição sem gastar carta ou RAM. Em efeitos coletivos, unidades já modificadas não ganham o bônus de novo, mas efeitos separados como cura de HP continuam funcionando.
+
 Unidades são instâncias de campo com UID, ATK e DEF atuais, DEF máxima, afinidade e marcadores de boot e ataque. Exploits declarativos usam alvo próprio, inimigo ou nenhum alvo, com ações sobre uma unidade, aliados ou inimigos conforme a definição. As cartas emprestadas dos desafios não substituem o deck ativo. O limite de duas cópias vale para os decks do jogador. Os baralhos dos adversários são listas de dados próprias.
 
 | Desafio | Cartas da primeira vitória |

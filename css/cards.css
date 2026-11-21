@@ -468,3 +468,13 @@
   font: 900 12px var(--font-mono);
   pointer-events: none;
 }
+
+.field-modifier-mark {
+  flex: none;
+  padding: 0 3px;
+  border: 1px solid #8ef1d5;
+  border-radius: 3px;
+  color: #bafcf1;
+  background: #102722;
+  font: 900 10px/13px var(--font-mono);
+}
