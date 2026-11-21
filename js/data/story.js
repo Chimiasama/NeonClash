@@ -304,6 +304,8 @@
 
   const meterVersions = evidenceArt('medidores-da-iris', 'As duas versões do medidor na bancada de Íris');
 
+  const cipherOrders = evidenceArt('ordens-da-muralha', 'As duas versões da ordem e o recibo do Hotel Espelho');
+
   const beats = {
     mara: [undefined, evidenceArt('itinerario-de-mara', 'O itinerário corrigido de Mara')],
     kiraAudit: [ringLedger],
@@ -331,10 +333,20 @@
       camera: 'zoom-in', mood: 'memory' }],
     kiraPeace: [kiraReceipt, { speaker: 'kira', bubbleType: 'speech', expression: 'whisper' }],
     kiraProof: [kiraReceipt, { speaker: 'kira', bubbleType: 'speech' }],
+    pass: [
+      { art: './src/assets/comic/raquel-no-corredor.webp', artTitle: 'Raquel e a lista de plantonistas',
+        camera: 'wide', mood: 'tense' }
+    ],
+    cipherDeal: [
+      { art: './src/assets/comic/cipher-e-o-cofre.webp', artTitle: 'Cipher diante do cofre de dados',
+        camera: 'wide', mood: 'tense' }
+    ],
+    cipherAlt: [evidenceArt('janela-isolada', 'A janela de manutenção isolada')],
+    cipherProof: [cipherOrders],
     cipherToken: [opticalFilter],
     cipherPeace: [{ ...evidenceArt('filtro-na-muralha', 'O filtro instalado na Muralha'),
       camera: 'focus-detail', focus: 'center', mood: 'tense' },
-      { speaker: 'cipher', bubbleType: 'speech' }],
+      { ...cipherOrders, speaker: 'cipher', bubbleType: 'speech' }],
     vexAlt: [theatreProof],
     archonDeal: [
       ...Array(dialogue[5].length),
