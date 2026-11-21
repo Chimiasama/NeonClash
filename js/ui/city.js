@@ -21,6 +21,7 @@
     vehicles: 'M8 17a4 4 0 1 1-8 0 4 4 0 0 1 8 0z M24 17a4 4 0 1 1-8 0 4 4 0 0 1 8 0z M4 17l4-8 5 8H4m9 0 4-9 3 9 M15 5h3l2 3 M6 8h5',
     implant: 'M4 20h9l5-5-2-6-3 1-1 5H8L4 20z M16 9l3-4 3 2-3 4 M19 5l-2-2-3 2 M9 17h2',
     cyberdecks: 'M3 5h18v13H3z M7 9h6v5H7z M16 9h2m-2 4h2 M6 21h12',
+    upgrades: 'M7 15l5-5 5 5 M7 9l5-5 5 5 M5 20h14',
     workshop: 'M13 6a5 5 0 0 0 5 6l-8 8a2 2 0 0 1-3-3l8-8m-2-3 4 2 2-2-2-4a5 5 0 0 1 5 7l-4 3',
     initiative: 'M5 6h14m-4-3 4 3-4 3 M19 18H5m4-3-4 3 4 3 M12 9v6',
     jobs: 'M3 8h18v12H3z M8 8V4h8v4 M3 13h18 M10 13v3h4v-3'
@@ -30,6 +31,7 @@
     duel: { icon: '⚔', label: 'Duelo disponível' },
     secret: { icon: '✦', label: 'Atalho ou favor disponível' }
   };
+  const characterUpgrades = ['cyberdecks', 'initiative', 'implant'];
   let mapFilter = 'all';
   let neighborhoodFilter = 'all';
 
@@ -255,8 +257,16 @@
       else renderJournal(content, save);
     } else if (view.startsWith('shop-')) {
       const category = view.slice(5);
-      addButton(content, 'Voltar aos serviços', resetView);
-      if (category === 'cards') renderMarket(content, save);
+      if (characterUpgrades.includes(category)) {
+        addButton(content, 'Voltar às melhorias', () => openShop('upgrades'));
+      } else addButton(content, 'Voltar aos serviços', resetView);
+      if (category === 'upgrades') {
+        const services = shopServices('Melhorias da Kairo');
+        shopButton(services, 'Ver cyberdecks', 'cyberdecks', 'Cyberdecks');
+        if (district.id === 'market') shopButton(services, 'Ver itens de iniciativa', 'initiative', 'Iniciativa');
+        else if (district.id === 'garage') shopButton(services, 'Ver implante', 'implant', 'Implantes');
+        content.append(services);
+      } else if (category === 'cards') renderMarket(content, save);
       else if (category === 'cyberdecks') renderCyberdecks(content, save.city);
       else if (category === 'initiative') renderInitiativeShop(content, save.city);
       else if (category === 'workshop') renderWorkshop(content, save);
@@ -264,20 +274,15 @@
     } else if (district.id === 'home' || district.id === 'pension') {
       renderRest(content, save.city, district.rest);
     } else if (['market', 'kiosk', 'garage'].includes(district.id)) {
-      const services = document.createElement('div');
-      services.className = 'city-service-grid';
-      services.setAttribute('role', 'group');
-      services.setAttribute('aria-label', 'Serviços da loja');
+      const services = shopServices('Serviços da loja');
       if (district.id === 'market') {
         shopButton(services, 'Ver cartas à venda', 'cards', 'Cartas');
         shopButton(services, 'Ver consumíveis', 'items', 'Consumíveis');
-        shopButton(services, 'Ver cyberdecks', 'cyberdecks', 'Cyberdecks');
-        shopButton(services, 'Melhorar cartas', 'workshop', 'Melhorar cartas');
-        shopButton(services, 'Ver itens de iniciativa', 'initiative', 'Iniciativa');
+        shopButton(services, 'Ver melhorias', 'upgrades', 'Melhorias');
+        shopButton(services, 'Melhorar cartas', 'workshop', 'Oficina de cartas');
       } else if (district.id === 'garage') {
         shopButton(services, 'Ver veículos', 'vehicles', 'Veículos');
-        shopButton(services, 'Ver implante', 'implant', 'Implantes');
-        shopButton(services, 'Ver cyberdecks', 'cyberdecks', 'Cyberdecks');
+        shopButton(services, 'Ver melhorias', 'upgrades', 'Melhorias');
       } else {
         shopButton(services, 'Ver consumíveis', 'items', 'Consumíveis');
       }
@@ -664,13 +669,23 @@
     return control;
   }
 
+  function shopServices(label) {
+    const services = document.createElement('div');
+    services.className = 'city-service-grid';
+    services.setAttribute('role', 'group');
+    services.setAttribute('aria-label', label);
+    return services;
+  }
+
+  function openShop(category) {
+    view = `shop-${category}`;
+    announce('');
+    render();
+    $('city-content').querySelector('button')?.focus();
+  }
+
   function shopButton(content, label, category, text) {
-    serviceButton(content, label, () => {
-      view = `shop-${category}`;
-      announce('');
-      render();
-      $('city-content').querySelector('button')?.focus();
-    }, text, { icon: category });
+    serviceButton(content, label, () => openShop(category), text, { icon: category });
   }
 
   function initiativeDescription(item) {
@@ -851,79 +866,142 @@
     const workshop = document.createElement('section');
     workshop.className = 'city-workshop';
     addText(workshop, 'Oficina da Lume', 'city-clue-title');
-    addText(workshop, NB.Cards.AFFINITY_CYCLE + '. Vantagem dá +1 de dano contra unidades em choques. Duas afinidades diferentes dão +1 ao Overclock contra um bloqueador.');
     const units = save.unlockedCards.map(id => NB.Cards.CARD_DB[id]).filter(card => card?.kind === 'unit');
-    if (!units.length) return;
+    const slots = document.createElement('div');
+    slots.className = 'workshop-slots';
+    const input = addButton(slots, '', () => togglePicker(picker.hidden), !units.length);
+    const arrow = document.createElement('span');
+    arrow.className = 'workshop-arrow';
+    arrow.textContent = '→';
+    arrow.setAttribute('aria-hidden', 'true');
+    slots.append(arrow);
+    const output = addButton(slots, '', () => togglePreview(preview.hidden), true);
+    input.setAttribute('aria-controls', 'workshop-picker');
+    output.setAttribute('aria-controls', 'workshop-preview');
 
-    const grid = document.createElement('div');
-    grid.className = 'workshop-grid';
-    const editor = document.createElement('div');
-    editor.className = 'workshop-editor';
-    editor.hidden = true;
-    workshop.append(grid, editor);
-    content.append(workshop);
-
+    const picker = document.createElement('div');
+    picker.id = 'workshop-picker';
+    picker.className = 'workshop-grid';
     for (const card of units) {
-      const tile = addButton(grid, card.name, () => selectCard(card, tile));
-      tile.dataset.cardId = card.id;
-      tile.setAttribute('aria-pressed', 'false');
-      tile.prepend(NB.Sprites.createArtMarkup(card.id, card.img, ''));
-    }
-
-    function selectCard(card, tile) {
-      for (const button of grid.children) button.setAttribute('aria-pressed', button === tile);
-      editor.hidden = false;
-      editor.replaceChildren();
-      addText(editor, `${card.name} · ${card.atk} ATK / ${card.def} DEF`, 'city-clue-title');
-      const current = document.createElement('p');
-      const affinities = document.createElement('select');
-      affinities.setAttribute('aria-label', 'Nova afinidade');
-      const advice = document.createElement('p');
-      advice.setAttribute('aria-live', 'polite');
-      editor.append(current, affinities, advice);
-      const confirm = addButton(editor, '', () => {
-        const type = selectedType();
-        if (!affinities.value || !NB.Save.recalibrate(card.id, type)) return;
-        announce(`${card.name} agora usa afinidade ${NB.Cards.affinityLabel(type)}.`);
-        $('city-credits').textContent = `${save.city.credits} créditos`;
+      const tile = addButton(picker, card.name, () => {
+        selected = card;
+        togglePicker(false);
         updateOptions();
         affinities.focus();
       });
-      const base = card.affinity || null;
-      const selectedType = () => affinities.value === 'neutral' ? null : affinities.value;
+      tile.dataset.cardId = card.id;
+      const art = document.createElement('span');
+      art.className = 'workshop-art';
+      art.append(NB.Sprites.createArtMarkup(card.id, card.img, ''));
+      tile.prepend(art);
+    }
 
-      function updateOptions() {
-        const now = NB.Save.getAffinity(card.id);
-        current.textContent = `Afinidade atual · ${NB.Cards.affinityLabel(now)}`;
-        affinities.replaceChildren(new Option('Escolha a afinidade', '', true, true));
-        affinities.options[0].disabled = true;
-        for (const type of [null, ...Object.keys(NB.Cards.AFFINITIES)]) {
-          if (type === now || (type === null && base !== null)) continue;
-          affinities.add(new Option(NB.Cards.affinityLabel(type) + (type === base ? ' · restaurar grátis' : ''), type || 'neutral'));
-        }
-        updatePrice();
-      }
-
-      function updatePrice() {
-        const type = selectedType();
-        const now = NB.Save.getAffinity(card.id);
-        const restoring = type === base;
-        confirm.disabled = !affinities.value || (!restoring && save.city.credits < NB.Save.recalibrationPrice);
-        confirm.textContent = restoring ? 'Restaurar afinidade' : `Recalibrar · ${NB.Save.recalibrationPrice} créditos`;
-        if (!affinities.value) {
-          advice.textContent = 'Lume — Escolhe uma afinidade que complemente a outra unidade que você quer levar pro Overclock.';
-          return;
-        }
-        const advantage = id => NB.Cards.AFFINITIES[NB.Cards.AFFINITIES[id]?.beats]?.name;
-        const gains = type ? `Agora ela dará +1 de dano contra ${advantage(type)} nos choques.` : 'Neutra, ela deixa de explorar vantagens de afinidade.';
-        const tradeoff = now ? ` Ela abre mão do bônus contra ${advantage(now)}.` : '';
-        const synergy = type ? ' Para ganhar o bônus de Overclock contra um bloqueador, junte com outra afinidade.' : ' Com afinidade neutra, ela não ativa o bônus de dupla no Overclock.';
-        advice.textContent = `Lume — ${gains}${tradeoff}${synergy} O ATK e a DEF de base ficam iguais.`;
-      }
-
-      affinities.addEventListener('change', updatePrice);
+    const editor = document.createElement('div');
+    editor.className = 'workshop-editor';
+    const affinities = document.createElement('select');
+    affinities.setAttribute('aria-label', 'Nova afinidade');
+    affinities.addEventListener('change', () => {
+      updateResult();
+      togglePreview(false);
+    });
+    const preview = document.createElement('div');
+    preview.id = 'workshop-preview';
+    preview.className = 'workshop-preview';
+    preview.tabIndex = -1;
+    editor.append(affinities, preview);
+    workshop.append(slots, picker, editor);
+    const confirm = addButton(workshop, 'Confirmar modificação', () => {
+      if (!selected || !affinities.value || !NB.Save.recalibrate(selected.id, selectedType())) return;
+      announce(`${selected.name} agora usa afinidade ${NB.Cards.affinityLabel(NB.Save.getAffinity(selected.id))}. Disponível em Meu Deck.`);
+      $('city-credits').textContent = `${save.city.credits} créditos`;
       updateOptions();
-      affinities.focus();
+      input.focus();
+    }, true, 'city-primary');
+    content.append(workshop);
+
+    let selected = null;
+    drawSlot(input, 'Entrada', 'Escolher carta', null, 'Escolher carta da coleção');
+    drawSlot(output, 'Saída', 'Prévia da modificação', null, 'Ver carta modificada');
+    togglePicker(false);
+    togglePreview(false);
+    editor.hidden = true;
+    if (!units.length) addText(workshop, 'Nenhuma unidade disponível para modificar.');
+
+    function drawSlot(button, title, label, card, accessibleName) {
+      button.classList.add('workshop-slot');
+      button.setAttribute('aria-label', accessibleName);
+      button.replaceChildren();
+      const heading = document.createElement('span');
+      heading.className = 'workshop-slot-label';
+      heading.textContent = title;
+      button.append(heading);
+      const art = document.createElement('span');
+      art.className = 'workshop-art';
+      if (card) art.append(NB.Sprites.createArtMarkup(card.id, card.img, ''));
+      else art.textContent = button === input ? '+' : '◇';
+      button.append(art);
+      const caption = document.createElement('span');
+      caption.className = 'workshop-slot-caption';
+      caption.textContent = label;
+      button.append(caption);
+    }
+
+    function togglePicker(open) {
+      picker.hidden = !open;
+      input.setAttribute('aria-expanded', String(open));
+      if (open) {
+        togglePreview(false);
+        picker.querySelector('button')?.focus();
+      }
+    }
+
+    function togglePreview(open) {
+      if (open) togglePicker(false);
+      preview.hidden = !open;
+      output.setAttribute('aria-expanded', String(open));
+      if (open) preview.focus();
+    }
+
+    function selectedType() {
+      return affinities.value === 'neutral' ? null : affinities.value;
+    }
+
+    function updateOptions() {
+      const current = NB.Save.getAffinity(selected.id);
+      const original = selected.affinity || null;
+      editor.hidden = false;
+      drawSlot(input, 'Entrada', `${selected.name} · Afinidade atual · ${NB.Cards.affinityLabel(current)}`, selected, 'Escolher carta da coleção');
+      affinities.replaceChildren(new Option('Escolha a afinidade', '', true, true));
+      affinities.options[0].disabled = true;
+      for (const type of [null, ...Object.keys(NB.Cards.AFFINITIES)]) {
+        if (type === current || (type === null && original !== null)) continue;
+        affinities.add(new Option(NB.Cards.affinityLabel(type) + (type === original ? ' · restaurar grátis' : ''), type || 'neutral'));
+      }
+      updateResult();
+      togglePreview(false);
+    }
+
+    function updateResult() {
+      const proposed = Boolean(affinities.value);
+      const type = selectedType();
+      const restoring = type === (selected.affinity || null);
+      output.disabled = !proposed;
+      confirm.disabled = !proposed || (!restoring && save.city.credits < NB.Save.recalibrationPrice);
+      confirm.textContent = !proposed ? 'Confirmar modificação' :
+        restoring ? 'Restaurar afinidade · grátis' : `Recalibrar · ${NB.Save.recalibrationPrice} créditos`;
+      drawSlot(output, 'Saída', proposed ? `${selected.name} · ${NB.Cards.affinityLabel(type)}` : 'Prévia da modificação',
+        proposed ? selected : null, 'Ver carta modificada');
+      preview.replaceChildren();
+      if (!proposed) return;
+
+      const current = NB.Save.getAffinity(selected.id);
+      const advantage = id => NB.Cards.AFFINITIES[NB.Cards.AFFINITIES[id]?.beats]?.name;
+      const gains = type ? `Agora ela dará +1 de dano contra ${advantage(type)} nos choques.` : 'Neutra, ela deixa de explorar vantagens de afinidade.';
+      const tradeoff = current ? ` Ela abre mão do bônus contra ${advantage(current)}.` : '';
+      const synergy = type ? ' Para ganhar o bônus de Overclock contra um bloqueador, junte com outra afinidade.' : ' Com afinidade neutra, ela não ativa o bônus de dupla no Overclock.';
+      addText(preview, `${selected.atk} ATK · ${selected.def} DEF · +${selected.ramGain} RAM`, 'city-clue-title');
+      addText(preview, selected.desc);
+      addText(preview, `Lume — ${gains}${tradeoff}${synergy} O ATK e a DEF de base ficam iguais.`);
     }
   }
 
@@ -1284,6 +1362,18 @@
     if (view === 'district' && collection) {
       collection.open = false;
       collection.querySelector('summary').focus();
+      return true;
+    }
+    if (view === 'shop-workshop') {
+      const expanded = $('city-content').querySelector('.workshop-slot[aria-expanded="true"]');
+      if (expanded) {
+        expanded.click();
+        expanded.focus();
+        return true;
+      }
+    }
+    if (view.startsWith('shop-') && characterUpgrades.includes(view.slice(5))) {
+      openShop('upgrades');
       return true;
     }
     if (!job && view === 'district') return false;

@@ -450,17 +450,29 @@ test('recalibrates a unit at the workshop, preserves the choice, and restores it
   const units = page.locator('.workshop-grid [data-card-id="unit_03"]');
   const affinities = page.getByRole('combobox', { name: 'Nova afinidade' });
   const recalibrate = page.getByRole('button', { name: 'Recalibrar · 15 créditos' });
-  await page.getByText('Melhorar cartas', { exact: true }).click();
+  await page.getByRole('button', { name: 'Melhorar cartas' }).click();
+  await expect(units).toBeHidden();
+  await page.getByRole('button', { name: 'Escolher carta da coleção' }).click();
   await units.click();
-  await expect(recalibrate).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Confirmar modificação' })).toBeDisabled();
+  const preview = page.getByRole('button', { name: 'Ver carta modificada' });
+  await expect(preview).toBeDisabled();
   await affinities.selectOption('sombra');
-  await expect(page.locator('.workshop-editor')).toContainText('dará +1 de dano contra Pulso');
+  await expect(preview).toContainText('Aegis-Wall · ◆ Sombra');
+  await expect(page.locator('#workshop-preview')).toBeHidden();
+  await preview.click();
+  await expect(page.locator('#workshop-preview')).toBeVisible();
+  await expect(page.locator('#workshop-preview')).toContainText('dará +1 de dano contra Pulso');
+  expect(await page.evaluate(() => NB.Save.getAffinity('unit_03'))).toBe('malha');
+  await expect(page.locator('#city-credits')).toHaveText('35 créditos');
   await recalibrate.click();
   await expect(page.locator('#city-credits')).toHaveText('20 créditos');
   await expect(page.locator('.city-workshop')).toContainText('Afinidade atual · ◆ Sombra');
   await page.reload();
   await enterCity(page);
-  await page.getByText('Melhorar cartas', { exact: true }).click();
+  await page.getByRole('button', { name: 'Melhorar cartas' }).click();
+  await expect(units).toBeHidden();
+  await page.getByRole('button', { name: 'Escolher carta da coleção' }).click();
   await units.click();
   await expect(page.locator('.city-workshop')).toContainText('Afinidade atual · ◆ Sombra');
   expect(await page.evaluate(() => NB.State.createFieldUnit('unit_03', 1, 'player').affinity)).toBe('sombra');
@@ -681,7 +693,13 @@ test('wins the route pact, equips a suppression module and buys starting RAM', a
   await expect(offer).toHaveCount(0);
 
   await page.evaluate(() => { NB.Save.get().city.credits = 100; });
-  await page.getByRole('button', { name: 'Ver cyberdecks' }).click();
+  await expect(page.getByRole('button', { name: 'Ver cyberdecks' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Ver melhorias' }).click();
+  const upgrades = page.getByRole('group', { name: 'Melhorias da Kairo' });
+  await expect(upgrades.getByRole('button', { name: 'Ver itens de iniciativa' })).toBeVisible();
+  await upgrades.getByRole('button', { name: 'Ver cyberdecks' }).click();
+  await page.getByRole('button', { name: 'Voltar às melhorias' }).click();
+  await upgrades.getByRole('button', { name: 'Ver cyberdecks' }).click();
   await page.getByRole('button', { name: 'Comprar · 85 créditos' }).click();
   await expect(page.getByRole('button', { name: 'Adquirido' })).toBeDisabled();
   await page.reload();
@@ -1028,9 +1046,15 @@ test('learns the bicycle shortcut from Aline only after buying the bike and winn
   await expect(page.getByRole('button', { name: 'Desafiar Aline', exact: true })).toBeVisible();
   await expect(lesson).toHaveCount(0);
   const services = page.getByRole('group', { name: 'Serviços da loja' });
-  for (const name of ['Ver veículos', 'Ver implante', 'Ver cyberdecks']) {
+  for (const name of ['Ver veículos', 'Ver melhorias']) {
     await expect(services.getByRole('button', { name }).locator('svg')).toBeVisible();
   }
+  await page.getByRole('button', { name: 'Ver melhorias' }).click();
+  const upgrades = page.getByRole('group', { name: 'Melhorias da Kairo' });
+  for (const name of ['Ver implante', 'Ver cyberdecks']) {
+    await expect(upgrades.getByRole('button', { name }).locator('svg')).toBeVisible();
+  }
+  await page.getByRole('button', { name: 'Voltar aos serviços' }).click();
   await page.getByRole('button', { name: 'Ver veículos' }).click();
   await page.getByRole('button', { name: 'Comprar · 100 créditos' }).click();
   await page.getByRole('button', { name: 'Voltar aos serviços' }).click();
