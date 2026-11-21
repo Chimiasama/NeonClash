@@ -14,6 +14,7 @@
     39: { hp: 22, credits: 12, card: 'unit_23', deck: wagerBoss.deckList, canOverclock: true },
     ...NB.CityAtlas.residentDuels
   };
+  const aline = NB.CityAtlas.residents.find(person => person.id === 44);
   const markerTypes = {
     clue: { icon: '◆', label: 'Pista ativa' },
     duel: { icon: '⚔', label: 'Duelo disponível' },
@@ -37,7 +38,7 @@
     const hasDuel = place.id === 'arena' || encounter?.location === place.id ||
       (NB.Campaign.NODES.some(boss => boss.id === place.id) && !access(place)) ||
       NB.CityAtlas.residents.some(person => person.location === place.id && residentDuels[person.id]);
-    const hasSecret = place.id === routePactDestination(save.city.life) || (place.id === 'garage' && !save.city.life.favors.includes('hillPath')) ||
+    const hasSecret = place.id === routePactDestination(save.city.life) || (place.id === 'garage' && save.city.life.vehicles.includes('bike') && !save.city.life.favors.includes('hillPath')) ||
       (place.id === 'pump' && !save.city.life.favors.includes('pumpRelay'));
     return [clueLocations.has(place.id) && 'clue', hasDuel && 'duel', hasSecret && 'secret'].filter(Boolean);
   }
@@ -313,15 +314,7 @@
       ['Maíra', './avatars/maira.webp', 'Posso configurar o filtro da balsa para usar o acordo de Sinal. Se você equipar o módulo, deixa de aparecer na lista de quem pode ser abordada.']
     ];
     const [name, portrait, line] = speakers[step];
-    const dialogue = document.createElement('div');
-    dialogue.className = 'city-dialogue';
-    const image = document.createElement('img');
-    image.src = portrait;
-    image.alt = '';
-    image.width = image.height = 52;
-    dialogue.append(image);
-    addText(dialogue, `${name} — ${line}`);
-    section.append(dialogue);
+    addContactDialogue(section, name, portrait, line);
 
     if (step === 2) {
       addButton(section, 'Duelar com Sinal', () => {
@@ -342,13 +335,34 @@
     content.append(section);
   }
 
+  function addContactDialogue(parent, name, portrait, line) {
+    const dialogue = document.createElement('div');
+    dialogue.className = 'city-dialogue';
+    const image = document.createElement('img');
+    image.src = portrait;
+    image.alt = '';
+    image.width = image.height = 52;
+    dialogue.append(image);
+    addText(dialogue, `${name} — ${line}`);
+    parent.append(dialogue);
+  }
+
+  function renderAline(content, learned) {
+    const lesson = document.createElement('details');
+    lesson.className = 'city-contact';
+    const summary = document.createElement('summary');
+    summary.textContent = learned ? 'Rever a dica da Aline' : 'Aprender com Aline o atalho de bicicleta';
+    lesson.append(summary);
+    const intro = 'Vi que você comprou uma bicicleta. Conheço uma passagem que poupa tempo e perna. Se me vencer num duelo, eu te mostro por onde entrar.';
+    addContactDialogue(lesson, aline.name, aline.portrait, learned ? NB.CityLife.hillPathLesson : intro);
+    if (!learned) addButton(lesson, 'Duelar com Aline pelo atalho', () => startResidentDuel(aline, intro, true));
+    content.append(lesson);
+  }
+
   function renderContactServices(content, location) {
-    const favors = NB.Save.get().city.life.favors;
-    if (location === 'garage' && !favors.includes('hillPath')) {
-      addButton(content, 'Aprender com Aline o atalho de bicicleta', () => {
-        if (!NB.CityLife.helpContact('hillPath')) return;
-        refreshStory('Aline mostrou o atalho entre as Oficinas e o Morro.');
-      });
+    const { favors, vehicles } = NB.Save.get().city.life;
+    if (location === 'garage' && vehicles.includes('bike')) {
+      renderAline(content, favors.includes('hillPath'));
     }
     if (location === 'pump' && !favors.includes('pumpRelay')) {
       addButton(content, 'Ajudar Maíra na bomba · 30 min · +16 créditos', () => {
@@ -360,8 +374,24 @@
     }
   }
 
+  function startResidentDuel(person, line = person.line, teachesShortcut = false) {
+    const duel = residentDuels[person.id];
+    NB.Input.startMatch({
+      mode: 'arena',
+      boss: {
+        ...sparringBoss, name: person.name, fullTitle: `${person.name} // Duelo de bairro`, avatar: person.portrait,
+        hp: duel.hp, deckList: duel.deck.length === 20 ? duel.deck : Array.from({ length: 20 }, (_, index) => duel.deck[index % duel.deck.length]),
+        canOverclock: Boolean(duel.canOverclock), lines: { start: [line] },
+        residentId: person.id, teachesShortcut
+      }
+    });
+  }
+
   function renderLocalDuels(content, location) {
-    const opponents = NB.CityAtlas.residents.filter(person => person.location === location && residentDuels[person.id]);
+    const { vehicles, favors } = NB.Save.get().city.life;
+    const lessonAvailable = vehicles.includes('bike') && !favors.includes('hillPath');
+    const opponents = NB.CityAtlas.residents.filter(person => person.location === location &&
+      residentDuels[person.id] && (person !== aline || !lessonAvailable));
     if (!opponents.length) return;
     const section = document.createElement('section');
     section.className = 'city-local-duels';
@@ -374,18 +404,7 @@
       const firstWin = !NB.Save.get().city.residentWins.includes(person.id);
       const row = document.createElement('div');
       row.className = 'city-local-duel';
-      addButton(row, `Desafiar ${person.name}`, () => {
-        NB.Input.startMatch({
-          mode: 'arena',
-          boss: {
-            ...sparringBoss, name: person.name, fullTitle: `${person.name} // Duelo de bairro`, avatar: person.portrait,
-            hp: duel.hp, deckList: duel.deck.length === 20 ? duel.deck : Array.from({ length: 20 }, (_, index) => duel.deck[index % duel.deck.length]),
-            canOverclock: Boolean(duel.canOverclock),
-            lines: { start: [person.line] },
-            residentId: person.id
-          }
-        });
-      });
+      addButton(row, `Desafiar ${person.name}`, () => startResidentDuel(person));
       addText(row, `${duel.hp} HP · +${duel.credits} créditos por vitória${card && firstWin ? ` · primeira vitória: ${card.name}` : ''}`);
       section.append(row);
     }
@@ -950,6 +969,7 @@
     if (winner === 'player' && state.boss.routeMediator && NB.CityLife.advanceRoutePact(2)) {
       state.routePactWon = true;
     }
+    if (winner === 'player' && state.boss.teachesShortcut && NB.CityLife.learnHillPath()) state.hillPathLearned = true;
     const residentId = state.boss.residentId;
     const duel = residentDuels[residentId];
     const encounter = state.boss.encounterKey;
@@ -1058,7 +1078,7 @@
       $('city-journal').focus();
       return true;
     }
-    const collection = document.querySelector('.workshop-collection[open]');
+    const collection = document.querySelector('.workshop-collection[open], .city-contact[open]');
     if (view === 'district' && collection) {
       collection.open = false;
       collection.querySelector('summary').focus();

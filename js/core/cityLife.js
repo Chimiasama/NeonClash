@@ -462,14 +462,19 @@
     return true;
   }
 
+  const hillPathLesson = 'De bicicleta, pegue a passagem da encosta entre o Pátio das Oficinas e o Morro das Casas. Funciona nos dois sentidos e corta caminho, então você gasta menos tempo e chega com mais energia.';
+
+  function learnHillPath() {
+    const state = city();
+    if (state.district !== 'garage' || !state.life.vehicles.includes('bike') ||
+        state.life.favors.includes('hillPath')) return false;
+    state.life.favors.push('hillPath');
+    return true;
+  }
+
   function helpContact(id) {
     const state = city();
     if (state.life.favors.includes(id)) return false;
-    if (id === 'hillPath' && state.district === 'garage') {
-      state.life.favors.push(id);
-      NB.Save.save();
-      return true;
-    }
     if (id === 'pumpRelay' && state.district === 'pump') {
       state.life.favors.push(id);
       state.credits += 16;
@@ -491,6 +496,6 @@
 
   NB.CityLife = { items, transport, beds, streetRest, bagLimit, implantPrice, normalize, clock, maxEnergy, maxAwake,
     bagCount, routes, advance, travel, getTravelChallenge, requiredTravelChallenge, travelWithdrawalFee, settleTravelChallenge, finishTravelChallenge,
-    advanceRoutePact, setRouteMask, cyberdecks, equipCyberdeck, sleep, buy, use, nightShift, workNightShift, helpContact, takeNotice, consumablePrice, recoverEnergy,
+    advanceRoutePact, setRouteMask, cyberdecks, equipCyberdeck, sleep, buy, use, nightShift, workNightShift, helpContact, learnHillPath, hillPathLesson, takeNotice, consumablePrice, recoverEnergy,
     relayModes, demand, jobQuote, work, finishSignal, startDelivery, cancelDelivery };
 })(window.NB = window.NB || {});

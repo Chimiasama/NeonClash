@@ -62,7 +62,7 @@ A Feira vende o **Relé de Bolso** (+1 RAM inicial por 85 créditos). A Garagem 
 | Transporte | Tempo | Energia | Créditos e condição |
 | --- | --- | --- | --- |
 | A pé | 7 × d min | 2 × d | Grátis. |
-| Bicicleta | 4 × d min | d | Compra por 100. Entre Oficinas e Morro, o favor de Aline reduz a distância para `max(2, ceil(d × 0,55))`. |
+| Bicicleta | 4 × d min | d | Compra por 100. Com a bicicleta comprada, converse com Aline na Garagem e vença o duelo para aprender o atalho. Entre Oficinas e Morro, o atalho reduz a distância para `max(2, ceil(d × 0,55))`. |
 | Ônibus | 3 × d + 5 min | d | 4 por viagem. |
 | Moto | 2 × d min | d | Compra por 450. |
 | Balsa | 2 × d min | d | 3 por travessia Canal–Cais. Opera das 07:00 às 18:00, com a partida às 18:00 já indisponível. Requer ajudar Maíra na Casa de Bombas. |

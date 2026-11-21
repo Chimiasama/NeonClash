@@ -288,7 +288,7 @@
   background: #164344;
 }
 
-.workshop-collection summary {
+.workshop-collection summary, .city-contact summary {
   padding: 12px;
   border: 1px solid #68c7cf;
   border-radius: 4px;

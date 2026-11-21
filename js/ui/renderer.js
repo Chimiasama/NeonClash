@@ -617,6 +617,12 @@
         clueBox.style.display = 'flex';
         document.getElementById('go-clue-title').textContent = 'ACORDO DAS ROTAS';
         document.getElementById('go-clue-text').textContent = 'As abordagens agora são opcionais. Maíra pode preparar um módulo para evitá-las na Casa de Bombas.';
+      } else if (state.hillPathLearned) {
+        clueBox.style.display = 'flex';
+        document.getElementById('go-clue-title').textContent = 'ATALHO DA ALINE';
+        const card = NB.Cards.CARD_DB[state.residentReward];
+        document.getElementById('go-clue-text').textContent = `Aline — ${NB.CityLife.hillPathLesson}` +
+          (card ? ` Carta conquistada: ${card.name}.` : '');
       } else if (state.travelBonus) {
         const { type, id, amount } = state.travelBonus;
         clueBox.style.display = 'flex';

@@ -901,7 +901,7 @@ test('unwinds the complete investigation with alternative routes and a recorded 
   expect(result.aftermath).toContain('conselho');
 });
 
-test('opens ferry and bicycle shortcuts through local contacts', async ({ page }) => {
+test('opens the ferry shortcut through Maíra', async ({ page }) => {
   await page.goto('/');
   const result = await page.evaluate(() => {
     const city = NB.Save.get().city;
@@ -912,16 +912,53 @@ test('opens ferry and bicycle shortcuts through local contacts', async ({ page }
     const ready = NB.CityLife.routes('ferry').find(route => route.id === 'ferry').available;
     city.life.minute = 1200;
     const closed = NB.CityLife.routes('ferry').find(route => route.id === 'ferry').available;
-    city.district = 'garage';
-    city.life.vehicles.push('bike');
-    const long = NB.CityLife.routes('clinic').find(route => route.id === 'bike').minutes;
-    NB.CityLife.helpContact('hillPath');
-    const shortcut = NB.CityLife.routes('clinic').find(route => route.id === 'bike').minutes;
-    return { before, helped, duplicate, ready, closed, long, shortcut, credits: city.credits };
+    return { before, helped, duplicate, ready, closed, credits: city.credits };
   });
-  expect(result).toMatchObject({ before: false, helped: true, duplicate: false, ready: true, closed: false, credits: 51 });
-  expect(result.shortcut).toBeLessThan(result.long);
+  expect(result).toEqual({ before: false, helped: true, duplicate: false, ready: true, closed: false, credits: 51 });
 });
+
+test('learns the bicycle shortcut from Aline only after buying the bike and winning her duel', async ({ page }) => {
+  await page.goto('/');
+  await enterCity(page);
+  await page.evaluate(() => { NB.Save.get().city.credits = 150; });
+  await walkTo(page, page.locator('[data-district="garage"]'));
+  const lesson = page.getByText('Aprender com Aline o atalho de bicicleta', { exact: true });
+  await expect(lesson).toHaveCount(0);
+  await page.getByRole('button', { name: 'Ver veículos' }).click();
+  await page.getByRole('button', { name: 'Comprar · 100 créditos' }).click();
+  await page.getByRole('button', { name: 'Voltar aos serviços' }).click();
+  await lesson.click();
+  await expect(page.locator('.city-contact')).toContainText('Se me vencer num duelo');
+  const quote = () => page.evaluate(() => NB.CityLife.routes('clinic').find(route => route.id === 'bike'));
+  const before = await quote();
+  const duel = page.getByRole('button', { name: 'Duelar com Aline pelo atalho' });
+  await duel.click();
+  await page.evaluate(() => {
+    NB.State.get().player.hp = 0;
+    NB.State.checkWinCondition();
+  });
+  await page.getByRole('button', { name: 'Voltar à cidade' }).click();
+  expect((await quote()).minutes).toBe(before.minutes);
+  await lesson.click();
+  await duel.click();
+  await page.evaluate(() => {
+    NB.State.get().enemy.hp = 0;
+    NB.State.checkWinCondition();
+  });
+  await expect(page.locator('#go-clue-title')).toHaveText('ATALHO DA ALINE');
+  await expect(page.locator('#go-clue-text')).toContainText('entre o Pátio das Oficinas e o Morro das Casas');
+  await expect(page.locator('#go-clue-text')).toContainText('menos tempo e chega com mais energia');
+  await expect(page.locator('#go-clue-text')).toContainText('Ferro de Pulso');
+
+  await page.reload();
+  await enterCity(page);
+  const after = await quote();
+  expect(after.minutes).toBeLessThan(before.minutes);
+  expect(after.energy).toBeLessThan(before.energy);
+  await page.getByText('Rever a dica da Aline', { exact: true }).click();
+  await expect(page.locator('.city-contact')).toContainText('Funciona nos dois sentidos');
+});
+
 
 test('searches collection without accents and keeps three deck slots separate across reloads', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 600 });
