@@ -15,6 +15,15 @@
     ...NB.CityAtlas.residentDuels
   };
   const aline = NB.CityAtlas.residents.find(person => person.id === 44);
+  const serviceIcons = {
+    cards: 'M4 3h16v18H4z M4 8l4-2 3 2 3-2 6 2 M10 15l2-4 2 4-2 4z',
+    items: 'M12 4a8 8 0 1 0 8 8l-4-1-1-3-3-1z M10 12a2 2 0 1 0 2 2 M7 10h.01 M10 18h.01 M16 15h.01',
+    vehicles: 'M8 17a4 4 0 1 1-8 0 4 4 0 0 1 8 0z M24 17a4 4 0 1 1-8 0 4 4 0 0 1 8 0z M4 17l4-8 5 8H4m9 0 4-9 3 9 M15 5h3l2 3 M6 8h5',
+    implant: 'M4 20h9l5-5-2-6-3 1-1 5H8L4 20z M16 9l3-4 3 2-3 4 M19 5l-2-2-3 2 M9 17h2',
+    cyberdecks: 'M3 5h18v13H3z M7 9h6v5H7z M16 9h2m-2 4h2 M6 21h12',
+    workshop: 'M13 6a5 5 0 0 0 5 6l-8 8a2 2 0 0 1-3-3l8-8m-2-3 4 2 2-2-2-4a5 5 0 0 1 5 7l-4 3',
+    jobs: 'M3 8h18v12H3z M8 8V4h8v4 M3 13h18 M10 13v3h4v-3'
+  };
   const markerTypes = {
     clue: { icon: '◆', label: 'Pista ativa' },
     duel: { icon: '⚔', label: 'Duelo disponível' },
@@ -202,22 +211,29 @@
       addButton(content, 'Voltar aos serviços', resetView);
       if (category === 'cards') renderMarket(content, save);
       else if (category === 'cyberdecks') renderCyberdecks(content, save.city);
+      else if (category === 'workshop') renderWorkshop(content, save);
       else renderSupplies(content, save.city, category);
     } else if (district.id === 'home' || district.id === 'pension') {
       renderRest(content, save.city, district.rest);
     } else if (['market', 'kiosk', 'garage'].includes(district.id)) {
+      const services = document.createElement('div');
+      services.className = 'city-service-grid';
+      services.setAttribute('role', 'group');
+      services.setAttribute('aria-label', 'Serviços da loja');
       if (district.id === 'market') {
-        shopButton(content, 'Ver cartas à venda', 'cards');
-        renderWorkshop(content, save);
-      }
-      if (district.id !== 'kiosk') shopButton(content, 'Ver cyberdecks', 'cyberdecks');
-      if (district.id === 'garage') {
-        shopButton(content, 'Ver veículos', 'vehicles');
-        shopButton(content, 'Ver implante', 'implant');
+        shopButton(services, 'Ver cartas à venda', 'cards', 'Cartas');
+        shopButton(services, 'Ver consumíveis', 'items', 'Consumíveis');
+        shopButton(services, 'Ver cyberdecks', 'cyberdecks', 'Cyberdecks');
+        shopButton(services, 'Melhorar cartas', 'workshop', 'Melhorar cartas');
+      } else if (district.id === 'garage') {
+        shopButton(services, 'Ver veículos', 'vehicles', 'Veículos');
+        shopButton(services, 'Ver implante', 'implant', 'Implantes');
+        shopButton(services, 'Ver cyberdecks', 'cyberdecks', 'Cyberdecks');
       } else {
-        shopButton(content, 'Ver consumíveis', 'items');
-        if (district.id === 'kiosk') renderKioskShift(content);
+        shopButton(services, 'Ver consumíveis', 'items', 'Consumíveis');
       }
+      content.append(services);
+      if (district.id === 'kiosk') renderKioskShift(content, services);
     } else if (district.id === 'relay') {
       renderRelay(content, save);
     } else if (district.id === 'arena') {
@@ -228,7 +244,8 @@
       if (requirement) {
         addText(content, requirement, 'city-notice');
       } else {
-        addButton(content, cleared ? 'Abrir dossiê · revanche' : 'Abrir dossiê', () => NB.UI.openDossier(district.id), false, 'city-primary');
+        const label = cleared ? 'Abrir dossiê · revanche' : 'Abrir dossiê';
+        serviceButton(content, label, () => NB.UI.openDossier(district.id), district.npc.split(' · ')[0], { portrait: district.portrait });
       }
     }
     if (view === 'district') {
@@ -267,9 +284,9 @@
       } else {
         const status = NB.CityLife.demand('delivery');
         addText(row, demandText(status));
-        addButton(row, 'Iniciar Correio Expresso', () => {
+        serviceButton(row, 'Iniciar Correio Expresso', () => {
           if (NB.CityLife.startDelivery()) refreshStory('Entrega aceita. Consulte o destino do pacote.');
-        }, !status.available);
+        }, 'Correio Expresso', { icon: 'jobs' }, !status.available);
       }
       content.append(row);
     }
@@ -284,12 +301,12 @@
       if (job.hours) addText(row, `Horário de início: ${job.hours[0]}h às ${job.hours[1]}h (limite exclusivo).`);
       if (id === 'drones') addText(row, NB.CityLife.bagCount(life) < NB.CityLife.bagLimit
         ? 'Inclui café ou energético.' : 'Mochila cheia. A compensação em créditos está incluída.');
-      addButton(row, job.name, () => {
+      serviceButton(row, job.name, () => {
         const result = NB.CityLife.work(id);
         if (!result) return;
         const item = result.item ? ` · ${NB.CityLife.items[result.item].name} na mochila` : '';
         refreshStory(`${job.name}: +${result.credits} créditos${item}.`);
-      }, !quote.open || !quote.available);
+      }, job.name, { icon: 'jobs' }, !quote.open || !quote.available);
       content.append(row);
     }
   }
@@ -317,12 +334,12 @@
     addContactDialogue(section, name, portrait, line);
 
     if (step === 2) {
-      addButton(section, 'Duelar com Sinal', () => {
+      serviceButton(section, 'Duelar com Sinal', () => {
         NB.Input.startMatch({ mode: 'arena', boss: {
           ...wagerBoss, name: mediator.name, fullTitle: 'Sinal // Acordo das Rotas', avatar: mediator.portrait,
           hp: 18, canOverclock: false, routeMediator: true, lines: { start: [line] }
         } });
-      });
+      }, mediator.name, { portrait: mediator.portrait });
     } else {
       const labels = ['Anotar o relato de Mara', 'Buscar Sinal com o registro de Leila', 'Receber Módulo de Rota Cega'];
       addButton(section, labels[step === 3 ? 2 : step], () => {
@@ -347,28 +364,36 @@
     parent.append(dialogue);
   }
 
-  function renderAline(content, learned) {
-    const lesson = document.createElement('details');
-    lesson.className = 'city-contact';
+  function renderAline(content, life) {
+    const choices = document.createElement('details');
+    choices.className = 'city-contact';
     const summary = document.createElement('summary');
-    summary.textContent = learned ? 'Rever a dica da Aline' : 'Aprender com Aline o atalho de bicicleta';
-    lesson.append(summary);
-    const intro = 'Vi que você comprou uma bicicleta. Conheço uma passagem que poupa tempo e perna. Se me vencer num duelo, eu te mostro por onde entrar.';
-    addContactDialogue(lesson, aline.name, aline.portrait, learned ? NB.CityLife.hillPathLesson : intro);
-    if (!learned) addButton(lesson, 'Duelar com Aline pelo atalho', () => startResidentDuel(aline, intro, true));
-    content.append(lesson);
+    decorateService(summary, 'Aline', { portrait: aline.portrait });
+    choices.append(summary);
+    addButton(choices, 'Desafiar Aline', () => startResidentDuel(aline));
+    if (life.vehicles.includes('bike')) {
+      const learned = life.favors.includes('hillPath');
+      const lesson = document.createElement('details');
+      const topic = document.createElement('summary');
+      topic.textContent = learned ? 'Rever a dica da Aline' : 'Aprender com Aline o atalho de bicicleta';
+      lesson.append(topic);
+      const intro = 'Vi que você comprou uma bicicleta. Conheço uma passagem que poupa tempo e perna. Se me vencer num duelo, eu te mostro por onde entrar.';
+      addContactDialogue(lesson, aline.name, aline.portrait, learned ? NB.CityLife.hillPathLesson : intro);
+      if (!learned) addButton(lesson, 'Duelar com Aline pelo atalho', () => startResidentDuel(aline, intro, true));
+      choices.append(lesson);
+    }
+    content.append(choices);
   }
 
   function renderContactServices(content, location) {
-    const { favors, vehicles } = NB.Save.get().city.life;
-    if (location === 'garage' && vehicles.includes('bike')) {
-      renderAline(content, favors.includes('hillPath'));
-    }
+    const life = NB.Save.get().city.life;
+    const { favors } = life;
+    if (location === 'garage') renderAline(content, life);
     if (location === 'pump' && !favors.includes('pumpRelay')) {
-      addButton(content, 'Ajudar Maíra na bomba · 30 min · +16 créditos', () => {
+      serviceButton(content, 'Ajudar Maíra na bomba · 30 min · +16 créditos', () => {
         if (!NB.CityLife.helpContact('pumpRelay')) return;
         refreshStory('A bomba voltou a funcionar. A travessia para o Cais reabriu.');
-      });
+      }, 'Maíra', { portrait: './avatars/maira.webp' });
     } else if (location === 'pump') {
       addText(content, 'A balsa para o Cais está aberta das 7h às 18h.');
     }
@@ -388,10 +413,8 @@
   }
 
   function renderLocalDuels(content, location) {
-    const { vehicles, favors } = NB.Save.get().city.life;
-    const lessonAvailable = vehicles.includes('bike') && !favors.includes('hillPath');
     const opponents = NB.CityAtlas.residents.filter(person => person.location === location &&
-      residentDuels[person.id] && (person !== aline || !lessonAvailable));
+      residentDuels[person.id] && person !== aline);
     if (!opponents.length) return;
     const section = document.createElement('section');
     section.className = 'city-local-duels';
@@ -404,7 +427,7 @@
       const firstWin = !NB.Save.get().city.residentWins.includes(person.id);
       const row = document.createElement('div');
       row.className = 'city-local-duel';
-      addButton(row, `Desafiar ${person.name}`, () => startResidentDuel(person));
+      serviceButton(row, `Desafiar ${person.name}`, () => startResidentDuel(person), person.name, { portrait: person.portrait });
       addText(row, `${duel.hp} HP · +${duel.credits} créditos por vitória${card && firstWin ? ` · primeira vitória: ${card.name}` : ''}`);
       section.append(row);
     }
@@ -547,13 +570,41 @@
     }
   }
 
-  function shopButton(content, label, category) {
-    addButton(content, label, () => {
+  function decorateService(control, text, { icon, portrait }) {
+    control.classList.add('city-service');
+    const span = document.createElement('span');
+    span.textContent = text;
+    if (portrait) {
+      const image = document.createElement('img');
+      image.src = portrait;
+      image.alt = '';
+      control.replaceChildren(image, span);
+    } else {
+      const ns = 'http://www.w3.org/2000/svg';
+      const svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', icon === 'vehicles' ? '-1 0 26 24' : '0 0 24 24');
+      svg.setAttribute('aria-hidden', 'true');
+      const path = document.createElementNS(ns, 'path');
+      path.setAttribute('d', serviceIcons[icon]);
+      svg.append(path);
+      control.replaceChildren(svg, span);
+    }
+  }
+
+  function serviceButton(parent, label, action, text, artwork, disabled = false) {
+    const control = addButton(parent, label, action, disabled);
+    control.setAttribute('aria-label', label);
+    decorateService(control, text, artwork);
+    return control;
+  }
+
+  function shopButton(content, label, category, text) {
+    serviceButton(content, label, () => {
       view = `shop-${category}`;
       announce('');
       render();
       $('city-content').querySelector('button')?.focus();
-    });
+    }, text, { icon: category });
   }
 
   function renderCyberdecks(content, state) {
@@ -596,14 +647,14 @@
     }
   }
 
-  function renderKioskShift(content) {
+  function renderKioskShift(content, services) {
     const shift = NB.CityLife.nightShift();
     addText(content, 'Turno de atendimento entre 19h e 2h. Último início à 1h.');
-    addButton(content, shift.done ? 'Turno já concluído' : 'Trabalhar no quiosque · 1 h · +14 créditos', () => {
+    serviceButton(services, shift.done ? 'Turno já concluído' : 'Trabalhar no quiosque · 1 h · +14 créditos', () => {
       if (!NB.CityLife.workNightShift()) return;
       render();
       announce(['Turno concluído. +14 créditos.', NB.CityLife.takeNotice()].filter(Boolean).join(' '));
-    }, !shift.open || shift.done);
+    }, 'Trabalho', { icon: 'jobs' }, !shift.open || shift.done);
   }
 
   function renderJournal(content, save) {
@@ -656,18 +707,12 @@
     const units = save.unlockedCards.map(id => NB.Cards.CARD_DB[id]).filter(card => card?.kind === 'unit');
     if (!units.length) return;
 
-    const collection = document.createElement('details');
-    collection.className = 'workshop-collection';
-    const summary = document.createElement('summary');
-    summary.textContent = 'Melhorar cartas';
-    collection.append(summary);
     const grid = document.createElement('div');
     grid.className = 'workshop-grid';
     const editor = document.createElement('div');
     editor.className = 'workshop-editor';
     editor.hidden = true;
-    collection.append(grid, editor);
-    workshop.append(collection);
+    workshop.append(grid, editor);
     content.append(workshop);
 
     for (const card of units) {
@@ -744,7 +789,7 @@
         const status = NB.CityLife.demand(id, mode.pay);
         const row = document.createElement('div');
         row.className = 'city-life-row';
-        addButton(row, mode.name, () => startJob(null, id), !status.available);
+        serviceButton(row, mode.name, () => startJob(null, id), mode.name, { icon: 'jobs' }, !status.available);
         addText(row, `${mode.symbols} símbolos · ${(mode.previewMs / 1000).toLocaleString('pt-BR')} s para memorizar · 12 s para enviar`);
         addText(row, `${mode.minutes} min · −${mode.energy} energia · +${status.pay} créditos · ${demandText(status)}`);
         content.append(row);
@@ -882,8 +927,13 @@
 
   function renderArena(content, save) {
     const stakeUnlocked = NB.Save.isNodeDefeated('kira');
-    addButton(content, 'Desafio de rua · vitória paga 15', () => startArena(0));
-    addButton(content, 'Apostar 25 · vitória paga 60', () => startArena(25), !stakeUnlocked || save.city.credits < 25);
+    const ring = document.createElement('div');
+    ring.className = 'city-service-grid';
+    const portrait = { portrait: sparringBoss.avatar };
+    serviceButton(ring, 'Desafio de rua · vitória paga 15', () => startArena(0), 'Risco · Treino', portrait);
+    serviceButton(ring, 'Apostar 25 · vitória paga 60', () => startArena(25), 'Risco · Aposta', portrait,
+      !stakeUnlocked || save.city.credits < 25);
+    content.append(ring);
     if (!stakeUnlocked) addText(content, 'A mesa de apostas abre após vencer Kira.', 'city-notice');
     else if (save.city.credits < 25) addText(content, 'Você precisa de 25 créditos para apostar.', 'city-notice');
     else addText(content, 'Na mesa de apostas, sair do duelo encerra a partida e perde a entrada.');
@@ -901,9 +951,10 @@
       addText(row, challenge.goal);
       addText(row, save.challengeWins.includes(challenge.id) ? 'Recompensas coletadas.' :
         `Primeira vitória · ${challenge.cards.map(id => NB.Cards.CARD_DB[id].name).join(' + ')}`);
-      addButton(row, challenge.name, () => {
-        NB.Input.startMatch({ mode: 'challenge', boss: NB.Campaign.getNodeById(challenge.opponent), challenge });
-      });
+      const boss = NB.Campaign.getNodeById(challenge.opponent);
+      serviceButton(row, challenge.name, () => {
+        NB.Input.startMatch({ mode: 'challenge', boss, challenge });
+      }, challenge.name, { portrait: boss.avatar });
       challenges.append(row);
     }
     addText(challenges, 'Decks emprestados de 20 cartas. Cada duelo consome tempo e energia da cidade.');
@@ -919,7 +970,7 @@
   }
 
   function renderEncounter(content, encounter) {
-    addButton(content, `Desafiar ${encounter.name} · encontro urbano`, () => {
+    serviceButton(content, `Desafiar ${encounter.name} · encontro urbano`, () => {
       NB.Input.startMatch({
         mode: 'arena',
         boss: {
@@ -928,7 +979,7 @@
           avatar: encounter.portrait, encounterKey: encounter.key, encounterReward: encounter.credits
         }
       });
-    });
+    }, encounter.name, { portrait: encounter.portrait });
   }
 
   function renderTravelChallenge(content, challenge) {
@@ -937,7 +988,7 @@
     offer.setAttribute('aria-label', 'Desafio de viagem');
     addText(offer, `${challenge.name} abordou Kairo no trajeto.`, 'city-clue-title');
     addText(offer, `${challenge.label} · ${challenge.hp} HP · vitória paga ${challenge.reward} créditos`);
-    addButton(offer, `Aceitar desafio de ${challenge.name}`, () => {
+    serviceButton(offer, `Aceitar desafio de ${challenge.name}`, () => {
       if (!NB.CityLife.getTravelChallenge()) return;
       NB.Input.startMatch({ mode: 'arena', boss: {
         ...sparringBoss, name: challenge.name, fullTitle: `${challenge.name} // Desafio de viagem`,
@@ -945,7 +996,7 @@
         deckList: Array.from({ length: 20 }, (_, index) => challenge.deck[index % challenge.deck.length]),
         travelReward: challenge.reward
       } });
-    });
+    }, challenge.name, { portrait: challenge.portrait });
     const fee = NB.CityLife.travelWithdrawalFee();
     if (!challenge.optional) addText(offer, 'Resolva a abordagem para recuperar acesso à cidade.');
     const actionLabel = challenge.optional ? 'Recusar desafio' : `Desistir · perder ${fee} créditos`;
@@ -1078,7 +1129,7 @@
       $('city-journal').focus();
       return true;
     }
-    const collection = document.querySelector('.workshop-collection[open], .city-contact[open]');
+    const collection = document.querySelector('.city-contact[open] details[open], .city-contact[open]');
     if (view === 'district' && collection) {
       collection.open = false;
       collection.querySelector('summary').focus();

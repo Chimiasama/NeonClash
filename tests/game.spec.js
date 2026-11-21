@@ -923,11 +923,21 @@ test('learns the bicycle shortcut from Aline only after buying the bike and winn
   await page.evaluate(() => { NB.Save.get().city.credits = 150; });
   await walkTo(page, page.locator('[data-district="garage"]'));
   const lesson = page.getByText('Aprender com Aline o atalho de bicicleta', { exact: true });
+  const aline = page.locator('.city-contact > summary').filter({ hasText: 'Aline' });
+  await expect(aline.locator('img')).toHaveAttribute('src', './avatars/aline.webp');
+  await aline.click();
+  await expect(page.getByRole('button', { name: 'Desafiar Aline', exact: true })).toBeVisible();
   await expect(lesson).toHaveCount(0);
+  const services = page.getByRole('group', { name: 'Serviços da loja' });
+  for (const name of ['Ver veículos', 'Ver implante', 'Ver cyberdecks']) {
+    await expect(services.getByRole('button', { name }).locator('svg')).toBeVisible();
+  }
   await page.getByRole('button', { name: 'Ver veículos' }).click();
   await page.getByRole('button', { name: 'Comprar · 100 créditos' }).click();
   await page.getByRole('button', { name: 'Voltar aos serviços' }).click();
+  await aline.click();
   await lesson.click();
+  await expect(page.getByRole('button', { name: 'Desafiar Aline', exact: true })).toBeVisible();
   await expect(page.locator('.city-contact')).toContainText('Se me vencer num duelo');
   const quote = () => page.evaluate(() => NB.CityLife.routes('clinic').find(route => route.id === 'bike'));
   const before = await quote();
@@ -939,6 +949,7 @@ test('learns the bicycle shortcut from Aline only after buying the bike and winn
   });
   await page.getByRole('button', { name: 'Voltar à cidade' }).click();
   expect((await quote()).minutes).toBe(before.minutes);
+  await aline.click();
   await lesson.click();
   await duel.click();
   await page.evaluate(() => {
@@ -955,6 +966,7 @@ test('learns the bicycle shortcut from Aline only after buying the bike and winn
   const after = await quote();
   expect(after.minutes).toBeLessThan(before.minutes);
   expect(after.energy).toBeLessThan(before.energy);
+  await aline.click();
   await page.getByText('Rever a dica da Aline', { exact: true }).click();
   await expect(page.locator('.city-contact')).toContainText('Funciona nos dois sentidos');
 });
@@ -1330,7 +1342,14 @@ test('shows a distinct combat portrait for each neighborhood and urban duel oppo
       save.city.life.minute = minute ?? 8 * 60;
       NB.Input.openNetMap();
     }, { district, minute });
-    await page.getByRole('button', { name: `Desafiar ${name}${minute ? ' · encontro urbano' : ''}`, exact: true }).click();
+    if (name === 'Aline') {
+      const contact = page.locator('.city-contact > summary');
+      await expect(contact.locator('img')).toHaveAttribute('src', './avatars/aline.webp');
+      await contact.click();
+    }
+    const fight = page.getByRole('button', { name: `Desafiar ${name}${minute ? ' · encontro urbano' : ''}`, exact: true });
+    if (name !== 'Aline') await expect(fight.locator('img')).toHaveAttribute('src', `./avatars/${filename}.webp`);
+    await fight.click();
     const path = `./avatars/${filename}.webp`;
     const portrait = page.locator(`#enemy-avatar-box img[src="${path}"]`);
     await expect(portrait).toBeVisible();
