@@ -91,7 +91,7 @@
     return best;
   }
 
-  async function startEnemyTurn() {
+  async function startEnemyTurn({ opening = false } = {}) {
     if (NB.State.checkWinCondition()) return;
     const state = NB.State.get();
     const CARD_DB = NB.Cards.CARD_DB;
@@ -115,9 +115,9 @@
       }
     });
 
-    NB.State.drawCard('enemy');
+    if (!opening) NB.State.drawCard('enemy');
     NB.UI.renderAll();
-    NB.Physics.showToast(`TURNO DE ${bossName}`, 'var(--magenta)');
+    NB.Physics.showToast(opening ? `${bossName} COMEÇA · TURNO 1` : `TURNO DE ${bossName}`, 'var(--magenta)');
     if (!(await NB.State.wait(680))) return;
 
     // 1) IA baixa Unidade priorizando arquétipo do chefe

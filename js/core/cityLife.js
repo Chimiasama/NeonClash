@@ -41,6 +41,11 @@
     backbone: { name: 'Espinha Óptica', ram: 3, price: 280, shop: 'garage', chapter: 3 }
   };
 
+  const initiativeItems = {
+    firstSignal: { name: 'Pulso de Partida', side: 'player', price: 65 },
+    deferredSignal: { name: 'Relé de Espera', side: 'enemy', price: 45 }
+  };
+
   const beds = {
     home: { minutes: 480, price: 0 },
     pension: { minutes: 420, price: 12 },
@@ -82,6 +87,8 @@
     const routePact = integer(raw?.routePact, 0, 0, 4);
     const ownedDecks = Object.keys(cyberdecks).filter(id => id === 'stock' ||
       (Array.isArray(raw?.ownedDecks) && raw.ownedDecks.includes(id)));
+    const ownedInitiative = Object.keys(initiativeItems).filter(id =>
+      Array.isArray(raw?.ownedInitiative) && raw.ownedInitiative.includes(id));
     return {
       minute,
       streetRestEvent: typeof raw?.streetRestEvent?.robbed === 'boolean'
@@ -92,6 +99,8 @@
       routePact,
       routeMask: routePact === 4 && raw?.routeMask === true,
       ownedDecks,
+      ownedInitiative,
+      activeInitiative: ownedInitiative.includes(raw?.activeInitiative) ? raw.activeInitiative : null,
       equippedDeck: ownedDecks.includes(raw?.equippedDeck) ? raw.equippedDeck : 'stock',
       dailyJobDay: day(minute),
       dailyJobCounts: raw?.dailyJobDay === day(minute) ? Object.fromEntries(jobIds.flatMap(id => {
@@ -417,11 +426,28 @@
     return gain;
   }
 
+  function equipInitiative(id) {
+    const state = city();
+    if (id !== null && !state.life.ownedInitiative.includes(id)) return false;
+    state.life.activeInitiative = id;
+    NB.Save.save();
+    return true;
+  }
+
+  function rollInitiative() {
+    return Math.random() < 0.5 ? 'player' : 'enemy';
+  }
+
+  function duelInitiative() {
+    return initiativeItems[city().life.activeInitiative]?.side ?? NB.CityLife.rollInitiative();
+  }
+
   function buy(id) {
     const state = city();
     const item = items[id];
     const mode = transport[id];
     const deck = cyberdecks[id];
+    const initiative = initiativeItems[id];
     if (item && ['kiosk', 'market'].includes(state.district) && state.credits >= consumablePrice(id) && bagCount(state.life) < bagLimit) {
       state.credits -= consumablePrice(id);
       state.life.inventory[id]++;
@@ -433,6 +459,10 @@
       state.credits -= deck.price;
       state.life.ownedDecks.push(id);
       state.life.equippedDeck = id;
+    } else if (initiative && state.district === 'market' && state.credits >= initiative.price &&
+        !state.life.ownedInitiative.includes(id)) {
+      state.credits -= initiative.price;
+      state.life.ownedInitiative.push(id);
     } else if (id === 'implant' && state.district === 'garage' && state.credits >= implantPrice && !state.life.implant) {
       state.credits -= implantPrice;
       state.life.implant = true;
@@ -513,6 +543,6 @@
 
   NB.CityLife = { items, transport, beds, streetRest, streetRestArt, acknowledgeStreetRest, bagLimit, implantPrice, normalize, clock, maxEnergy, maxAwake,
     bagCount, routes, advance, travel, getTravelChallenge, requiredTravelChallenge, travelWithdrawalFee, settleTravelChallenge, finishTravelChallenge,
-    advanceRoutePact, setRouteMask, cyberdecks, equipCyberdeck, sleep, buy, use, nightShift, workNightShift, helpContact, learnHillPath, hillPathLesson, takeNotice, consumablePrice, recoverEnergy,
+    advanceRoutePact, setRouteMask, cyberdecks, equipCyberdeck, initiativeItems, equipInitiative, rollInitiative, duelInitiative, sleep, buy, use, nightShift, workNightShift, helpContact, learnHillPath, hillPathLesson, takeNotice, consumablePrice, recoverEnergy,
     relayModes, demand, jobQuote, work, finishSignal, startDelivery, cancelDelivery };
 })(window.NB = window.NB || {});

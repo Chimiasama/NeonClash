@@ -52,7 +52,8 @@
     hideAllScreens();
     document.getElementById('game-ui').inert = false;
     NB.Audio.setScene(boss.id, true);
-    NB.State.reset({ mode, boss, stake: options.stake, challenge: options.challenge });
+    const openingSide = NB.CityLife.duelInitiative();
+    NB.State.reset({ mode, boss, stake: options.stake, challenge: options.challenge, openingSide });
     NB.UI.closeVisor();
     NB.Physics.clearLasers();
     NB.UI.renderEnemyAvatar(boss);
@@ -67,13 +68,15 @@
     NB.Dialogue.setDialogue(NB.Dialogue.pickLine('start'));
     NB.UI.renderAll();
     NB.Physics.playMatchHudEntrance(boss.accent || '#FF0055');
-    NB.Physics.showToast(`CONEXÃO: ${boss.name} · TURNO 1`, 'var(--cyan)');
+    if (openingSide === 'enemy') NB.AI.startEnemyTurn({ opening: true });
+    else NB.Physics.showToast('KAIRO COMEÇA · TURNO 1', 'var(--cyan)');
   }
 
   function startPlayerTurn() {
     if (NB.State.checkWinCondition()) return;
     const state = NB.State.get();
-    state.turn++;
+    if (!state.openingPlayerTurnPending) state.turn++;
+    state.openingPlayerTurnPending = false;
     state.phase = 'PLAYER_MAIN';
     state.player.summonedThisTurn = false;
     state.selectedAttackers = [];

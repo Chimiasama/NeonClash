@@ -170,6 +170,8 @@ Muralhas com Bloqueio Múltiplo podem assumir mais de um atacante. Os choques us
 
 A Feira vende as cinco cartas que ampliam essa regra. **Vigia de Turno** (55 cr) tem Vigilância e bloqueia mesmo depois de atacar. **Estilhaço de Pulso** (46 cr) tem 4 ATK, zero DEF e é destruído quando seu ataque é bloqueado. **Anteparo de Rua** (60 cr) tem 6 DEF, zero ATK e bloqueia como Firewall sem contra-atacar. **Formação de Retaguarda** (65 cr, 3 RAM) permite que unidades exaustas aptas a defender bloqueiem até o próximo turno do dono. **Escudo de Emergência** (50 cr, 2 RAM) absorve até 4 de dano ao HP no mesmo intervalo, sem acumular.
 
+Todo duelo sorteia quem começa com chances iguais. O lado que começa joga com quatro cartas. O segundo lado compra uma quinta carta ao receber seu primeiro turno, dentro da rodada 1. A Feira vende dois itens permanentes de iniciativa. Pulso de Partida (65 créditos) dá a abertura a Kairo e Relé de Espera (45 créditos) dá a abertura ao adversário. A Mochila mantém um único item de iniciativa ativo e permite desligá-lo para retomar o sorteio. A compra e a seleção persistem após fechar o app e no Novo Jogo+.
+
 Unidades são instâncias de campo com UID, ATK e DEF atuais, DEF máxima, afinidade e marcadores de boot e ataque. Exploits declarativos usam alvo próprio, inimigo ou nenhum alvo, com ações sobre uma unidade, aliados ou inimigos conforme a definição. As cartas emprestadas dos desafios não substituem o deck ativo. O limite de duas cópias vale para os decks do jogador. Os baralhos dos adversários são listas de dados próprias.
 
 | Desafio | Cartas da primeira vitória |

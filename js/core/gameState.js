@@ -43,7 +43,8 @@
       boss,
       cipherInterference,
       turn: 1,
-      phase: 'PLAYER_MAIN',
+      phase: options.openingSide === 'enemy' ? 'ENEMY_TURN' : 'PLAYER_MAIN',
+      openingPlayerTurnPending: options.openingSide === 'enemy',
       winner: null,
       player: {
         hp: playerMaxHp,

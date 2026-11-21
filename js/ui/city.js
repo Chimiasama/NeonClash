@@ -22,6 +22,7 @@
     implant: 'M4 20h9l5-5-2-6-3 1-1 5H8L4 20z M16 9l3-4 3 2-3 4 M19 5l-2-2-3 2 M9 17h2',
     cyberdecks: 'M3 5h18v13H3z M7 9h6v5H7z M16 9h2m-2 4h2 M6 21h12',
     workshop: 'M13 6a5 5 0 0 0 5 6l-8 8a2 2 0 0 1-3-3l8-8m-2-3 4 2 2-2-2-4a5 5 0 0 1 5 7l-4 3',
+    initiative: 'M5 6h14m-4-3 4 3-4 3 M19 18H5m4-3-4 3 4 3 M12 9v6',
     jobs: 'M3 8h18v12H3z M8 8V4h8v4 M3 13h18 M10 13v3h4v-3'
   };
   const markerTypes = {
@@ -246,6 +247,7 @@
       addButton(content, 'Voltar aos serviços', resetView);
       if (category === 'cards') renderMarket(content, save);
       else if (category === 'cyberdecks') renderCyberdecks(content, save.city);
+      else if (category === 'initiative') renderInitiativeShop(content, save.city);
       else if (category === 'workshop') renderWorkshop(content, save);
       else renderSupplies(content, save.city, category);
     } else if (district.id === 'home' || district.id === 'pension') {
@@ -260,6 +262,7 @@
         shopButton(services, 'Ver consumíveis', 'items', 'Consumíveis');
         shopButton(services, 'Ver cyberdecks', 'cyberdecks', 'Cyberdecks');
         shopButton(services, 'Melhorar cartas', 'workshop', 'Melhorar cartas');
+        shopButton(services, 'Ver itens de iniciativa', 'initiative', 'Iniciativa');
       } else if (district.id === 'garage') {
         shopButton(services, 'Ver veículos', 'vehicles', 'Veículos');
         shopButton(services, 'Ver implante', 'implant', 'Implantes');
@@ -500,7 +503,7 @@
   }
 
   const destinationServices = {
-    market: 'Cartas, consumíveis, cyberdecks e ajustes de afinidade na banca da Lume.',
+    market: 'Cartas, consumíveis, cyberdecks e itens de iniciativa na banca da Lume.',
     kiosk: 'Café, energéticos e um turno de atendimento noturno.',
     garage: 'Bicicleta, moto, cyberdecks e implante de vigília à venda.',
     relay: 'Trabalhos de sinal na Antena Comunitária.',
@@ -595,6 +598,18 @@
         if (NB.CityLife.setRouteMask(!life.routeMask)) render();
       });
     }
+    if (life.ownedInitiative.length) {
+      addText(content, 'Iniciativa do duelo', 'city-clue-title');
+      const active = NB.CityLife.initiativeItems[life.activeInitiative];
+      addText(content, active ? `${active.name} ativo · ${initiativeDescription(active)}` : 'Ordem inicial por sorteio.');
+      for (const id of life.ownedInitiative) {
+        const item = NB.CityLife.initiativeItems[id];
+        const selected = life.activeInitiative === id;
+        addButton(content, `${selected ? 'Desativar' : 'Ativar'} ${item.name}`, () => {
+          if (NB.CityLife.equipInitiative(selected ? null : id)) render();
+        });
+      }
+    }
     addText(content, 'Cyberdeck equipado', 'city-clue-title');
     for (const id of life.ownedDecks) {
       const deck = NB.CityLife.cyberdecks[id];
@@ -640,6 +655,24 @@
       render();
       $('city-content').querySelector('button')?.focus();
     }, text, { icon: category });
+  }
+
+  function initiativeDescription(item) {
+    return item.side === 'player' ? 'Kairo começa o duelo.' : 'O adversário começa o duelo.';
+  }
+
+  function renderInitiativeShop(content, state) {
+    for (const [id, item] of Object.entries(NB.CityLife.initiativeItems)) {
+      const owned = state.life.ownedInitiative.includes(id);
+      const row = document.createElement('div');
+      row.className = 'city-life-row';
+      addText(row, item.name, 'city-clue-title');
+      addText(row, initiativeDescription(item));
+      addButton(row, owned ? 'Adquirido' : `Comprar · ${item.price} créditos`, () => {
+        if (NB.CityLife.buy(id)) refreshStory(`${item.name} adquirido. Ative-o na Mochila.`);
+      }, owned || state.credits < item.price);
+      content.append(row);
+    }
   }
 
   function renderCyberdecks(content, state) {

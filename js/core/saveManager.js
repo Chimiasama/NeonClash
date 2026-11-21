@@ -215,6 +215,8 @@
     const progress = get();
     if (!NB.Story.has('epilogue')) return false;
     const fresh = createDefaultSave();
+    fresh.city.life.ownedInitiative = [...progress.city.life.ownedInitiative];
+    fresh.city.life.activeInitiative = progress.city.life.activeInitiative;
     Object.assign(progress, {
       newGamePlus: true,
       story: fresh.story,

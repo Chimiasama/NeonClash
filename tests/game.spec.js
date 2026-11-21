@@ -1,5 +1,14 @@
 import { expect, test } from '@playwright/test';
 
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    document.addEventListener('DOMContentLoaded', () => {
+      window.realInitiativeRoll = window.NB.CityLife.rollInitiative;
+      window.NB.CityLife.rollInitiative = () => 'player';
+    }, { once: true });
+  });
+});
+
 async function walkTo(page, pin, encounterRoll = 0.99) {
   await pin.click();
   const walking = page.getByRole('button', { name: 'A pé', exact: true });
@@ -675,6 +684,57 @@ test('wins the route pact, equips a suppression module and buys starting RAM', a
   expect(await page.evaluate(() => NB.CityLife.routes('terminal').find(route => route.id === 'walk').encounterChance)).toBe(35);
   await page.getByRole('button', { name: /Equipar · Terminal de Campo/ }).click();
   expect(await page.evaluate(() => NB.Save.get().city.life.equippedDeck)).toBe('stock');
+});
+
+test('rolls either side for initiative and equips only one permanent starter item', async ({ page }) => {
+  await page.goto('/');
+  const opening = await page.evaluate(() => {
+    NB.CityLife.rollInitiative = window.realInitiativeRoll;
+    const original = Math.random;
+    Math.random = () => 0.49;
+    NB.Input.startMatch({ mode: 'quick' });
+    const playerPhase = NB.State.get().phase;
+    Math.random = () => 0.50;
+    NB.Input.startMatch({ mode: 'quick' });
+    Math.random = original;
+    const state = NB.State.get();
+    const result = { playerPhase, enemyPhase: state.phase, turn: state.turn, hands: [state.player.hand.length, state.enemy.hand.length] };
+    NB.Input.openTitleScreen();
+    return result;
+  });
+  expect(opening).toEqual({ playerPhase: 'PLAYER_MAIN', enemyPhase: 'ENEMY_TURN', turn: 1, hands: [4, 4] });
+
+  await enterCity(page);
+  await page.evaluate(() => { NB.Save.get().city.credits = 120; });
+  await walkTo(page, page.locator('[data-district="market"]'));
+  await page.getByRole('button', { name: 'Ver itens de iniciativa' }).click();
+  await page.getByRole('button', { name: 'Comprar · 65 créditos' }).click();
+  await page.getByRole('button', { name: 'Comprar · 45 créditos' }).click();
+  await page.locator('#city-bag').click();
+  await page.getByRole('button', { name: 'Ativar Pulso de Partida' }).click();
+  expect(await page.evaluate(() => {
+    NB.CityLife.rollInitiative = () => 'enemy';
+    return NB.CityLife.duelInitiative();
+  })).toBe('player');
+  await page.getByRole('button', { name: 'Ativar Relé de Espera' }).click();
+  await expect(page.getByRole('button', { name: 'Desativar Pulso de Partida' })).toHaveCount(0);
+  await page.reload();
+  await enterCity(page);
+  const enemyOpening = await page.evaluate(() => {
+    NB.Input.startMatch({ mode: 'quick' });
+    const state = NB.State.get();
+    state.enemy.hand = [];
+    return { phase: state.phase, item: NB.Save.get().city.life.activeInitiative };
+  });
+  expect(enemyOpening).toEqual({ phase: 'ENEMY_TURN', item: 'deferredSignal' });
+  await expect.poll(() => page.evaluate(() => [NB.State.get().phase, NB.State.get().turn, NB.State.get().player.hand.length]))
+    .toEqual(['PLAYER_MAIN', 1, 5]);
+
+  await page.evaluate(() => NB.Input.openNetMap());
+  await page.locator('#city-bag').click();
+  await page.getByRole('button', { name: 'Desativar Relé de Espera' }).click();
+  expect(await page.evaluate(() => NB.Save.get().city.life.activeInitiative)).toBeNull();
+  await expect(page.locator('#city-content')).toContainText('Ordem inicial por sorteio.');
 });
 
 test('stores supplies and vehicles, restores the backpack and uses its contents', async ({ page }) => {
