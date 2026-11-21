@@ -89,6 +89,10 @@
       (Array.isArray(raw?.ownedDecks) && raw.ownedDecks.includes(id)));
     const ownedInitiative = Object.keys(initiativeItems).filter(id =>
       Array.isArray(raw?.ownedInitiative) && raw.ownedInitiative.includes(id));
+    const receipt = raw?.lastDelivery;
+    const lastDelivery = receipt && districts.some(place => place.id === receipt.targetId) &&
+      Number.isSafeInteger(receipt.credits) && receipt.credits >= 0
+      ? { targetId: receipt.targetId, credits: receipt.credits } : null;
     return {
       minute,
       streetRestEvent: typeof raw?.streetRestEvent?.robbed === 'boolean'
@@ -108,6 +112,7 @@
         return count ? [[id, count]] : [];
       })) : {},
       activeDelivery,
+      lastDelivery,
       awake: integer(raw?.awake, 0, 0, maxAwake({ implant })),
       energy: integer(raw?.energy, 100, 0, maxEnergy({ implant })),
       implant,
@@ -258,6 +263,7 @@
     const base = 6 + 2 * distance;
     const bonus = time <= walking ? Math.min(12, Math.max(0, Math.floor(10 * (1 - time / walking)))) : 0;
     const credits = payJob('delivery', late ? Math.floor(base * 0.75) : base + bonus, life.minute + elapsed);
+    life.lastDelivery = { targetId: destination, credits };
     const detail = late ? ' · multa de 25% por atraso' : bonus ? ` · bônus de velocidade: +${bonus} antes da saturação` : '';
     return `Entrega concluída: +${credits} créditos${detail}.`;
   }

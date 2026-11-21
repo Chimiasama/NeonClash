@@ -662,6 +662,12 @@ test('wins the route pact, equips a suppression module and buys starting RAM', a
   await module.click();
   await page.locator('#city-bag').click();
   await page.getByRole('button', { name: 'Ativar Rota Cega' }).click();
+  await page.locator('#city-story').click();
+  await page.getByRole('button', { name: 'Missões secundárias' }).click();
+  const pact = page.locator('.city-mission-entry').filter({ hasText: 'Acordo das Rotas' });
+  await expect(pact).toContainText('Você pode recusar ou abandonar sem pagar.');
+  await expect(pact).toContainText('Módulo de Rota Cega');
+  await expect(pact).toContainText('Casa de Bombas · Maíra');
   await page.reload();
   await enterCity(page);
   expect(await page.evaluate(() => NB.CityLife.routes('market').every(route => route.encounterChance === 0))).toBe(true);
@@ -1789,6 +1795,42 @@ test('persists one Correio Expresso package and awards the speed bonus after ord
   await expect(page.locator('#city-feedback')).toContainText('bônus de velocidade: +7');
   await expect(page.locator('#city-credits')).toHaveText(`${35 + 6 + 2 * listing.distance + 7} créditos`);
   expect(await page.evaluate(() => NB.Save.get().city.life.activeDelivery)).toBeNull();
+});
+
+test('keeps a main objective visible when a delivery ends at its location', async ({ page }) => {
+  await page.goto('/');
+  await enterCity(page);
+  await page.evaluate(() => {
+    const save = NB.Save.get();
+    save.story = NB.Story.normalize({ started: true, chapter: 1, flags: ['invoice'] });
+    save.city.district = 'kira';
+    save.city.life.activeDelivery = { startMinute: save.city.life.minute, targetId: 'terminal', distance: 6 };
+    NB.Input.openNetMap();
+  });
+  await walkTo(page, page.getByRole('button', { name: 'Ir para Terminal da Estação (entrega)' }), 0);
+  await expect(page.locator('#city-feedback')).toContainText('Entrega concluída');
+  const objective = page.getByRole('button', { name: 'Ler o itinerário de Mara' });
+  await expect(objective).toBeDisabled();
+  await expect(page.locator('.city-story-section')).toContainText('Resolva a abordagem');
+  await page.getByRole('button', { name: /Desistir · perder/ }).click();
+  await expect(objective).toBeEnabled();
+  await expect(objective).toBeFocused();
+  await objective.click();
+  await expect(page.getByRole('dialog', { name: 'Ler o itinerário de Mara' })).toBeVisible();
+  await page.locator('#btn-story-close').click();
+
+  await page.locator('#city-story').click();
+  await expect(page.locator('#city-content')).toContainText('Terminal da Estação · Mara');
+  await page.getByRole('button', { name: 'Missões secundárias' }).click();
+  await expect(page.locator('.city-mission-entry').filter({ hasText: 'Correio Expresso' })).toContainText('na última entrega · Terminal da Estação');
+  await expect(page.locator('.city-mission-entry').filter({ hasText: 'Acordo das Rotas' })).toContainText('Terminal da Estação · Mara');
+
+  await page.evaluate(() => {
+    NB.Save.get().city.life.minute = 20 * 60;
+    NB.City.resetView();
+  });
+  await expect(page.locator('.city-story-section')).toContainText('Mara está no Terminal das 6h às 19h');
+  await expect(objective).toHaveCount(0);
 });
 
 test('filters pins by story, duels and actionable secrets on the same map', async ({ page }) => {

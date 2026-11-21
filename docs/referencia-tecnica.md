@@ -10,7 +10,7 @@ NeonClash é um jogo solo em português que combina exploração urbana, investi
 | --- | --- |
 | Início | Exibe progresso, início da aventura, duelo rápido, coleção, galeria e volume/configurações. A primeira entrada na aventura apresenta três quadros do prólogo. Concluir ou pular marca a apresentação no save e inicia a investigação com a Casa de Kairo em destaque. |
 | Cidade | Área rolável com relógio, créditos, energia, mapa, legenda com filtros e detalhes. A barra inferior usa ícones com nomes acessíveis para Mapa, Investigação, Bairros, Mochila, Pistas, Meu Deck e Configurações. O retorno ao início fica dentro de Configurações. |
-| Investigação | Mostra passos disponíveis, viagens até os locais, cenas paginadas com retomada, decisões e provas já reunidas. Há destaque neon para ações relevantes. |
+| Investigação | Mostra passos disponíveis, viagens até os locais, cenas paginadas com retomada, decisões e provas já reunidas. O diário separa missão principal e missões secundárias e informa próximo local, contato e prêmios já recebidos. |
 | Mercado e oficina | Compra de cartas na Feira. A oficina de Lume tem vitrine ilustrada das unidades possuídas, prévia de afinidade e confirmação. |
 | Duelo | Dossiê com voltar ou iniciar, tabuleiro com três posições por lado, mão, visor de cartas, indicação de fase, previsão de defesa e tela de estatísticas/recompensas. |
 | Coleção | Busca textual sem distinção de acentos, filtros, três baralhos, autocompletar e inspetor ampliado. |
@@ -50,6 +50,8 @@ Uma partida nova começa na Estação Fantasma às 08:00 do dia 1, com 35 crédi
 O atlas contém 10 bairros, 23 locais e um elenco ligado a cenas, serviços e duelos. O mapa oferece os 23 locais em posições ilustrativas, com ícones compactos e nomes para o destino ativo, a posição atual e lugares destacados. **Bairros** filtra o próprio mapa. Uma viagem tem cotação e execução. Abrir a cotação não cobra nem avança o relógio. Ao escolher transporte, o motor verifica disponibilidade, cobra a tarifa, salva a posição de destino e aplica tempo e energia.
 
 A distância é `max(2, ceil(hypot(Δx, Δy) / 10))` com as coordenadas do mapa. Na tabela, `d` representa essa distância.
+
+Quando uma entrega coincide com a missão principal, a ação local fica visível. Caso haja abordagem obrigatória, o botão explica a condição e fica ativo assim que ela termina. O Terminal informa o horário de Mara e indica Severino quando ela está fora do turno.
 
 A cotação também descreve o que há no destino e mostra a tarifa de descanso quando aplicável. A Feira, o Quiosque e a Garagem abrem catálogos por serviço. Cartas que o jogador ainda não possui aparecem em cinza na coleção e não abrem o inspetor.
 

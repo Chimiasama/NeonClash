@@ -73,6 +73,16 @@
   }
 
   let destination = null;
+  let missionTab = 'main';
+  const routePactLog = [
+    { location: 'terminal', contact: 'Mara', task: 'Anotar o relato sobre as cobranças nas rotas.' },
+    { location: 'ringArchive', contact: 'Leila', task: 'Conferir o caderno de cobranças.' },
+    { location: 'depots', contact: 'Sinal', task: 'Vencer o duelo para entrar no acordo.' },
+    { location: 'pump', contact: 'Maíra', task: 'Ajudar na bomba e receber o Módulo de Rota Cega no capítulo 3 ou depois.' }
+  ];
+  const pactReward = 'Abordagens opcionais. Você pode recusar ou abandonar sem pagar.';
+  const maskReward = 'Módulo de Rota Cega. Ative na Mochila para impedir novas abordagens durante viagens.';
+
 
   function access(district) {
     if (NB.Story.active()) return NB.Story.matchAccess(district?.id);
@@ -226,13 +236,14 @@
       panel.inert = Boolean(mandatory);
     }
     if (mandatory) {
+      if (view === 'district') NB.StoryUI.local(content, district, true);
       $('city-name').textContent = 'Abordagem no caminho';
       renderTravelChallenge(content, mandatory);
       return;
     }
     if (view === 'story') {
       $('city-name').textContent = 'Investigação';
-      NB.StoryUI.journal(content, district, selectDestination);
+      renderMissionLog(content, district, save);
     } else if (view === 'atlas') {
       return;
     } else if (view === 'travel') {
@@ -240,7 +251,7 @@
     } else if (view === 'bag') {
       renderBag(content, save.city.life);
     } else if (view === 'journal') {
-      if (NB.Story.active()) NB.StoryUI.journal(content, district, selectDestination);
+      if (NB.Story.active()) renderMissionLog(content, district, save);
       else renderJournal(content, save);
     } else if (view.startsWith('shop-')) {
       const category = view.slice(5);
@@ -350,7 +361,7 @@
   }
 
   function routePactDestination(life) {
-    return ['terminal', 'ringArchive', 'depots', 'pump'][life.routePact];
+    return routePactLog[life.routePact]?.location;
   }
 
   function renderRoutePact(content, location, life) {
@@ -383,7 +394,7 @@
       addButton(section, labels[step === 3 ? 2 : step], () => {
         if (!NB.CityLife.advanceRoutePact(step)) return;
         const next = ['Leila está no Arquivo do Ringue.', 'Procure Sinal no Depósito de Peças.'];
-        refreshStory(next[step] || 'Módulo de Rota Cega recebido. Equipe-o na Mochila.');
+        refreshStory(next[step] || `Prêmio recebido: ${maskReward}`);
       }, step === 3 && (NB.Story.get().chapter < 2 || !life.favors.includes('pumpRelay')));
       if (step === 3) addText(section, 'Disponível a partir do capítulo 3, depois de ajudar Maíra na bomba.');
     }
@@ -537,6 +548,8 @@
     }
     for (const scene of NB.Story.getScenes(place.id)) addText(content, `◆ Ao chegar: ${scene.title}`, 'city-active-destination');
     if (NB.Story.pendingDuel(place.id)) addText(content, '◆ Ao chegar: abrir o dossiê da investigação', 'city-active-destination');
+    const schedule = NB.Story.unavailableSchedule(place.id);
+    if (schedule) addText(content, schedule, 'city-notice');
     if (place.id === 'archon' && NB.Story.archonWarning()) addText(content, NB.Story.archonWarning(), 'city-notice');
     addText(content, `Energia atual: ${life.energy}. Os custos abaixo só são cobrados ao escolher um transporte.`);
     for (const route of NB.CityLife.routes(destination)) {
@@ -723,6 +736,69 @@
       render();
       announce(['Turno concluído. +14 créditos.', NB.CityLife.takeNotice()].filter(Boolean).join(' '));
     }, 'Trabalho', { icon: 'jobs' }, !shift.open || shift.done);
+  }
+
+  function renderMissionLog(content, district, save) {
+    const tabs = document.createElement('div');
+    tabs.className = 'city-mission-tabs';
+    tabs.setAttribute('role', 'group');
+    tabs.setAttribute('aria-label', 'Categorias de missões');
+    for (const [id, label] of [['main', 'Missão principal'], ['side', 'Missões secundárias']]) {
+      const tab = addButton(tabs, label, () => {
+        missionTab = id;
+        render();
+        $('city-content').querySelector('.city-mission-tabs [aria-pressed="true"]')?.focus();
+      });
+      tab.setAttribute('aria-pressed', String(missionTab === id));
+    }
+    content.append(tabs);
+    if (missionTab === 'main') NB.StoryUI.journal(content, district, selectDestination);
+    else renderSideMissions(content, district, save.city.life);
+  }
+
+  function renderSideMissions(content, district, life) {
+    const locationName = id => districts.find(place => place.id === id).name;
+    function entry(title, status) {
+      const section = document.createElement('section');
+      section.className = 'city-mission-entry';
+      addText(section, title, 'city-clue-title');
+      addText(section, status);
+      content.append(section);
+      return section;
+    }
+    function next(section, { location, contact, task }) {
+      addText(section, `Próximo passo · ${locationName(location)} · ${contact}: ${task}`);
+      addButton(section, location === district.id ? 'Ver ações deste local' : `Ir para ${locationName(location)}`,
+        () => selectDestination(location));
+    }
+    function reward(section, label) {
+      addText(section, `Prêmio recebido · ${label}`, 'city-clue-title');
+    }
+
+    const pact = entry('Acordo das Rotas', life.routePact === 4 ? 'Concluída' : life.routePact ? 'Em andamento' : 'Disponível');
+    for (const step of routePactLog.slice(0, life.routePact)) {
+      addText(pact, `✓ ${locationName(step.location)} · ${step.contact}`);
+    }
+    if (life.routePact >= 3) reward(pact, pactReward);
+    if (life.routePact === 4) reward(pact, `${maskReward} Estado: ${life.routeMask ? 'ativo' : 'desativado'}.`);
+    else next(pact, routePactLog[life.routePact]);
+
+    const shortcut = life.favors.includes('hillPath');
+    const aline = entry('Atalho da Aline', shortcut ? 'Concluída · Garagem da Íris · Aline'
+      : life.vehicles.includes('bike') ? 'Disponível' : 'Requer bicicleta');
+    if (shortcut) reward(aline, 'Viagens de bicicleta entre Oficinas e Morro gastam menos tempo e energia.');
+    else next(aline, { location: 'garage', contact: 'Aline',
+      task: life.vehicles.includes('bike') ? 'Conversar sobre o atalho e vencer o duelo.' : 'Comprar a bicicleta para liberar a conversa.' });
+
+    const unlockedFerry = life.favors.includes('pumpRelay');
+    const pump = entry('Travessia da Ressaca', unlockedFerry ? 'Concluída · Casa de Bombas · Maíra' : 'Disponível');
+    if (unlockedFerry) reward(pump, '16 créditos e acesso à balsa do Canal ao Cais.');
+    else next(pump, { location: 'pump', contact: 'Maíra', task: 'Ajudar a religar a bomba.' });
+
+    const delivery = entry('Correio Expresso', life.activeDelivery ? 'Entrega em andamento' : 'Trabalho recorrente');
+    if (life.lastDelivery) reward(delivery, `${life.lastDelivery.credits} créditos na última entrega · ${locationName(life.lastDelivery.targetId)}.`);
+    if (life.activeDelivery) next(delivery, { location: life.activeDelivery.targetId, contact: 'Destinatário', task: 'Entregar o pacote.' });
+    else next(delivery, { location: 'kira', contact: 'Despacho', task: 'Aceitar uma entrega na Estação ou em outra central.' });
   }
 
   function renderJournal(content, save) {
@@ -1074,6 +1150,8 @@
       if (paid === null) return;
       render();
       announce(paid ? `Você desistiu do desafio e perdeu ${paid} créditos.` : 'Você deixou a abordagem sem duelar.');
+      const missionAction = content.querySelector('.city-story-section button');
+      missionAction?.focus();
     });
     content.append(offer);
   }

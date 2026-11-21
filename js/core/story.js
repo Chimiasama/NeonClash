@@ -26,7 +26,13 @@
       typeof raw?.allies?.[id] === 'boolean' ? raw.allies[id] : evidence.includes(`${id}Peace`)]));
     const nairTruthEarly = typeof raw?.nairTruthEarly === 'boolean' ? raw.nairTruthEarly :
       choices.tellingNair ? choices.tellingNair === 'tell' : null;
-    return { started: raw?.started === true || prologueSeen, chapter, flags, choices, read, evidence,
+    const completed = Array.isArray(raw?.completed)
+      ? [...new Set(raw.completed.filter(id => Object.hasOwn(sceneById, id) && flags.includes(sceneById[id].grants)))]
+      : scenes.filter(scene => flags.includes(scene.grants) &&
+        (evidence.includes(scene.id) || Object.hasOwn(choices, scene.id) ||
+          (read[scene.id] ?? -1) >= scene.lines.length - 1 ||
+          scenes.filter(other => other.grants === scene.grants).length === 1)).map(scene => scene.id);
+    return { started: raw?.started === true || prologueSeen, chapter, flags, choices, read, evidence, completed,
       allies, nairTruthEarly, kiraSupportUsed: raw?.kiraSupportUsed === true,
       prologueFrame: Number.isInteger(raw?.prologueFrame) && raw.prologueFrame >= 0 && raw.prologueFrame < NB.StoryData.prologue.length ? raw.prologueFrame : 0,
       comicDone: Object.fromEntries(Object.entries(raw?.comicDone || {}).flatMap(([id, frames]) => {
@@ -62,10 +68,19 @@
     archonWon: () => won('archon')
   };
 
-  function available(scene) {
+  function hasStoryRequirements(scene) {
     return Boolean(active() && scene && scene.chapter === get().chapter &&
-      !has(scene.grants) && scene.requires.every(has) &&
-      (!scene.when || conditions[scene.when]()));
+      !has(scene.grants) && scene.requires.every(has));
+  }
+
+  function available(scene) {
+    return hasStoryRequirements(scene) && (!scene.when || conditions[scene.when]());
+  }
+
+  function unavailableSchedule(location) {
+    const scene = sceneById.mara;
+    return (!location || scene.location === location) && hasStoryRequirements(scene) && !available(scene)
+      ? 'Mara está no Terminal das 6h às 19h. Fora desse horário, procure Severino na Estação Fantasma.' : '';
   }
 
   function getScenes(location) {
@@ -109,6 +124,7 @@
     if ((story.read[id] ?? 0) !== getLines(scene).length - 1) return false;
     if (scene.choices) story.choices[id] = selected;
     story.flags.push(scene.grants);
+    story.completed.push(id);
     if (scene.evidence) story.evidence.push(id);
     if (id === 'tellingNair') story.nairTruthEarly = selected === 'tell';
     if (scene.ally) story.allies[scene.ally] = true;
@@ -161,6 +177,6 @@
     return '';
   }
 
-  NB.Story = { normalize, get, start, active, matchAccess, pendingDuel, alternate, getScenes, available, finish,
+  NB.Story = { normalize, get, start, active, matchAccess, pendingDuel, alternate, getScenes, available, unavailableSchedule, finish,
     remember, getLines, aftermath, applyKiraSupport, finalBattle, eclipseInterference, archonWarning: () => active() && get().chapter === 5 && has('protocol') && !won('archon') ? NB.StoryData.archonWarning : '', has, choice, sceneById, chapters };
 })(window.NB = window.NB || {});

@@ -635,7 +635,7 @@
       if (state.routePactWon) {
         clueBox.style.display = 'flex';
         document.getElementById('go-clue-title').textContent = 'ACORDO DAS ROTAS';
-        document.getElementById('go-clue-text').textContent = 'As abordagens agora são opcionais. Maíra pode preparar um módulo para evitá-las na Casa de Bombas.';
+        document.getElementById('go-clue-text').textContent = 'Prêmio: abordagens opcionais. Você pode recusar ou abandonar sem pagar. No capítulo 3, procure Maíra na Casa de Bombas para obter um módulo que desliga as abordagens.';
       } else if (state.hillPathLearned) {
         clueBox.style.display = 'flex';
         document.getElementById('go-clue-title').textContent = 'ATALHO DA ALINE';

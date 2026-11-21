@@ -301,26 +301,41 @@
     $('story-options').lastElementChild?.focus({ preventScroll: true });
   }
 
-  function local(content, place) {
+  function local(content, place, blocked = false) {
     if (!NB.Story.active()) return;
     const scenes = NB.Story.getScenes(place.id);
     const duel = NB.Story.pendingDuel(place.id);
     const aftermath = NB.Story.aftermath(place.id);
     const warning = place.id === 'archon' && NB.Story.archonWarning();
-    if (!scenes.length && !duel && !aftermath && !warning) return;
+    const schedule = NB.Story.unavailableSchedule(place.id);
+    if (!scenes.length && !duel && !aftermath && !warning && !schedule) return;
     const section = document.createElement('section');
     section.className = 'city-story-section';
     text(section, NB.Story.chapters[NB.Story.get().chapter], 'h4');
     if (warning) text(section, warning).className = 'city-notice';
     if (aftermath) text(section, aftermath);
-    scenes.forEach(scene => button(section, scene.title, () => open(scene.id)).classList.add('city-investigate'));
-    if (duel?.[1].route && NB.Story.choice(duel[1].deal) !== duel[1].route) {
+    if (schedule) text(section, schedule).className = 'city-notice';
+    if (blocked && (scenes.length || duel)) text(section, 'Resolva a abordagem para continuar a investigação aqui.');
+    for (const scene of scenes) {
+      const action = button(section, scene.title, () => open(scene.id));
+      action.classList.add('city-investigate');
+      action.disabled = blocked;
+    }
+    if (blocked && duel) button(section, 'Abrir dossiê da investigação', () => {}).disabled = true;
+    if (!blocked && duel?.[1].route && NB.Story.choice(duel[1].deal) !== duel[1].route) {
       button(section, duel[1].label, () => {
         NB.Story.alternate(duel[0]);
         NB.City.refreshStory('Rota alternativa registrada no diário.');
       });
     }
     content.prepend(section);
+  }
+
+  const contactOverrides = { keys: 'Kairo', delivery: 'Beto', cipherPeace: 'Raquel e Cipher',
+    vexAlt: 'Bia e Helena', epilogue: 'Dona Nair' };
+
+  function sceneContact(scene, location) {
+    return contactOverrides[scene.id] || location.npc.split(' · ')[0];
   }
 
   function journal(content, district, travel) {
@@ -341,31 +356,38 @@
     const current = NB.Story.getScenes();
     for (const scene of current) {
       const location = NB.CityData.districts.find(place => place.id === scene.location);
-      text(content, `${scene.title} · ${location.name}`);
+      text(content, `${scene.title} · ${location.name} · ${sceneContact(scene, location)}`);
       if (scene.location === district.id) button(content, scene.title, () => open(scene.id));
       else button(content, `Ir para ${location.name}`, () => travel(location.id));
     }
+    const schedule = NB.Story.unavailableSchedule();
+    if (schedule) text(content, schedule).className = 'city-notice';
     if (!current.length) {
       const duel = NB.Story.pendingDuel();
       if (duel) {
         const place = NB.CityData.districts.find(item => item.id === duel[0]);
-        text(content, `Dispute a prova em ${place.name}.`);
+        text(content, `Dispute a prova em ${place.name} com ${place.npc.split(' · ')[0]}.`);
         if (place.id === district.id) button(content, 'Abrir dossiê da investigação', () => NB.UI.openDossier(place.id));
         else button(content, `Ir para ${place.name}`, () => travel(place.id));
       } else if (NB.Story.has('epilogue')) {
         text(content, 'Campanha concluída. Baixa Luz continua aberta para revisitas.');
       }
     }
-    if (story.evidence.length) {
-      text(content, 'Provas reunidas', 'h4');
-      for (const id of story.evidence) {
+    if (story.completed.length) {
+      const history = document.createElement('details');
+      text(history, 'Histórico da missão principal', 'summary');
+      for (const id of [...story.completed].reverse()) {
         const scene = NB.Story.sceneById[id];
+        const location = NB.CityData.districts.find(place => place.id === scene.location);
         const item = document.createElement('article');
         text(item, scene.title, 'h5');
-        text(item, scene.evidence);
+        text(item, `${location.name} · ${sceneContact(scene, location)}`);
+        if (scene.evidence) text(item, scene.evidence);
+        if (scene.reward) text(item, `Prêmio: +${scene.reward.credits} créditos e ${NB.Cards.CARD_DB[scene.reward.card].name}.`);
         button(item, 'Reler cena', () => open(id, true));
-        content.append(item);
+        history.append(item);
       }
+      content.append(history);
     }
   }
 
