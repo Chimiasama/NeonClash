@@ -271,7 +271,9 @@
     mara: { name: 'Mara', art: './avatars/mara.webp' },
     severino: { name: 'Severino', art: './avatars/severino.webp' },
     leila: { name: 'Leila', art: './avatars/leila.webp' },
-    kira: { name: 'Kira', art: './avatars/kira.png' },
+    kira: { name: 'Kira', art: './avatars/kira.png', variants: {
+      alert: './avatars/kira-alerta.webp', whisper: './avatars/kira-sussurro.webp'
+    } },
     cipher: { name: 'Cipher', art: './avatars/cipher.png' },
     iris: { name: 'Íris', art: './avatars/iris.webp' },
     ada: { name: 'Ada', art: './avatars/ada.webp' },
@@ -297,9 +299,13 @@
   });
   const kiraReceipt = evidenceArt('terminal-de-kira', 'O terminal e o recibo de Kira');
   const opticalFilter = evidenceArt('filtro-optico', 'O filtro óptico de Íris');
+  const ringLedger = evidenceArt('livro-do-ringue', 'O livro de apostas e o segundo recibo');
   const theatreProof = evidenceArt('conferencia-no-teatro', 'A conferência nos bastidores do Teatro');
 
   const beats = {
+    mara: [undefined, evidenceArt('itinerario-de-mara', 'O itinerário corrigido de Mara')],
+    kiraAudit: [ringLedger],
+    ringLedger: [ringLedger],
     renan: [{ ...evidenceArt('paineis-do-cais', 'Os dois painéis da Subestação do Cais'), camera: 'wide' }],
     reserve: [{ art: './src/assets/comic/bateria-da-clinica.webp', artTitle: 'A bateria de reserva da Clínica',
       camera: 'zoom-in', mood: 'tense' }],
@@ -358,12 +364,18 @@
       { camera: 'focus-detail', focus: 'center', mood: 'revelation', bubbleType: 'evidence' },
       { camera: 'pan-right', speaker: 'beto', bubbleType: 'speech', mood: 'tense' }
     ],
-    guard: [{ camera: 'wide' }, { camera: 'pan-right', mood: 'tense' }, { camera: 'focus-detail', focus: 'center' }],
+    guard: [evidenceArt('livro-do-portao', 'O livro de entrada de Severino'),
+      { camera: 'pan-right', mood: 'tense' }, { camera: 'focus-detail', focus: 'center' }],
     kiraDeal: [
       { camera: 'wide', speaker: 'kira', bubbleType: 'speech', mood: 'tense' },
       { camera: 'zoom-in', speaker: 'kairo', bubbleType: 'speech' },
       { camera: 'pan-left', mood: 'memory' },
-      { camera: 'focus-detail', focus: 'center', speaker: 'kira', expression: 'alert', bubbleType: 'speech' }
+      { camera: 'focus-detail', focus: 'center', speaker: 'kira', expression: 'alert', bubbleType: 'speech' },
+      { camera: 'zoom-in', mood: 'tense' },
+      { ...evidenceArt('foto-da-emboscada', 'A foto de Kairo usada no pátio'), camera: 'wide' },
+      { speaker: 'kira', expression: 'whisper', camera: 'zoom-in', mood: 'tense' },
+      { speaker: 'kairo', camera: 'wide', mood: 'memory' },
+      { speaker: 'kira', expression: 'whisper', camera: 'wide' }
     ],
     meridianoRadio: [
       { art: './src/assets/comic/radio-meridiano.webp', artTitle: 'O rádio da interceptação de Meridiano', camera: 'wide', mood: 'radio', sfxVisual: { text: 'TRRRIM…', style: 'electric', pos: 'top-right', sound: 'glitch' } },

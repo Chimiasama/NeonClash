@@ -6,7 +6,8 @@ A primeira entrega reaproveita as ilustrações do prólogo, o quarto de Kairo, 
 | --- | --- | --- |
 | Casa de Kairo | **Integrados.** Leitor com chaveiro, recibo molhado e retrato de Dona Nair. | Os dois pontos interativos ganham objetos identificáveis. O retrato pode acompanhar toda a conversa com Nair. |
 | Antena e Feira | **Integrados.** Bancada do rádio de Nina, banca de Lume e retrato de Beto. | A faixa de frequência fica sobre a bancada. Feira e recibo ganham contexto visual próprio. |
-| Estação | **Integrados.** Plano aberto e detalhe do terminal com o recibo, usado tanto na prova após o duelo quanto na entrega pacifista. Retratos de expressão de Kira seguem planejados. | Use o plano aberto para situar o percurso e faça a revelação com recortes dos objetos. |
+| Estação | **Integrados.** Plano aberto e detalhe do terminal com o recibo, usado tanto na prova após o duelo quanto na entrega pacifista. Retratos de Kira em alerta e em voz baixa, mais a foto de Kairo mostrada na conversa. | Use o plano aberto para situar o percurso e faça a revelação com recortes dos objetos. |
+| Provas do desvio | **Integrados.** Itinerário de Mara, livro do portão de Severino e livro de apostas com o segundo recibo. | Os quadros mostram as provas do desvio e da cobrança duplicada. O livro de apostas aparece também durante o favor com Leila. |
 | Muralha e Teatro | **Integrados.** Filtro óptico na bancada de Íris e durante a extração de Raquel, além da conferência de Bia e Helena no Teatro. Os retratos de Bia e Helena usam a própria cena como referência. | Enfatiza o isolamento das credenciais e a autenticação do anexo sem expor os hóspedes. |
 | Transição e epílogo | **Integrados.** Painéis do Cais, bateria da Clínica, via de serviço da Praça e recibo ao amanhecer. | Os quadros ligam a prova do corte à preparação dos bairros e à nova leitura anotada com Dona Nair. |
 | Torre Vértice | **Integrados.** Barramento central, console mestre e Núcleo Eclipse em quadros próprios durante o confronto. | Separa visualmente o terminal de Kairo, a intervenção de Cipher e a transferência da rede a Renan. |
@@ -35,3 +36,5 @@ Na Muralha, Raquel conecta o mesmo filtro que Íris calibrou. O quadro da Muralh
 Isa usa o retrato de repórter da [cena de entrega na Praça](../avatars/isa.webp). A [interceptação de rádio](../src/assets/comic/radio-meridiano.webp) mostra o receptor preparado na Muralha.
 
 O descanso forçado na rua tem dois quadros de consequência. [Descanso no beco](../src/assets/comic/descanso-no-beco.webp) mostra Kairo sob papelão junto a um tonel aceso. [Assalto no beco](../src/assets/comic/assalto-no-beco.webp) mostra Kairo observando as silhuetas do esconderijo. Os dois seguem o rosto, penteado e jaqueta da capa.
+
+As expressões de Kira seguem o [retrato-base](../avatars/kira.png), com o mesmo cabelo assimétrico roxo, as marcas faciais e a jaqueta turquesa. A [foto usada no pátio](../src/assets/comic/foto-da-emboscada.webp) segue o rosto e a roupa de Kairo no prólogo.
