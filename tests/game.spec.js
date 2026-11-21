@@ -2215,3 +2215,54 @@ test('reveals and saves comic beats with tactile key, wipe and radio controls', 
   await page.getByRole('slider', { name: 'Sintonizar o rádio de Nina' }).fill('64');
   await expect(next).toBeEnabled();
 });
+
+test('shows both sides of the duel history and keeps removed cards out of recycling', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 600 });
+  await page.goto('/');
+  await page.evaluate(() => {
+    NB.Input.startMatch({ mode: 'quick' });
+    const { player, enemy } = NB.State.get();
+    player.ram = 10;
+    player.hand = [{ cardId: 'unit_01', uid: 901 }, { cardId: 'exploit_03', uid: 902 }];
+    enemy.hand = [{ cardId: 'unit_03', uid: 903 }];
+    NB.State.deployUnit('player', 901, 0);
+    NB.State.deployUnit('enemy', 903, 0);
+    NB.State.executeExploit('player', 902, 0);
+    enemy.field[1] = NB.State.createFieldUnit('unit_04', 904, 'enemy');
+    NB.State.destroyUnit('enemy', 1, true);
+    enemy.deck = [{ cardId: 'unit_02', uid: 905 }];
+    NB.UI.renderAll();
+  });
+
+  await page.locator('#btn-duel-log').click();
+  const log = page.getByRole('dialog', { name: 'Histórico do duelo' });
+  const cards = log.locator('#duel-log-grid');
+  await expect(cards.getByRole('button')).toHaveText(['Kill-Switch · T1', 'Kuroi-01 · T1']);
+  await log.getByRole('button', { name: 'Descarte (1)', exact: true }).click();
+  await expect(cards.getByRole('button')).toHaveText(['Kill-Switch']);
+
+  await log.getByRole('button', { name: 'Adversário', exact: true }).click();
+  await expect(cards.getByRole('button')).toHaveText(['Ghost-Runner']);
+  await log.getByRole('button', { name: 'Usadas (1)', exact: true }).click();
+  await expect(cards.getByRole('button')).toHaveText(['Aegis-Wall · T1']);
+  await log.getByRole('button', { name: 'Removidas (1)', exact: true }).click();
+  await cards.getByRole('button', { name: 'Aegis-Wall', exact: true }).click();
+  await expect(log.getByRole('heading', { name: 'Aegis-Wall' })).toBeVisible();
+  await expect(log.locator('#duel-log-stats')).toContainText('7 DEF');
+  await log.getByRole('button', { name: 'Voltar às cartas' }).click();
+  await expect(cards.getByRole('button', { name: 'Aegis-Wall', exact: true })).toBeFocused();
+  await log.getByRole('button', { name: 'Fechar', exact: true }).click();
+  await expect(log).toBeHidden();
+
+  const drawn = await page.evaluate(() => {
+    const cards = Array.from({ length: 3 }, () => NB.State.drawCard('enemy')?.cardId ?? null);
+    NB.State.get().enemy.hp = 0;
+    NB.State.checkWinCondition();
+    return cards;
+  });
+  expect(drawn).toEqual(['unit_02', 'unit_04', null]);
+  await page.locator('#btn-result-log').click();
+  await log.getByRole('button', { name: 'Adversário', exact: true }).click();
+  await log.getByRole('button', { name: 'Removidas (1)', exact: true }).click();
+  await expect(cards.getByRole('button')).toHaveText(['Aegis-Wall']);
+});

@@ -22,6 +22,7 @@
     if (!state) return;
 
     const boss = state.boss || NB.Campaign.NODES[0];
+    document.getElementById('btn-duel-log').disabled = ['ENEMY_TURN', 'COMBAT_ANIM'].includes(state.phase);
     document.getElementById('turn-badge').textContent = 'T' + state.turn;
     document.getElementById('enemy-name-label').textContent = boss.fullTitle;
 

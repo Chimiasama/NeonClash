@@ -53,6 +53,8 @@
         deck: options.challenge ? shuffle(options.challenge.deck.map(cardId => ({ uid: uidCounter++, cardId }))) : buildPlayerDeck(),
         hand: [],
         discard: [],
+        removed: [],
+        played: [],
         field: [null, null, null],
         counterFormation: false,
         hpShield: 0,
@@ -65,6 +67,8 @@
         deck: buildBossDeck(boss),
         hand: [],
         discard: [],
+        removed: [],
+        played: [],
         field: [null, null, null],
         counterFormation: false,
         hpShield: 0,
@@ -227,6 +231,7 @@
     actor.hand.splice(idx, 1);
     const unit = createFieldUnit(card.id, item.uid, side);
     actor.field[slot] = unit;
+    actor.played.push({ cardId: item.cardId, turn: state.turn });
     actor.summonedThisTurn = true;
     actor.ram += card.ramGain;
 
@@ -300,6 +305,7 @@
     if (card.kind !== 'exploit' || !canPlayHandCard(side, item).ok ||
         !NB.CardEffects.legalSlots(state, card, side).includes(targetSlot)) return false;
     actor.ram -= card.cost;
+    actor.played.push({ cardId: item.cardId, turn: state.turn });
     actor.hand.splice(index, 1);
 
     if (side === 'player') {
@@ -356,10 +362,10 @@
     return amount;
   }
 
-  function destroyUnit(side, slotIdx, countedAsPlayerKill) {
+  function destroyUnit(side, slotIdx, countedAsPlayerKill, removed = false) {
     const u = state[side].field[slotIdx];
     if (!u) return;
-    state[side].discard.push({ uid: u.uid, cardId: u.cardId });
+    state[side][removed ? 'removed' : 'discard'].push({ uid: u.uid, cardId: u.cardId });
     state[side].field[slotIdx] = null;
     if (countedAsPlayerKill && side === 'enemy') {
       state.stats.enemyUnitsDestroyed++;

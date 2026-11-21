@@ -3,6 +3,7 @@
 
   /* Controlador de Entrada Touch, Navegação entre Telas, Campanha, Overclock e Save */
   function hideAllScreens() {
+    NB.DuelLog.close();
     NB.City.cancelJob();
     ['title-modal', 'netmap-modal', 'starter-modal', 'prologue-modal', 'abandon-modal', 'street-rest-modal', 'story-modal', 'dossier-modal', 'gameover-modal', 'settings-modal', 'deck-modal', 'card-inspector-modal'].forEach(id => {
       const el = document.getElementById(id);
@@ -406,7 +407,7 @@
 
   // True tells the Android activity that the game handled Back.
   function handleBack() {
-    if (NB.Gallery.handleBack()) return true;
+    if (NB.Gallery.handleBack() || NB.DuelLog.handleBack()) return true;
     const isOpen = id => document.getElementById(id).classList.contains('open');
     const closeButtons = [
       ['abandon-modal', 'abandon-cancel'],

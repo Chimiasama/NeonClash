@@ -75,7 +75,7 @@
       unit.affinity = NB.Cards.AFFINITIES[unit.affinity]?.beats || 'pulso';
       return NB.Cards.affinityLabel(unit.affinity);
     }
-    return 'ELIMINADO!';
+    return type === 'banish' ? 'FORA DA PARTIDA!' : 'ELIMINADO!';
   }
 
   function resonates(field, unit) {
@@ -154,7 +154,9 @@
           const node = NB.State.getSlotEl(target.side, target.slot);
           const label = adjustUnit(type, target.unit, value);
           if (appliesModifier && (type === 'atk' ? target.unit.atk : target.unit.def) > before) modified.add(target.unit);
-          if (type === 'destroy' || (type === 'damage' && target.unit.def <= 0)) NB.State.destroyUnit(target.side, target.slot, side === 'player' && target.side !== side);
+          if (type === 'banish' || type === 'destroy' || (type === 'damage' && target.unit.def <= 0)) {
+            NB.State.destroyUnit(target.side, target.slot, side === 'player' && target.side !== side, type === 'banish');
+          }
           if (node) {
             NB.Physics.fireLaserBeam(caster, node, card.accent, 5);
             NB.Physics.spawnFloatText(node, label, card.accent);
@@ -192,7 +194,7 @@
         actor.deck.length + actor.discard.length) * 2;
       return targets(state, card, effect, side, slot).reduce((total, { unit }) => {
         if (isModifier(effect) && alreadyModified(card, unit)) return total;
-        if (type === 'destroy') return total + 2 + (unit.atk + unit.def) * 0.6;
+        if (type === 'destroy' || type === 'banish') return total + 2 + (unit.atk + unit.def) * 0.6;
         if (type === 'damage') return total + Math.min(value, unit.def) + (value >= unit.def ? 3 : 0);
         if (type === 'repair') return total + Math.min(value, Math.max(0, unit.maxDef - unit.def));
         if (type === 'atk') return total + (value > 0 ? value * (unit.booting ? 0.7 : 1.3) : Math.min(-value, unit.atk));

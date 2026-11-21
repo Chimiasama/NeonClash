@@ -328,7 +328,7 @@
       accent: '#FF0055',
       targetType: 'enemy_unit',
       lore: 'Chave-mestra de desligamento remoto criada pela Diretoria Negra para apagar agentes traidores em um clique.',
-      desc: 'Custo: 4 RAM. Dispara laser de execução e destrói instantaneamente uma Unidade inimiga escolhida.'
+      desc: 'Custo: 4 RAM. Remove da partida uma unidade inimiga escolhida. Ela não entra no descarte e não pode ser recuperada.'
     },
     exploit_04: {
       id: 'exploit_04',
@@ -412,7 +412,7 @@
   const effects = {
     exploit_01: [{ type: 'atk', target: 'selected', value: 3 }],
     exploit_02: [{ type: 'direct', value: 3 }],
-    exploit_03: [{ type: 'destroy', target: 'selected' }],
+    exploit_03: [{ type: 'banish', target: 'selected' }],
     exploit_04: [{ type: 'heal', value: 4 }, { type: 'def', target: 'allies', value: 2 }],
     exploit_05: [{ type: 'atk', target: 'enemies', value: -2 }, { type: 'damage', target: 'enemies', value: 2 }],
     exploit_06: [{ type: 'direct', value: 2 }, { type: 'drain', value: 2 }, { type: 'draw', value: 1 }],

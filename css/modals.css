@@ -474,3 +474,81 @@
 #starter-options h3 { color: #a8f5f3; font-size: 16px; }
 #starter-options p { font-size: 13px; line-height: 1.4; }
 #starter-options button { justify-self: start; min-height: 40px; }
+
+#duel-log-modal { z-index: 54; }
+
+.duel-log-panel {
+  max-width: 440px;
+  max-height: 100%;
+  overflow-y: auto;
+  border-radius: 12px;
+}
+
+.duel-log-tabs {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+
+.duel-log-tabs button,
+#duel-log-grid button {
+  min-height: 36px;
+  padding: 5px;
+  border: 1px solid #3a4861;
+  border-radius: 6px;
+  background: #172032;
+  color: #e7f0fa;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.duel-log-tabs button[aria-pressed="true"] {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  background: #102e3a;
+}
+
+#duel-log-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+#duel-log-grid button {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+  overflow-wrap: anywhere;
+}
+
+.duel-log-art,
+#duel-log-art {
+  position: relative;
+  display: block;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: #0b111d;
+}
+
+.duel-log-art img,
+#duel-log-art img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+#duel-log-art {
+  width: min(100%, 260px, 44dvh);
+  margin-inline: auto;
+}
+
+#duel-log-detail h3,
+#duel-log-detail p,
+#duel-log-empty {
+  margin-block: 8px;
+}

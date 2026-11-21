@@ -7,6 +7,7 @@
     NB.Sprites.initAssets();
     NB.Input.bindEvents();
     NB.City.bindEvents();
+    NB.DuelLog.bindEvents();
     NB.StoryUI.bindEvents();
     NB.Physics.init();
     NB.State.reset({ mode: 'campaign', boss: NB.Campaign.NODES[0] });

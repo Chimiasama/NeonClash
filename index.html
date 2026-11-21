@@ -34,6 +34,7 @@
           <span id="turn-badge" class="turn-counter tabular">T1</span>
         </div>
         <div class="top-controls">
+          <button id="btn-duel-log" aria-label="Histórico do duelo" class="hud-btn chamfer-sm" type="button">LOG</button>
           <button id="btn-png-modal" class="hud-btn chamfer-sm" type="button">ARTES</button>
           <button id="btn-sound" class="hud-btn chamfer-sm muted-sound" type="button">SOM: OFF</button>
         </div>
@@ -434,6 +435,7 @@
           </div>
         </div>
 
+        <button id="btn-result-log" class="hud-btn" type="button">Histórico do duelo</button>
         <div class="end-action-row">
           <button id="btn-go-primary" class="btn-launch chamfer-sm" type="button" data-action="netmap" style="padding:11px 12px;font-size:12px;">VOLTAR À CIDADE</button>
           <button id="btn-go-secondary" class="btn-secondary chamfer-sm" type="button" data-action="rematch">REVANCHE</button>
@@ -441,7 +443,35 @@
       </div>
     </div>
 
-    <!-- Modal 7: Banco de Dados (Coleção + Editor de Baralho 20/20) -->
+    <div id="duel-log-modal" class="full-modal" role="dialog" aria-modal="true" aria-labelledby="duel-log-title">
+      <section class="modal-panel duel-log-panel">
+        <header class="gallery-header">
+          <h2 id="duel-log-title">Histórico do duelo</h2>
+          <button id="duel-log-close" class="hud-btn" type="button">Fechar</button>
+        </header>
+        <div id="duel-log-list">
+          <div id="duel-log-sides" class="duel-log-tabs" role="group" aria-label="Lado do duelo">
+            <button type="button" data-side="player">Kairo</button>
+            <button type="button" data-side="enemy">Adversário</button>
+          </div>
+          <div id="duel-log-zones" class="duel-log-tabs" role="group" aria-label="Área das cartas">
+            <button type="button" data-zone="played">Usadas</button>
+            <button type="button" data-zone="discard">Descarte</button>
+            <button type="button" data-zone="removed">Removidas</button>
+          </div>
+          <p id="duel-log-empty" role="status" hidden></p>
+          <div id="duel-log-grid"></div>
+        </div>
+        <div id="duel-log-detail" hidden>
+          <button id="duel-log-back" class="hud-btn" type="button">Voltar às cartas</button>
+          <h3 id="duel-log-card"></h3>
+          <div id="duel-log-art"></div>
+          <p id="duel-log-stats"></p>
+          <p id="duel-log-description"></p>
+        </div>
+      </section>
+    </div>
+
     <div id="abandon-modal" class="full-modal" role="alertdialog" aria-modal="true" aria-labelledby="abandon-title" aria-describedby="abandon-cost">
       <section class="modal-panel abandon-panel">
         <h2 id="abandon-title">Abandonar duelo?</h2>
@@ -574,6 +604,7 @@
   <script defer src="./js/ui/city.js"></script>
   <script defer src="./js/ui/story.js"></script>
   <script defer src="./js/ui/gallery.js"></script>
+  <script defer src="./js/ui/duelLog.js"></script>
   <script defer src="./js/main.js"></script>
 </body>
 </html>
