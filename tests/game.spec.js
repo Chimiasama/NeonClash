@@ -25,6 +25,8 @@ async function walkTo(page, pin, encounterRoll = 0.99) {
 
 async function openAdventure(page, starter = 'Equilibrado') {
   await page.locator('#btn-start-campaign').click();
+  const resume = page.getByRole('button', { name: 'Continuar do save' });
+  if (await resume.isVisible()) await resume.click();
   const select = page.getByRole('dialog', { name: 'Escolha seu deck inicial' });
   if (await select.isVisible()) await select.getByRole('button', { name: `Escolher ${starter}`, exact: true }).click();
 }
@@ -1524,7 +1526,7 @@ test('offers three balanced starter decks and remembers the chosen collection ac
     [20, 14, 2], [20, 14, 2], [20, 14, 2]
   ] });
   await page.reload();
-  await page.locator('#btn-start-campaign').click();
+  await openAdventure(page);
   await expect(page.locator('#starter-modal')).toBeHidden();
   await expect(page.locator('#prologue-modal')).toBeVisible();
   expect(await page.evaluate(() => NB.Save.getActiveDeck().filter(id => id === 'unit_38').length)).toBe(2);
@@ -2629,4 +2631,36 @@ test('applies the expansion effects and assigns a finite power value to all eigh
       Object.values(NB.CardPower.byId).filter(value => Number.isFinite(value.total)).length];
   });
   expect(result).toEqual([true, 5, 1, 2, 0, 80]);
+});
+
+test('continues an existing adventure or resets it only after confirmation', async ({ page }) => {
+  await page.goto('/');
+  await enterCity(page);
+  await page.evaluate(() => {
+    const save = NB.Save.get();
+    save.city.credits = 94;
+    save.city.district = 'market';
+    save.unlockedCards.push('unit_43');
+    save.defeatedBosses.push('kira');
+    NB.Save.save();
+    NB.Input.openTitleScreen();
+  });
+  const start = page.locator('#btn-start-campaign');
+  await start.click();
+  await page.getByRole('button', { name: 'Recomeçar do zero' }).click();
+  const warning = page.getByRole('dialog', { name: 'Recomeçar do zero?' });
+  await expect(warning).toContainText('Todo o progresso será apagado');
+  await warning.getByRole('button', { name: 'Cancelar' }).click();
+  await page.getByRole('button', { name: 'Continuar do save' }).click();
+  await expect(page.locator('#city-credits')).toContainText('94 créditos');
+  await page.evaluate(() => NB.Input.openTitleScreen());
+  await start.click();
+  await page.getByRole('button', { name: 'Recomeçar do zero' }).click();
+  await warning.getByRole('button', { name: 'Apagar progresso e recomeçar' }).click();
+  await expect(page.getByRole('dialog', { name: 'Escolha seu deck inicial' })).toBeVisible();
+  const saved = await page.evaluate(() => JSON.parse(localStorage.neon_breach_save_v1));
+  expect(saved).toMatchObject({ starterDeck: null, prologueSeen: false, defeatedBosses: [], city: { credits: 35, district: 'kira' } });
+  expect(saved.unlockedCards).not.toContain('unit_43');
+  await page.getByRole('button', { name: 'Escolher Equilibrado' }).click();
+  await expect(page.getByRole('dialog', { name: 'Prólogo de Kairo' })).toBeVisible();
 });

@@ -486,6 +486,9 @@
 .abandon-confirm { border-color: #ff8caf; color: #ffe0eb; }
 
 .starter-panel { width: 100%; max-width: 420px; overflow-y: auto; }
+.adventure-choice-actions:not([hidden]) { display: grid; gap: 8px; }
+#adventure-choice-modal button { min-height: 44px; }
+#adventure-choice-caption { line-height: 1.45; }
 #starter-options { display: grid; gap: 9px; }
 #starter-options section {
   display: grid;

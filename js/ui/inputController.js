@@ -7,7 +7,7 @@
     NB.City.cancelJob();
     document.getElementById('float-layer').replaceChildren();
     document.getElementById('toast-banner').classList.remove('show');
-    ['title-modal', 'netmap-modal', 'starter-modal', 'prologue-modal', 'abandon-modal', 'street-rest-modal', 'story-modal', 'dossier-modal', 'gameover-modal', 'settings-modal', 'deck-modal', 'card-inspector-modal'].forEach(id => {
+    ['title-modal', 'netmap-modal', 'starter-modal', 'adventure-choice-modal', 'prologue-modal', 'abandon-modal', 'street-rest-modal', 'story-modal', 'dossier-modal', 'gameover-modal', 'settings-modal', 'deck-modal', 'card-inspector-modal'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.classList.remove('open');
     });
@@ -33,6 +33,38 @@
     NB.State.cancelPending();
     NB.Audio.setScene('city');
     NB.City.open(message);
+  }
+
+  function closeAdventureChoice() {
+    document.getElementById('adventure-choice-modal').classList.remove('open');
+    document.getElementById('title-modal').inert = false;
+    document.getElementById('btn-start-campaign').focus();
+  }
+
+  function showAdventureChoice(confirmRestart = false) {
+    document.getElementById('adventure-choice-title').textContent = confirmRestart ? 'Recomeçar do zero?' : 'Iniciar aventura';
+    document.getElementById('adventure-choice-caption').textContent = confirmRestart
+      ? 'Todo o progresso será apagado, incluindo história, coleção, baralhos, créditos e equipamentos. Esta ação é definitiva.'
+      : 'Há progresso salvo neste aparelho. Você pode continuar ou começar uma nova aventura.';
+    document.getElementById('adventure-choice-options').hidden = confirmRestart;
+    document.getElementById('adventure-reset-options').hidden = !confirmRestart;
+    const back = document.getElementById('adventure-choice-back');
+    back.textContent = confirmRestart ? 'Cancelar' : 'Voltar';
+    document.getElementById('title-modal').inert = true;
+    document.getElementById('adventure-choice-modal').classList.add('open');
+    (confirmRestart ? back : document.getElementById('adventure-continue')).focus();
+  }
+
+  function backAdventureChoice() {
+    if (!document.getElementById('adventure-reset-options').hidden) showAdventureChoice();
+    else closeAdventureChoice();
+  }
+
+  function enterAdventure() {
+    const progress = NB.Save.get();
+    if (progress.prologueSeen) openNetMap();
+    else if (!progress.starterDeck) openStarterChoice();
+    else NB.StoryUI.openPrologue();
   }
 
   function closeStarterChoice() {
@@ -435,6 +467,7 @@
     const closeButtons = [
       ['abandon-modal', 'abandon-cancel'],
       ['street-rest-modal', 'street-rest-close'],
+      ['adventure-choice-modal', 'adventure-choice-back'],
       ['starter-modal', 'starter-close'],
       ['prologue-modal', 'prologue-close'],
       ['card-inspector-modal', 'btn-insp-close'],
@@ -580,15 +613,28 @@
       if (document.visibilityState === 'visible' && NB.Audio.enabled) NB.Audio.resume();
     });
     // Navegação Tela Inicial
+    document.getElementById('adventure-continue').addEventListener('click', () => {
+      closeAdventureChoice();
+      enterAdventure();
+    });
+    document.getElementById('adventure-restart').addEventListener('click', () => showAdventureChoice(true));
+    document.getElementById('adventure-choice-back').addEventListener('click', backAdventureChoice);
+    document.getElementById('adventure-choice-modal').addEventListener('keydown', event => {
+      if (event.key === 'Escape') backAdventureChoice();
+    });
+    document.getElementById('adventure-reset').addEventListener('click', () => {
+      NB.Save.resetSave();
+      closeAdventureChoice();
+      NB.UI.renderTitleStats();
+      enterAdventure();
+    });
     document.getElementById('starter-close').addEventListener('click', closeStarterChoice);
     document.getElementById('btn-start-campaign').addEventListener('click', () => {
       NB.Audio.activateOnEntry();
       NB.Audio.playSelect();
       NB.Physics.vibrateCard();
-      const progress = NB.Save.get();
-      if (progress.prologueSeen) openNetMap();
-      else if (!progress.starterDeck) openStarterChoice();
-      else NB.StoryUI.openPrologue();
+      if (NB.Save.hasProgress()) showAdventureChoice();
+      else enterAdventure();
     });
     document.getElementById('btn-new-game-plus').addEventListener('click', () => {
       if (!NB.Save.startNewGamePlus()) return;

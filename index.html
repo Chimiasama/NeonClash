@@ -180,6 +180,21 @@
       </div>
     </div>
 
+    <div id="adventure-choice-modal" class="full-modal" role="dialog" aria-modal="true" aria-labelledby="adventure-choice-title" aria-describedby="adventure-choice-caption">
+      <section class="modal-panel starter-panel">
+        <h2 id="adventure-choice-title">Iniciar aventura</h2>
+        <p id="adventure-choice-caption"></p>
+        <div id="adventure-choice-options" class="adventure-choice-actions">
+          <button id="adventure-continue" class="btn-launch chamfer-sm" type="button">Continuar do save</button>
+          <button id="adventure-restart" class="btn-danger-subtle chamfer-sm" type="button">Recomeçar do zero</button>
+        </div>
+        <div id="adventure-reset-options" class="adventure-choice-actions" hidden>
+          <button id="adventure-reset" class="hud-btn abandon-confirm chamfer-sm" type="button">Apagar progresso e recomeçar</button>
+        </div>
+        <button id="adventure-choice-back" class="hud-btn chamfer-sm" type="button">Voltar</button>
+      </section>
+    </div>
+
     <div id="starter-modal" class="full-modal" role="dialog" aria-modal="true" aria-labelledby="starter-title">
       <section class="modal-panel starter-panel">
         <header class="gallery-header">

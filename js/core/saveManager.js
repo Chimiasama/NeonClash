@@ -274,6 +274,18 @@
     return { ok: true, count: cleaned.length };
   }
 
+  function hasProgress() {
+    const progress = get();
+    if (progress.starterDeck || progress.prologueSeen || progress.story.started || progress.newGamePlus ||
+        progress.matches || progress.defeatedBosses.length || progress.challengeWins.length ||
+        progress.unlockedCards.some(id => !NB.Cards.STARTER_CARD_IDS.includes(id)) ||
+        Object.keys(progress.affinities).length || Object.keys(progress.deckSlots).length) return true;
+    const initial = createDefaultSave();
+    return progress.city.credits !== initial.city.credits || progress.city.district !== initial.city.district ||
+      progress.city.life.minute !== initial.city.life.minute ||
+      progress.customDeck.join(',') !== initial.customDeck.join(',');
+  }
+
   function resetSave() {
     data = createDefaultSave();
     try {
@@ -364,6 +376,7 @@
     startNewGamePlus,
     buildBalancedDeck,
     resetSave,
+    hasProgress,
     isNodeDefeated,
     isNodeUnlocked,
     recordBossVictory,
