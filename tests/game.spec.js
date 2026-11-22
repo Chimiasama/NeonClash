@@ -703,7 +703,7 @@ test('wins the route pact, equips a suppression module and buys starting RAM', a
     NB.State.get().enemy.hp = 0;
     NB.State.checkWinCondition();
   });
-  await expect(page.locator('#go-clue-title')).toHaveText('ACORDO DAS ROTAS');
+  await expect(page.locator('#go-clue-title')).toHaveText('MISSÃO AVANÇOU · ACORDO DAS ROTAS');
   await page.getByRole('button', { name: 'Voltar à cidade' }).click();
   await walkTo(page, page.locator('[data-district="pump"]'), 0);
   const offer = page.getByRole('region', { name: 'Desafio de viagem' });
