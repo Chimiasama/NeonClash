@@ -18,7 +18,7 @@ const context = createContext({
 });
 context.window = context;
 for (const script of [
-  'data/cards', 'data/campaign', 'data/challenges', 'data/cityAtlas', 'data/city', 'core/cityLife',
+  'data/cards', 'data/campaign', 'data/challenges', 'data/cityAtlas', 'data/city', 'core/cityCommerce', 'core/cityLife',
   'core/saveManager', 'core/cardEffects', 'core/gameState', 'core/combatEngine',
   'core/aiController', 'ui/inputController'
 ]) runInContext(readFileSync(new URL(`../js/${script}.js`, import.meta.url), 'utf8'), context);

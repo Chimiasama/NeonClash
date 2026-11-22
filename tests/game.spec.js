@@ -2454,3 +2454,99 @@ test('resolves rare Overclock roles and registers power for the entire catalog',
     consumedAndDestroyed: true, values: true
   });
 });
+
+test('charges the bus pass fare, uses a trip, and restores the ordinary fare on expiration', async ({ page }) => {
+  await page.goto('/');
+  const result = await page.evaluate(() => {
+    const save = NB.Save.get();
+    save.city.district = 'kira';
+    const before = save.city.credits;
+    NB.CityCommerce.buyPass();
+    const random = Math.random;
+    Math.random = () => 0.99;
+    try {
+      NB.CityLife.travel('market', 'bus');
+    } finally {
+      Math.random = random;
+    }
+    const charged = before - save.city.credits;
+    const pass = NB.CityCommerce.activePass();
+    save.city.life.minute = pass.until;
+    return [charged, pass.trips, NB.CityLife.routes('kira').find(route => route.id === 'bus').fare];
+  });
+  expect(result).toEqual([13, 5, 4]);
+});
+
+test('replaces a travel duel with a persistent merchant and grants the mission discount once', async ({ page }) => {
+  await page.goto('/');
+  const offer = await page.evaluate(() => {
+    const save = NB.Save.get();
+    save.city.district = 'kira';
+    save.story.chapter = 3;
+    save.city.credits = 200;
+    const rolls = [0, 0.94];
+    const random = Math.random;
+    Math.random = () => rolls.shift() ?? 0;
+    try {
+      NB.CityLife.travel('garage', 'walk');
+    } finally {
+      Math.random = random;
+    }
+    return [NB.CityCommerce.offer(), NB.CityLife.getTravelChallenge()];
+  });
+  expect(offer[0]).toMatchObject({ kind: 'gear', destination: 'garage' });
+  expect(offer[0].stock).toContain('tram');
+  expect(offer[1]).toBeNull();
+  await page.reload();
+  const outcome = await page.evaluate(() => {
+    const save = NB.Save.get();
+    const initial = NB.CityCommerce.price('gear', 'tram');
+    const fee = NB.CityCommerce.finishMission('gear', false);
+    const victory = NB.CityCommerce.finishMission('gear', true);
+    const repeat = NB.CityCommerce.finishMission('gear', true);
+    const discounted = NB.CityCommerce.price('gear', 'tram');
+    const purchased = NB.CityCommerce.buyOffer('tram');
+    NB.State.reset({ mode: 'quick', openingSide: 'player' });
+    const { player } = NB.State.get();
+    return [initial, fee, victory, repeat, discounted, purchased, player.ram, NB.Combat.overclockCost(player), save.city.credits];
+  });
+  expect(outcome).toEqual([155, expect.stringContaining('3 créditos'), expect.stringContaining('10%'), '', 140, true, 1, 2, 72]);
+});
+
+test('settles a reloaded card wager as a loss and lets Risco return the same card once', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    const save = NB.Save.get();
+    save.city.district = 'arena';
+    save.defeatedBosses.push('kira');
+    save.unlockedCards.push('unit_33');
+    save.customDeck = NB.Save.buildBalancedDeck(save.unlockedCards, ['unit_33', 'unit_33']);
+    NB.Input.openNetMap();
+  });
+  await page.getByRole('button', { name: 'Apostar Estilhaço de Pulso' }).click();
+  await page.getByRole('button', { name: 'Confirmar aposta em carta' }).click();
+  await expect(page.locator('#netmap-modal')).toBeHidden();
+  await page.reload();
+  const outcome = await page.evaluate(() => {
+    const save = NB.Save.get();
+    const lost = save.city.life.commerce.lost;
+    const hasLost = save.unlockedCards.includes(lost) || NB.Save.getActiveDeck().includes(lost);
+    save.city.life.minute += 1440;
+    const random = Math.random;
+    Math.random = () => 0;
+    let proposal;
+    try {
+      proposal = NB.CityCommerce.wager();
+    } finally {
+      Math.random = random;
+    }
+    const accepted = NB.CityCommerce.beginWager(null);
+    const recovered = NB.CityCommerce.finishWager(true);
+    const duplicate = NB.CityCommerce.finishWager(true);
+    return { lost, hasLost, proposal, accepted, recovered, duplicate, count: save.unlockedCards.filter(id => id === lost).length };
+  });
+  expect(outcome).toEqual({
+    lost: 'unit_33', hasLost: false, proposal: { prize: 'unit_33', stakes: [], fee: 12 },
+    accepted: true, recovered: expect.stringContaining('Estilhaço de Pulso'), duplicate: '', count: 1
+  });
+});

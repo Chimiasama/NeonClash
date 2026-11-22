@@ -176,18 +176,23 @@
      - Gasta 3 RAM
      - Soma o ATK de 2 unidades prontas em um ataque combinado único
      - Possui PERFURAÇÃO: dano excedente à DEF do bloqueador vai direto no HP do hacker inimigo */
+  function overclockCost(actor) {
+    return NB.Cards.OVERCLOCK_COST - (actor.overclockDiscount || 0);
+  }
+
   async function executeOverclockAttack() {
     const state = NB.State.get();
     if (state.phase !== 'PLAYER_OVERCLOCK' || state.overclockUnits.length !== 2) return;
-    if (state.player.ram < NB.Cards.OVERCLOCK_COST) return;
+    const cost = overclockCost(state.player);
+    if (state.player.ram < cost) return;
 
     const [slotA, slotB] = state.overclockUnits;
     const unitA = state.player.field[slotA];
     const unitB = state.player.field[slotB];
     if (slotA === slotB || !canAttack(unitA, state.player.field) || !canAttack(unitB, state.player.field)) return;
 
-    // Deduz 3 RAM
-    state.player.ram -= NB.Cards.OVERCLOCK_COST;
+    state.player.ram -= cost;
+    state.player.overclockDiscount = 0;
     const coupled = state.player.overclockCoupler;
     state.player.overclockCoupler = false;
     state.overclockUnits = [];
@@ -206,7 +211,7 @@
     const slotElA = NB.State.getSlotEl('player', slotA);
     const slotElB = NB.State.getSlotEl('player', slotB);
     const playerHud = document.getElementById('player-hud');
-    NB.Physics.spawnFloatText(playerHud, `-${NB.Cards.OVERCLOCK_COST} RAM`, '#39FF14');
+    NB.Physics.spawnFloatText(playerHud, `-${cost} RAM`, '#39FF14');
     NB.Physics.drawOverclockLink(slotA, slotB);
 
     if (slotElA && slotElB) {
@@ -543,6 +548,7 @@
     clashDamage,
     overclockSynergy,
     overclockDamage,
+    overclockCost,
     overclockCounter,
     resolveCombatSequence,
     executeOverclockAttack,

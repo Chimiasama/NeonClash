@@ -278,3 +278,13 @@ Os nomes e os atributos base abaixo também identificam a arte, a rota de aquisi
 | `unit_31` | Auditora de Rede | Unidade | 2 / 4 · +2 RAM | Malha |
 | `exploit_15` | Rastreador de Lote | Exploit | 1 RAM | — |
 | `exploit_16` | Filtro de Isolamento | Exploit | 2 RAM | — |
+
+## Comércio de viagem e apostas em cartas
+
+- **Lanche de rua** custa 3 créditos e recupera 8 de energia. Usa um espaço da mochila. A Feira e o Quiosque vendem consumíveis.
+- **Passe de ônibus** custa 12 créditos e é vendido na Estação Fantasma e no Terminal. Vale por 48 horas do jogo ou seis embarques, o que ocorrer primeiro. Cada embarque custa 1 crédito com passe. Quatro viagens empatam com a tarifa normal, cinco poupam 3 créditos e seis poupam 6.
+- **Nara Vira-Fita** e **Breno Frequência** substituem parte dos encontros de viagem a partir do capítulo 2. Dos encontros que seriam gerados, até 18% viram ofertas de Nara e até 10% ofertas de Breno, conforme o estoque disponível. A oferta é opcional, fica salva no destino e termina ao dispensar o vendedor ou viajar de novo. Nara oferece até três cartas compatíveis com o capítulo, incluindo possibilidade de rara, a preços 35% acima da Feira.
+- Breno vende cyberdecks e **Scanner de rota**, melhoria permanente de 125 créditos que reduz o risco base em cinco pontos percentuais de ônibus ou bicicleta. O **Acoplador de Campo** custa 155 créditos, começa com 1 RAM e reduz o primeiro Overclock do duelo de 3 para 2 RAM quando equipado. Usa o slot de cyberdeck.
+- Conhecer cada vendedor abre uma missão de combate no Arquivo do Ringue ou na Garagem. Uma vitória rende 15 créditos e desconto permanente de 10% com aquele vendedor. Derrota ou abandono consome tempo, energia e até 3 créditos. As missões aparecem no diário secundário.
+- **Risco** oferece apostas em carta no Ringue depois da vitória sobre Kira. O piloto aceita Estilhaço de Pulso, Anteparo de Rua e Biombo de Sucata, contanto que ainda seja possível montar um deck de 20 cartas após a perda. O prêmio vem de um estoque finito de quatro cartas de Overclock. Cada prêmio pode ser ganho uma vez e há uma aposta por dia. Uma derrota, desistência ou reabertura do app com aposta pendente transfere a carta para Risco. Os decks ativos e salvos são recompostos com cartas possuídas.
+- Enquanto Risco tiver a carta, ela fica fora das lojas e das novas apostas. Em um dia elegível posterior, ele tem 50% de chance de oferecer a recuperação. Após dois dias elegíveis sem oferta, a próxima é garantida. A revanche custa 12 créditos, devolve o desbloqueio original se vencida e continua disponível em dias futuros se Kairo perder.

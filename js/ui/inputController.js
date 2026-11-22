@@ -377,7 +377,9 @@
     const state = NB.State.get();
     if (state.phase === 'GAME_OVER') return;
     const fee = abandonmentCost(state);
-    const cost = state.stake ? `A aposta de ${state.stake} créditos fica com o Ringue.` :
+    const pending = state.boss?.cardWager && NB.Save.get().city.life.commerce.pending;
+    const cost = pending ? (pending.stake ? `Você perde ${NB.Cards.CARD_DB[pending.stake].name}.` :
+      'Os 12 créditos da revanche ficam com Risco.') : state.stake ? `A aposta de ${state.stake} créditos fica com o Ringue.` :
       fee ? `Você perde ${fee} ${fee === 1 ? 'crédito' : 'créditos'}.` : 'Nenhum crédito será cobrado.';
     document.getElementById('abandon-cost').textContent = `O duelo termina como derrota. ${cost}`;
     document.getElementById('game-ui').inert = true;
@@ -404,6 +406,14 @@
     const fee = abandonmentCost(state);
     state.phase = 'GAME_OVER';
     state.winner = 'enemy';
+    if (state.boss?.cardWager || state.boss?.commerceMission) {
+      const message = state.boss.cardWager ? NB.CityCommerce.finishWager(false) :
+        NB.CityCommerce.finishMission(state.boss.commerceMission, false);
+      NB.Save.recordMatchLoss();
+      NB.CityLife.advance(40, 8);
+      openNetMap(message);
+      return;
+    }
     if (state.boss?.travelReward) NB.CityLife.settleTravelChallenge(true);
     else NB.Save.get().city.credits -= fee;
     NB.Save.recordMatchLoss();
@@ -486,7 +496,7 @@
       state.player.field.forEach((u, idx) => {
         if (NB.Combat.canAttack(u, state.player.field)) readySlots.push(idx);
       });
-      if (state.player.ram < NB.Cards.OVERCLOCK_COST || readySlots.length < 2) return;
+      if (state.player.ram < NB.Combat.overclockCost(state.player) || readySlots.length < 2) return;
 
       state.phase = 'PLAYER_OVERCLOCK';
       state.selectedAttackers = [];

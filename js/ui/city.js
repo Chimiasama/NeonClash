@@ -47,7 +47,10 @@
   }
 
   function locationMarkers(place, save, clueLocations, encounter) {
-    const hasDuel = place.id === 'arena' || encounter?.location === place.id ||
+    const tradeMission = Object.entries(NB.CityCommerce.merchants).some(([kind, merchant]) =>
+      merchant.location === place.id && save.city.life.commerce.seen.includes(kind) &&
+      !save.city.life.commerce.discounts.includes(kind));
+    const hasDuel = tradeMission || place.id === 'arena' || encounter?.location === place.id ||
       (NB.Campaign.NODES.some(boss => boss.id === place.id) && !access(place)) ||
       NB.CityAtlas.residents.some(person => person.location === place.id && residentDuels[person.id]);
     const hasSecret = place.id === routePactDestination(save.city.life) || (place.id === 'garage' && save.city.life.vehicles.includes('bike') && !save.city.life.favors.includes('hillPath')) ||
@@ -306,6 +309,7 @@
       }
     }
     if (view === 'district') {
+      renderCommerce(content, district.id);
       const challenge = NB.CityLife.getTravelChallenge();
       if (challenge) renderTravelChallenge(content, challenge);
       NB.StoryUI.local(content, district);
@@ -527,8 +531,8 @@
     garage: 'Bicicleta, moto, cyberdecks e implante de vigília à venda.',
     relay: 'Trabalhos de sinal na Antena Comunitária.',
     arena: 'Duelos de treino, apostas e desafios de arquétipo conforme a aventura.',
-    kira: 'Estação de passagem e ponto de partida do Correio Expresso.',
-    terminal: 'Terminal de ônibus com entregas e bicos de registros.',
+    kira: 'Estação de passagem, passe de ônibus e ponto de partida do Correio Expresso.',
+    terminal: 'Terminal de ônibus com passe de viagem, entregas e bicos de registros.',
     depots: 'Depósito de peças com entregas, triagem de sucata e duelos locais.',
     docks: 'Subestação no Cais com entregas e ronda de carga.',
     ferry: 'Embarque para a travessia da Ressaca.',
@@ -613,6 +617,9 @@
     }
     if (!NB.CityLife.bagCount(life)) addText(content, 'Mochila vazia.');
     if (life.implant) addText(content, 'Implante de vigília instalado.');
+    const ticket = NB.CityCommerce.activePass();
+    if (ticket) addText(content, `Passe de ônibus · ${ticket.trips} viagens · expira em ${duration(ticket.until - life.minute)}.`);
+    if (life.commerce.navigator) addText(content, 'Scanner de rota · −5 pontos percentuais de abordagens de ônibus ou bicicleta antes da fadiga.');
     if (life.routePact === 4) {
       addText(content, 'Módulo de Rota Cega · evita abordagens no trajeto enquanto equipado.');
       addButton(content, life.routeMask ? 'Desativar Rota Cega' : 'Ativar Rota Cega', () => {
@@ -793,6 +800,14 @@
       addText(section, `Prêmio recebido · ${label}`, 'city-clue-title');
     }
 
+    for (const [kind, merchant] of Object.entries(NB.CityCommerce.merchants)) {
+      if (!life.commerce.seen.includes(kind)) continue;
+      const done = life.commerce.discounts.includes(kind);
+      const section = entry(merchant.mission, done ? 'Concluída' : 'Em andamento');
+      if (done) reward(section, `15 créditos e 10% de desconto com ${merchant.name}.`);
+      else next(section, { location: merchant.location, contact: merchant.name, task: 'Vencer a escolta do depósito.' });
+    }
+
     const pact = entry('Acordo das Rotas', life.routePact === 4 ? 'Concluída' : life.routePact ? 'Em andamento' : 'Disponível');
     for (const step of routePactLog.slice(0, life.routePact)) {
       addText(pact, `✓ ${locationName(step.location)} · ${step.contact}`);
@@ -832,7 +847,7 @@
 
   function renderMarket(content, save) {
     for (const { id, price, chapter = 0 } of stock) {
-      if (NB.Story.get().chapter < chapter) continue;
+      if (NB.Story.get().chapter < chapter || save.city.life.commerce.lost === id) continue;
       const card = NB.Cards.CARD_DB[id];
       const owned = save.unlockedCards.includes(id);
       const row = document.createElement('div');
@@ -1164,6 +1179,7 @@
     else if (save.city.credits < 25) addText(content, 'Você precisa de 25 créditos para apostar.', 'city-notice');
     else addText(content, 'Na mesa de apostas, sair do duelo encerra a partida e perde a entrada.');
     renderLocalDuels(content, 'arena');
+    renderCardWager(content);
     const challenges = document.createElement('section');
     challenges.className = 'city-local-duels';
     const label = document.createElement('h4');
@@ -1185,6 +1201,86 @@
     }
     addText(challenges, 'Decks emprestados de 20 cartas. Cada duelo consome tempo e energia da cidade.');
     content.append(challenges);
+  }
+
+  function renderCommerce(content, district) {
+    const save = NB.Save.get();
+    const commerce = NB.CityCommerce;
+    if (['kira', 'terminal'].includes(district)) {
+      const ticket = commerce.activePass();
+      const { price, trips } = commerce.pass;
+      addButton(content, ticket ? `Passe ativo · ${ticket.trips} viagens` : `Comprar passe de ônibus · ${price} créditos`, () => {
+        if (commerce.buyPass()) refreshStory('Passe válido por 48 horas ou seis viagens. Cada embarque custa 1 crédito.');
+      }, Boolean(ticket) || save.city.credits < price);
+      addText(content, `Passe · até ${trips} embarques em 48 horas por 1 crédito cada.`);
+    }
+    const offer = commerce.offer();
+    if (offer) {
+      const section = document.createElement('section');
+      section.className = 'city-story-section';
+      addText(section, commerce.merchants[offer.kind].name, 'city-clue-title');
+      if (save.city.life.commerce.discounts.includes(offer.kind)) addText(section, 'Desconto de confiança · 10%.');
+      for (const id of offer.stock) {
+        const item = offer.kind === 'cards' ? NB.Cards.CARD_DB[id] :
+          id === 'navigator' ? commerce.navigator : NB.CityLife.cyberdecks[id];
+        const amount = commerce.price(offer.kind, id);
+        const details = id === 'navigator' ? ' · reduz abordagens de ônibus e bicicleta' :
+          offer.kind === 'gear' ? ` · +${item.ram} RAM inicial${id === 'tram' ? ' · primeiro Overclock custa 1 RAM a menos' : ''}` :
+            item.rarity === 'rare' ? ' · rara' : '';
+        addButton(section, `Comprar ${item.name}${details} · ${amount} créditos`, () => {
+          if (commerce.buyOffer(id)) refreshStory(`${item.name} adquirido.`);
+        }, save.city.credits < amount);
+      }
+      if (!offer.stock.length) addText(section, 'Estoque esgotado.');
+      addButton(section, 'Dispensar oferta', () => {
+        save.city.life.commerce.offer = null;
+        NB.Save.save();
+        refreshStory('O vendedor seguiu viagem.');
+      });
+      content.prepend(section);
+    }
+    for (const [kind, contact] of Object.entries(commerce.merchants)) {
+      if (!commerce.missionAvailable(kind)) continue;
+      addText(content, `${contact.name} pediu ajuda para recuperar sua mercadoria. Vença a escolta para receber 15 créditos e desconto. Derrota ou abandono custa até 3 créditos.`, 'city-notice');
+      addButton(content, contact.mission + ' · duelar', () => {
+        if (!commerce.missionAvailable(kind)) return;
+        NB.Input.startMatch({ mode: 'arena', boss: {
+          ...wagerBoss, ...NB.CityLife.travelDeck(kind === 'cards' ? 1 : 2),
+          hp: kind === 'cards' ? 15 : 17, name: 'Escolta do depósito',
+          fullTitle: 'Escolta do depósito // Contrabando', commerceMission: kind
+        } });
+      });
+    }
+  }
+
+  function renderCardWager(content) {
+    const terms = NB.CityCommerce.wager();
+    const lost = NB.Save.get().city.life.commerce.lost;
+    if (lost) addText(content, `Risco está com ${NB.Cards.CARD_DB[lost].name}.`);
+    if (!terms) return;
+    const row = document.createElement('section');
+    row.className = 'city-story-section';
+    const prize = NB.Cards.CARD_DB[terms.prize].name;
+    addText(row, `Aposta de Risco · prêmio: ${prize}`, 'city-clue-title');
+    const start = stake => {
+      if (!NB.CityCommerce.beginWager(stake)) return;
+      NB.Input.startMatch({ mode: 'arena', boss: { ...wagerBoss, cardWager: true } });
+    };
+    if (terms.fee) {
+      addButton(row, `Disputar recuperação · ${terms.fee} créditos`, () => start(null), NB.Save.get().city.credits < terms.fee);
+    } else {
+      addText(row, 'Na derrota ou abandono, você perde acesso às duas cópias dessa carta. Há uma aposta por dia.');
+      for (const id of terms.stakes) {
+        const name = NB.Cards.CARD_DB[id].name;
+        addButton(row, `Apostar ${name}`, () => {
+          row.replaceChildren();
+          addText(row, `Colocar ${name} em jogo contra ${prize}?`);
+          addButton(row, 'Confirmar aposta em carta', () => start(id));
+          addButton(row, 'Cancelar aposta', () => refreshStory(''));
+        });
+      }
+    }
+    content.append(row);
   }
 
   function startArena(stake) {
@@ -1240,6 +1336,13 @@
 
   function finishArena(state, winner) {
     const save = NB.Save.get();
+    if (state.boss.cardWager || state.boss.commerceMission) {
+      const won = winner === 'player';
+      state.payout = state.boss.commerceMission && won ? 15 : 0;
+      state.commerceResult = state.boss.cardWager ? NB.CityCommerce.finishWager(won) :
+        NB.CityCommerce.finishMission(state.boss.commerceMission, won);
+      return;
+    }
     if (state.boss.travelReward) {
       const reward = NB.CityLife.finishTravelChallenge(winner === 'player');
       state.payout = reward.credits;

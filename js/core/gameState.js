@@ -33,6 +33,7 @@
     const mode = options.mode || 'campaign';
     const boss = options.boss || (NB.Campaign ? NB.Campaign.NODES[0] : null);
     const playerMaxHp = NB.Cards.MAX_HP;
+    const equipment = mode === 'challenge' ? null : NB.CityLife.cyberdecks[NB.Save.get().city.life.equippedDeck];
     const cipherInterference = mode === 'campaign' && boss?.id === 'archon' && NB.Story.eclipseInterference();
     const enemyMaxHp = cipherInterference ? 18 : boss?.hp || NB.Cards.MAX_HP;
 
@@ -49,7 +50,8 @@
       player: {
         hp: playerMaxHp,
         maxHp: playerMaxHp,
-        ram: mode === 'challenge' ? 0 : NB.CityLife.cyberdecks[NB.Save.get().city.life.equippedDeck].ram,
+        ram: equipment?.ram || 0,
+        overclockDiscount: equipment?.overclockDiscount || 0,
         deck: options.challenge ? shuffle(options.challenge.deck.map(cardId => ({ uid: uidCounter++, cardId }))) : buildPlayerDeck(),
         hand: [],
         discard: [],

@@ -153,7 +153,7 @@
       btnS.textContent = 'VOLTAR';
 
       ocBar.classList.add('visible');
-      const canOverclock = state.player.ram >= NB.Cards.OVERCLOCK_COST && readyCount >= 2;
+      const canOverclock = state.player.ram >= NB.Combat.overclockCost(state.player) && readyCount >= 2;
       btnOc.disabled = !canOverclock;
       btnOc.textContent = `⚡ OVERCLOCK (${NB.Cards.OVERCLOCK_COST} RAM)`;
     } else if (state.phase === 'PLAYER_OVERCLOCK') {
@@ -639,9 +639,13 @@
       kicker.textContent = boss.travelReward ? `DESAFIO DE VIAGEM · ${boss.name}`
         : boss.residentId ? `DUELO DE BAIRRO · ${boss.name}` : 'RINGUE BAIXA TENSÃO';
       kicker.style.color = won ? 'var(--ram)' : 'var(--magenta)';
-      title.textContent = won ? `VITÓRIA · +${state.payout} CRÉDITOS` : (state.stake ? 'DERROTA · APOSTA PERDIDA' : 'DERROTA NO TREINO');
+      title.textContent = won ? (boss.cardWager ? 'VITÓRIA · CARTA CONQUISTADA' : `VITÓRIA · +${state.payout} CRÉDITOS`) : (state.stake || boss.cardWager ? 'DERROTA · APOSTA PERDIDA' : boss.commerceMission ? 'DERROTA · MISSÃO PENDENTE' : 'DERROTA NO TREINO');
       title.style.color = kicker.style.color;
-      if (state.routePactWon) {
+      if (state.commerceResult) {
+        clueBox.style.display = 'flex';
+        document.getElementById('go-clue-title').textContent = boss.cardWager ? 'APOSTA EM CARTA' : 'CONTRABANDO';
+        document.getElementById('go-clue-text').textContent = state.commerceResult;
+      } else if (state.routePactWon) {
         clueBox.style.display = 'flex';
         document.getElementById('go-clue-title').textContent = 'ACORDO DAS ROTAS';
         document.getElementById('go-clue-text').textContent = 'Prêmio: abordagens opcionais. Você pode recusar ou abandonar sem pagar. No capítulo 3, procure Maíra na Casa de Bombas para obter um módulo que desliga as abordagens.';

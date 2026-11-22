@@ -4,6 +4,13 @@
   /* Ponto de entrada (Bootstrap) do NEON BREACH // CARD FIGHTERS */
   function boot() {
     NB.Save.load();
+    const wagerForfeit = NB.CityCommerce.finishWager(false);
+    if (wagerForfeit) {
+      NB.Save.recordMatchLoss();
+      NB.CityLife.advance(40, 8);
+      NB.Save.get().city.life.notice = wagerForfeit;
+      NB.Save.save();
+    }
     NB.Sprites.initAssets();
     NB.Input.bindEvents();
     NB.City.bindEvents();

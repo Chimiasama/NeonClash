@@ -187,7 +187,7 @@
       if (type === 'overclockCoupler') {
         const ready = actor.field.filter(unit => NB.Combat.canAttack(unit, actor.field));
         return sum + (!actor.overclockCoupler && (side === 'player' || state.boss?.canOverclock) &&
-          actor.ram >= card.cost + NB.Cards.OVERCLOCK_COST &&
+          actor.ram >= card.cost + NB.Combat.overclockCost(actor) &&
           ready.some(unit => unit.affinity) && ready.some(unit => !unit.affinity) &&
           opponent.field.some(unit => NB.Combat.canBlock(unit, opponent)) ? 1 : 0);
       }

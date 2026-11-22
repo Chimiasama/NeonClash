@@ -11,6 +11,7 @@
   const day = minute => Math.floor(minute / 1440);
   const distanceBetween = (from, to) => Math.max(2, Math.ceil(Math.hypot(to.x - from.x, to.y - from.y) / 10));
   const items = {
+    streetSnack: { name: 'Lanche de rua', price: 3, energy: 8 },
     coffee: { name: 'Café', price: 4, energy: 15 },
     energyDrink: { name: 'Energético', price: 9, energy: 28 },
     synthetic: { name: 'Estímulo sintético', price: 16, energy: 45 }
@@ -38,6 +39,7 @@
   };
   const cyberdecks = {
     stock: { name: 'Terminal de Campo', ram: 0 },
+    tram: { name: 'Acoplador de Campo', ram: 1, price: 155, chapter: 2, overclockDiscount: 1 },
     relay: { name: 'Relé de Bolso', ram: 1, price: 85, shop: 'market', chapter: 0 },
     bridge: { name: 'Ponte de Fibra', ram: 2, price: 170, shop: 'garage', chapter: 1 },
     backbone: { name: 'Espinha Óptica', ram: 3, price: 280, shop: 'garage', chapter: 3 }
@@ -97,6 +99,7 @@
       ? { targetId: receipt.targetId, credits: receipt.credits } : null;
     return {
       minute,
+      commerce: NB.CityCommerce.normalize(raw?.commerce, minute),
       streetRestEvent: typeof raw?.streetRestEvent?.robbed === 'boolean'
         ? { robbed: raw.streetRestEvent.robbed,
           creditsLost: raw.streetRestEvent.robbed ? integer(raw.streetRestEvent.creditsLost, 0, 0, Number.MAX_SAFE_INTEGER) : 0 }
@@ -162,11 +165,13 @@
       const closed = id === 'ferry' && (dayMinute < 420 || dayMinute >= 1080);
       const energyAfter = Math.max(0, state.life.energy - energy);
       const willCollapse = state.life.energy <= energy || state.life.awake + minutes >= maxAwake(state.life);
-      const encounterChance = willCollapse || state.life.routeMask ? 0 : travelChances[id] * (energyAfter <= maxEnergy(state.life) * 0.2 ? 2 : 1);
+      const fare = id === 'bus' && NB.CityCommerce.activePass() ? NB.CityCommerce.pass.fare : mode.fare;
+      const baseChance = travelChances[id] - (state.life.commerce.navigator && ['bike', 'bus'].includes(id) ? 5 : 0);
+      const encounterChance = willCollapse || state.life.routeMask ? 0 : baseChance * (energyAfter <= maxEnergy(state.life) * 0.2 ? 2 : 1);
       return {
-        id, name: mode.name, minutes, energy, fare: mode.fare,
+        id, name: mode.name, minutes, energy, fare,
         note: closed ? 'A balsa opera das 7h às 18h.' : usesShortcut ? 'Atalho da encosta ensinado por Aline.' : '',
-        available: !closed && (!mode.price || state.life.vehicles.includes(id)) && state.credits >= mode.fare,
+        available: !closed && (!mode.price || state.life.vehicles.includes(id)) && state.credits >= fare,
         needsVehicle: Boolean(mode.price && !state.life.vehicles.includes(id)),
         energyAfter, willCollapse, encounterChance
       };
@@ -305,10 +310,12 @@
     if (!route?.available) return false;
     const state = city();
     state.credits -= route.fare;
+    if (mode === 'bus' && route.fare === NB.CityCommerce.pass.fare) state.life.commerce.pass.trips--;
+    state.life.commerce.offer = null;
     state.district = destination;
     const deliveryNotice = finishDelivery(destination, route.minutes);
     state.life.travelChallenge = null;
-    if (route.encounterChance && Math.random() * 100 < route.encounterChance) {
+    if (route.encounterChance && Math.random() * 100 < route.encounterChance && !NB.CityCommerce.createOffer(destination)) {
       const person = challengers[Math.floor(Math.random() * challengers.length)];
       const tier = Math.min(NB.Story.get().chapter, travelTiers.length - 1);
       const elite = tier === travelTiers.length - 1 && state.life.routePact >= 3 &&
