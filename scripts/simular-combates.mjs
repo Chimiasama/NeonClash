@@ -18,7 +18,7 @@ const context = createContext({
 });
 context.window = context;
 for (const script of [
-  'data/cards', 'data/campaign', 'data/cityAtlas', 'data/city', 'core/cityLife',
+  'data/cards', 'data/campaign', 'data/challenges', 'data/cityAtlas', 'data/city', 'core/cityLife',
   'core/saveManager', 'core/cardEffects', 'core/gameState', 'core/combatEngine',
   'core/aiController', 'ui/inputController'
 ]) runInContext(readFileSync(new URL(`../js/${script}.js`, import.meta.url), 'utf8'), context);
@@ -45,10 +45,13 @@ const starters = Object.entries(NB.Cards.STARTER_DECKS).map(([id, entry]) => ({
   id, cards: entry.cards?.flatMap(card => [card, card]) ?? NB.Save.buildBalancedDeck(NB.Cards.STARTER_CARD_IDS)
 }));
 const repeat = list => Array.from({ length: 20 }, (_, index) => list[index % list.length]);
-const travel = Array.from({ length: 5 }, (_, tier) => {
-  profile.city.life.travelChallenge = { name: Object.values(NB.CityAtlas.encounters).flat()[0].name, destination: 'terminal', tier };
+const travel = Array.from({ length: 6 }, (_, index) => {
+  const elite = index === 5;
+  profile.city.life.routePact = elite ? 3 : 0;
+  profile.city.life.travelChallenge = { name: Object.values(NB.CityAtlas.encounters).flat()[0].name,
+    destination: 'terminal', tier: Math.min(index, 4), elite };
   const offer = NB.CityLife.getTravelChallenge();
-  return { ...offer, id: `viagem-${tier + 1}`, deckList: repeat(offer.deck) };
+  return { ...offer, id: elite ? 'viagem-especialista' : `viagem-${index + 1}`, deckList: repeat(offer.deck) };
 });
 const residents = [33, 39, 43, 44, 84].map(id => {
   const entry = NB.CityAtlas.residentDuels[id] || (id === 33
@@ -58,7 +61,7 @@ const residents = [33, 39, 43, 44, 84].map(id => {
 });
 const bosses = [...NB.Campaign.NODES, ...travel, ...residents];
 const advanced = starters[0].cards.slice();
-const upgrades = ['unit_36', 'unit_13', 'unit_29', 'unit_07', 'unit_12', 'exploit_03', 'exploit_15', 'exploit_16'];
+const upgrades = ['unit_13', 'unit_22', 'unit_23', 'exploit_06', 'exploit_19'];
 for (const id of upgrades) {
   const slot = advanced.findIndex((current, index) => CARD_DB[current].kind === CARD_DB[id].kind &&
     !upgrades.includes(current) && advanced.indexOf(current) === index);
@@ -66,6 +69,28 @@ for (const id of upgrades) {
   advanced[slot] = id;
 }
 starters.push({ id: 'progressao-mista', cards: advanced, cyberdeck: 'relay' });
+starters.push({
+  id: 'fim-de-campanha', cyberdeck: 'backbone',
+  cards: ['unit_07', 'unit_10', 'unit_12', 'unit_13', 'unit_14', 'unit_02', 'unit_08',
+    'exploit_01', 'exploit_05', 'exploit_06'].flatMap(id => [id, id])
+});
+
+starters.push({
+  id: 'fim-pacifista', cyberdeck: 'backbone',
+  cards: ['unit_07', 'unit_10', 'unit_14', 'unit_05', 'unit_01', 'unit_02', 'unit_08',
+    'exploit_01', 'exploit_05'].flatMap(id => [id, id]).concat('exploit_15', 'exploit_16')
+});
+
+for (const { id, cards } of [...starters, ...NB.Challenges.map(({ id, deck }) => ({ id, cards: deck }))]) {
+  if (cards.length !== 20 || cards.some(card => !CARD_DB[card] || cards.filter(other => other === card).length > 2)) {
+    throw new Error(`Lista de jogador inválida: ${id}`);
+  }
+}
+for (const { id, deckList } of bosses) {
+  if (deckList.length !== 20 || deckList.some(card => !CARD_DB[card])) {
+    throw new Error(`Lista de oponente inválida: ${id}`);
+  }
+}
 
 function playCards(state) {
   const { player } = state;
@@ -166,10 +191,15 @@ for (const player of starters) {
   for (const boss of bosses) console.log(await report(player, boss));
 }
 const final = NB.Campaign.NODES.at(-1);
-for (const player of starters.slice(0, 3)) {
+for (const player of starters) {
   console.log(await report(player, final, { overclock: true }, 'archon-kairo-overclock'));
   console.log(await report(player, final, { overclock: true, cipher: true }, 'archon-cipher-kairo-overclock'));
-  console.log(await report(player, final, { ram: 1 }, 'archon-ram-1'));
+  console.log(await report({ ...player, cyberdeck: 'stock' }, final, { ram: 1 }, 'archon-ram-1'));
+}
+
+for (const challenge of NB.Challenges) {
+  console.log(await report({ id: challenge.id, cards: challenge.deck }, bosses.find(boss => boss.id === challenge.opponent),
+    { overclock: true }, `arquetipo-${challenge.opponent}`));
 }
 
 for (const attribute of ['atk', 'def', 'ramGain']) {

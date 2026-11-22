@@ -2333,3 +2333,53 @@ for (const [id, decision, proof, alternative] of [
     await expect(page.getByRole('button', { name: proof, exact: true })).toBeVisible();
   });
 }
+
+test('builds progressively different encounter decks and gates late card purchases', async ({ page }) => {
+  await page.goto('/');
+  const decks = await page.evaluate(() => [0, 2, 5].map(chapter => NB.CityLife.travelDeck(chapter, true)));
+  expect(decks.map(deck => deck.deckList.length)).toEqual([20, 20, 20]);
+  expect(decks.map(deck => deck.canOverclock)).toEqual([false, false, true]);
+  expect(decks[0].deckList).not.toEqual(decks[1].deckList);
+  expect(decks[2].deckList).toContain('unit_13');
+
+  await enterCity(page);
+  await page.evaluate(() => {
+    NB.Save.get().city.district = 'market';
+    NB.Input.openNetMap();
+  });
+  await page.getByRole('button', { name: 'Ver cartas à venda' }).click();
+  await expect(page.getByText('Malware-Rex', { exact: true })).toHaveCount(0);
+  await page.evaluate(() => {
+    NB.Story.get().chapter = 5;
+    NB.City.resetView();
+  });
+  await page.getByRole('button', { name: 'Ver cartas à venda' }).click();
+  await expect(page.getByText('Malware-Rex', { exact: true })).toBeVisible();
+});
+
+test('offers a tougher optional travel opponent to an equipped late-game deck', async ({ page }) => {
+  await page.goto('/');
+  const encounter = await page.evaluate(() => {
+    const save = NB.Save.get();
+    const units = ['unit_07', 'unit_10', 'unit_14'];
+    save.story.chapter = 5;
+    save.city.district = 'kira';
+    save.city.life.routePact = 3;
+    save.city.life.ownedDecks.push('backbone');
+    save.city.life.equippedDeck = 'backbone';
+    save.unlockedCards.push(...units);
+    save.customDeck = NB.Save.buildBalancedDeck(save.unlockedCards, units.flatMap(id => [id, id]));
+    const random = Math.random;
+    Math.random = () => 0;
+    try {
+      NB.CityLife.travel('market', 'walk');
+    } finally {
+      Math.random = random;
+    }
+    return NB.CityLife.getTravelChallenge();
+  });
+  expect(encounter).toMatchObject({ label: 'Elite · Especialista', hp: 24, reward: 28, optional: true });
+  await page.reload();
+  expect(await page.evaluate(() => NB.CityLife.getTravelChallenge()?.label)).toBe('Elite · Especialista');
+  expect(await page.evaluate(() => NB.CityLife.requiredTravelChallenge())).toBeNull();
+});

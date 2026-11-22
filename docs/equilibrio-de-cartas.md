@@ -66,7 +66,30 @@ Chefes narrativos devem ter identidade e dificuldade fixas. Valide cada um com d
 
 Registre cada premiação com capítulo mínimo, confiabilidade de obtenção, arquétipo habilitado e teto de duas cópias. Uma carta rara pode ser mais forte. O desbloqueio atual é por ID e permite duas cópias em deck, então a raridade de obtenção deixa de limitar a repetição depois de adquirida. Aumentar a força do oponente deve trazer recompensa proporcional. As cartas secretas podem ampliar uma estratégia, e o clímax deve continuar vencível sem elas.
 
-## Resultados da primeira bateria
+## Curva aplicada na versão 0.3
+
+A tabela abaixo usa 200 partidas por cenário, com 100 aberturas de cada lado. Os decks iniciais revisados têm 14 unidades e seis Exploits. Saves com deck escolhido preservam sua seleção e suas cartas. Os quatro chefes têm listas fixas. Viagens e encontros urbanos passam a usar listas do capítulo, enquanto moradores e o Ringue preservam seus próprios perfis. Os cinco níveis de viagem mantêm o HP, os prêmios e a taxa de desistência. Após o Acordo das Rotas, um encontro de nível Elite tem uma chance de um terço de virar **Especialista** se Kairo começar com pelo menos 2 RAM pelo cyberdeck e o deck incluir seis ou mais unidades com ATK + DEF de pelo menos 9, contando cópias. O Especialista tem 24 HP e paga 28 créditos. A oferta é opcional e fica salva até ser resolvida.
+
+| Encontro | Média dos iniciais | Progressão intermediária | Fim por duelos | Fim por favores |
+| --- | ---: | ---: | ---: | ---: |
+| Kira | 68,7% | 69,0% | 92,5% | 97,0% |
+| Cipher | 41,5% | 58,5% | 98,5% | 99,0% |
+| Vex | 8,0% | 24,0% | 74,5% | 68,5% |
+| Archon | 1,3% | 4,5% | 31,0% | 32,0% |
+| Viagem 1 | 100,0% | 100,0% | 100,0% | 100,0% |
+| Viagem 2 | 65,7% | 86,5% | 99,0% | 99,0% |
+| Viagem 3 | 57,7% | 65,0% | 91,0% | 96,0% |
+| Viagem 4 | 35,2% | 43,5% | 89,0% | 97,5% |
+| Viagem 5 | 21,0% | 30,5% | 89,5% | 98,0% |
+| Especialista opcional | 0,3% | 1,5% | 27,0% | 23,0% |
+
+A Espinha Óptica fornece 3 RAM iniciais nos dois perfis finais. Contra Archon, o perfil de duelos com Overclock venceu **44,5%** das partidas. Com o Pulso de Partida garantindo a iniciativa, a referência daquele cenário é **53%**. O perfil que completa os três favores venceu **42%** com Overclock e a interferência de Cipher, e **51%** quando começa nessa configuração.
+
+A Feira oferece Chrome-Brute e Bastion-Core a partir do capítulo 5 e Malware-Rex e Bomba EMP a partir do capítulo 6. São opções compráveis para a rota pacifista, que chega à Torre com recompensas próprias. Os perfis de laboratório pressupõem esses investimentos e não representam a compra automática dos itens.
+
+Foram **26.000** partidas nesta bateria, incluindo desafios de arquétipo e ablações. A [planilha da versão 0.3](equilibrio-simulacoes-v0.3.csv) contém os resultados completos.
+
+## Resultados históricos da versão 0.2
 
 Foram **33.200 partidas** em 83 cenários de 400, com 200 aberturas de cada lado por cenário. Apenas uma atingiu o limite sem desfecho. A versão de referência do catálogo e dos encontros é o commit `5e9df2c`. O perfil **Progressão mista** é um deck de bancada com premiações de combate, cartas de favores, Colosso e Relé de Bolso. Ele serve para testar crescimento de poder sem representar uma rota exclusiva ou uma lista garantida antes de determinado chefe.
 
@@ -97,6 +120,6 @@ A [planilha CSV](equilibrio-simulacoes-v0.2.csv) contém as taxas por iniciativa
 
 ## Reprodução
 
-Execute `node scripts/simular-combates.mjs 400` na raiz. A saída é CSV e a quantidade deve ser par. A simulação usa o motor real de regras, a IA dos NPCs, os decks reais e sementes fixas. O piloto de Kairo escolhe cartas e bloqueios por heurística. Na matriz principal ele ataca com todas as unidades prontas e reserva os testes de Overclock para cenários separados. Interfaces, animações e persistência são simuladas em memória. A partida é encerrada para análise após 30 ciclos de Kairo e sem desfecho conta como ausência de vitória. As taxas são referências comparativas do piloto, e medir dificuldade humana exige playtest.
+Execute `node scripts/simular-combates.mjs 200` na raiz para repetir a bateria 0.3. Para repetir a versão 0.2, use o simulador do commit `a5d2bcd` com 400 partidas por cenário. A saída é CSV e a quantidade deve ser par. A simulação usa o motor real de regras, a IA dos NPCs, os decks reais e sementes fixas. O piloto de Kairo escolhe cartas e bloqueios por heurística. Na matriz principal ele ataca com todas as unidades prontas e reserva os testes de Overclock para cenários separados. Interfaces, animações e persistência são simuladas em memória. A partida é encerrada para análise após 30 ciclos de Kairo e sem desfecho conta como ausência de vitória. As taxas são referências comparativas do piloto, e medir dificuldade humana exige playtest.
 
 Referências de design de cartas e restrições por ambiente em [Magic, New World Order](https://magic.wizards.com/en/news/making-magic/new-world-order-2011-12-05), [Magic, listas de restrição](https://magic.wizards.com/en/banned-restricted-list) e [Hearthstone, ajuste de Vol’jin](https://hearthstone.blizzard.com/en-us/news/24008697/28-2-patch-notes).

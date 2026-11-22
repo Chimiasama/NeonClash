@@ -9,7 +9,7 @@
   let jobTimer = null;
   let view = 'district';
   const residentDuels = {
-    10: { hp: 10, credits: 5, deck: ['unit_01', 'unit_02', 'unit_08', 'unit_09', 'exploit_01'] },
+    10: { hp: 10, credits: 5, deck: ['unit_01', 'unit_02', 'unit_37', 'unit_24', 'exploit_19'] },
     33: { hp: 14, credits: 7, card: 'unit_21', deck: sparringBoss.deckList },
     39: { hp: 22, credits: 12, card: 'unit_23', deck: wagerBoss.deckList, canOverclock: true },
     ...NB.CityAtlas.residentDuels
@@ -1201,6 +1201,7 @@
         mode: 'arena',
         boss: {
           ...(encounter.period === 'night' ? wagerBoss : sparringBoss),
+          ...NB.CityLife.travelDeck(NB.Story.get().chapter, encounter.period === 'night'),
           hp: encounter.hp, name: encounter.name, fullTitle: `${encounter.name} // Encontro urbano`,
           avatar: encounter.portrait, encounterKey: encounter.key, encounterReward: encounter.credits
         }

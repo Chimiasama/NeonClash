@@ -33,7 +33,11 @@
     { id: 'unit_38', price: 41 },
     { id: 'exploit_19', price: 39 },
     { id: 'unit_35', price: 38 },
-    { id: 'unit_36', price: 145, chapter: 4 }
+    { id: 'unit_36', price: 145, chapter: 4 },
+    { id: 'unit_07', price: 135, chapter: 4 },
+    { id: 'unit_10', price: 110, chapter: 4 },
+    { id: 'unit_14', price: 160, chapter: 5 },
+    { id: 'exploit_05', price: 95, chapter: 5 }
   ];
 
   const traces = {
@@ -46,7 +50,8 @@
   const sparringBoss = {
     ...kira, id: 'risco', name: 'RISCO', fullTitle: 'RISCO // Campeão do Viaduto',
     avatar: './avatars/risco.webp', fallbackArt: 'kira', accent: '#ffaf53', hp: 14, title: 'Campeão do Viaduto', archetype: 'Treino de controle de campo',
-    deckList: [...NB.Cards.STARTER_CARD_IDS.slice(0, 11), ...NB.Cards.STARTER_CARD_IDS.slice(0, 9)],
+    deckList: ['unit_01', 'unit_02', 'unit_04', 'unit_05', 'unit_08', 'unit_21', 'unit_37',
+      'exploit_01', 'exploit_09', 'exploit_19'].flatMap(id => [id, id]),
     lines: {
       start: ['"Três vagas. Quero ver como você usa cada uma."'],
       attack: ['"Escolha bem o que deixar passar."'],
@@ -59,7 +64,8 @@
     hp: 19,
     archetype: 'Pressão · OVERCLOCK',
     canOverclock: true,
-    deckList: [...sparringBoss.deckList.slice(0, -4), 'unit_07', 'unit_10', 'unit_13', 'exploit_05'],
+    deckList: ['unit_07', 'unit_10', 'unit_13', 'unit_01', 'unit_05', 'unit_02', 'unit_08',
+      'exploit_01', 'exploit_05', 'exploit_19'].flatMap(id => [id, id]),
     lines: { ...sparringBoss.lines, start: ['"Agora valendo. Tenta segurar meu Overclock."'], overclock: ['"Aumenta o volume. O ringue vai tremer."'] }
   };
 

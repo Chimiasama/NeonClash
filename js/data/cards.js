@@ -538,11 +538,12 @@
   ];
 
   const STARTER_DECKS = {
-    balanced: { name: 'Equilibrado', description: 'Ataque, defesa e Exploits de apoio. Uma abertura versátil.' },
+    balanced: { name: 'Equilibrado', description: 'Ataque, defesa e Exploits de apoio. Uma abertura versátil.',
+      cards: ['unit_01', 'unit_02', 'unit_03', 'unit_04', 'unit_05', 'unit_08', 'unit_09', 'exploit_01', 'exploit_02', 'exploit_04'] },
     tools: { name: 'Oficina Neutra', description: 'Mais unidades neutras, reparo e dano leve contra unidades.',
-      cards: ['unit_01', 'unit_02', 'unit_03', 'unit_04', 'unit_08', 'unit_11', 'unit_37', 'exploit_01', 'exploit_04', 'exploit_19'] },
+      cards: ['unit_01', 'unit_02', 'unit_03', 'unit_05', 'unit_08', 'unit_11', 'unit_37', 'exploit_01', 'exploit_09', 'exploit_19'] },
     breach: { name: 'Caça a Brechas', description: 'Pulso, Malha e Sombra para explorar afinidades e abrir a defesa.',
-      cards: ['unit_01', 'unit_02', 'unit_03', 'unit_04', 'unit_05', 'unit_09', 'unit_38', 'exploit_04', 'exploit_07', 'exploit_19'] }
+      cards: ['unit_01', 'unit_02', 'unit_04', 'unit_05', 'unit_06', 'unit_09', 'unit_38', 'exploit_01', 'exploit_07', 'exploit_19'] }
   };
 
   const AVATAR_ASSETS = {

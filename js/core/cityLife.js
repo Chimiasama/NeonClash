@@ -24,12 +24,14 @@
   const travelChances = { walk: 35, bike: 25, bus: 15, motorbike: 5, ferry: 15 };
   const challengers = Object.values(NB.CityAtlas.encounters).flat();
   const travelTiers = [
-    { label: 'Iniciante', fee: 3, hp: 10, reward: 5, deck: ['unit_01', 'unit_02', 'unit_08', 'exploit_01'] },
-    { label: 'Praticante', fee: 4, hp: 13, reward: 8, deck: ['unit_01', 'unit_04', 'unit_05', 'unit_08', 'exploit_04'] },
-    { label: 'Experiente', fee: 5, hp: 16, reward: 12, deck: ['unit_03', 'unit_04', 'unit_09', 'unit_25', 'exploit_07'] },
-    { label: 'Veterano', fee: 7, hp: 19, reward: 16, deck: ['unit_04', 'unit_06', 'unit_25', 'unit_32', 'exploit_10', 'exploit_17'] },
-    { label: 'Elite', fee: 9, hp: 22, reward: 21, canOverclock: true, deck: ['unit_03', 'unit_26', 'unit_27', 'unit_30', 'unit_32', 'exploit_10', 'exploit_18'] }
+    { label: 'Iniciante', fee: 3, hp: 10, reward: 5, deck: ['unit_37', 'unit_21', 'unit_24', 'unit_29', 'exploit_09'] },
+    { label: 'Praticante', fee: 4, hp: 13, reward: 8, deck: ['unit_01', 'unit_04', 'unit_28', 'unit_08', 'exploit_19'] },
+    { label: 'Experiente', fee: 5, hp: 16, reward: 12, deck: ['unit_01', 'unit_02', 'unit_04', 'unit_08', 'exploit_01'] },
+    { label: 'Veterano', fee: 7, hp: 19, reward: 16, deck: ['unit_01', 'unit_02', 'unit_06', 'unit_08', 'unit_09', 'exploit_01', 'exploit_06'] },
+    { label: 'Elite', fee: 9, hp: 22, reward: 21, canOverclock: true, deck: ['unit_02', 'unit_01', 'unit_10', 'unit_13', 'unit_09', 'exploit_01', 'exploit_18'] }
   ];
+  const eliteTravel = { label: 'Elite · Especialista', fee: 9, hp: 24, reward: 28, canOverclock: true,
+    deck: ['unit_02', 'unit_07', 'unit_10', 'unit_13', 'unit_14', 'exploit_01', 'exploit_05'] };
   const travelCards = {
     rare: ['unit_22', 'unit_23', 'unit_32', 'exploit_17'],
     common: ['unit_07', 'unit_21', 'unit_28', 'exploit_07']
@@ -83,7 +85,7 @@
     const challenge = raw?.travelChallenge;
     const travelChallenge = challenge && challengers.some(person => person.name === challenge.name) &&
       districts.some(place => place.id === challenge.destination) && Number.isInteger(challenge.tier) && travelTiers[challenge.tier]
-      ? { name: challenge.name, destination: challenge.destination, tier: challenge.tier } : null;
+      ? { name: challenge.name, destination: challenge.destination, tier: challenge.tier, elite: challenge.elite === true } : null;
     const routePact = integer(raw?.routePact, 0, 0, 4);
     const ownedDecks = Object.keys(cyberdecks).filter(id => id === 'stock' ||
       (Array.isArray(raw?.ownedDecks) && raw.ownedDecks.includes(id)));
@@ -309,7 +311,13 @@
     if (route.encounterChance && Math.random() * 100 < route.encounterChance) {
       const person = challengers[Math.floor(Math.random() * challengers.length)];
       const tier = Math.min(NB.Story.get().chapter, travelTiers.length - 1);
-      state.life.travelChallenge = { name: person.name, destination, tier };
+      const elite = tier === travelTiers.length - 1 && state.life.routePact >= 3 &&
+        cyberdecks[state.life.equippedDeck].ram >= 2 &&
+        NB.Save.getActiveDeck().filter(id => {
+          const card = NB.Cards.CARD_DB[id];
+          return card.kind === 'unit' && card.atk + card.def >= 9;
+        }).length >= 6 && Math.random() < 1 / 3;
+      state.life.travelChallenge = { name: person.name, destination, tier, elite };
     }
     advance(route.minutes, route.energy);
     if (deliveryNotice) {
@@ -324,7 +332,10 @@
     const challenge = state.life.travelChallenge;
     if (!challenge || challenge.destination !== state.district) return null;
     const person = challengers.find(item => item.name === challenge.name);
-    return { ...person, ...travelTiers[challenge.tier], optional: state.life.routePact >= 3 };
+    const optional = state.life.routePact >= 3;
+    const tier = optional && challenge.elite && challenge.tier === travelTiers.length - 1
+      ? eliteTravel : travelTiers[challenge.tier];
+    return { ...person, ...tier, optional };
   }
 
   function requiredTravelChallenge() {
@@ -547,7 +558,15 @@
     return notice;
   }
 
-  NB.CityLife = { items, transport, beds, streetRest, streetRestArt, acknowledgeStreetRest, bagLimit, implantPrice, normalize, clock, maxEnergy, maxAwake,
+  function travelDeck(tier, allowOverclock = false) {
+    const { deck, canOverclock } = travelTiers[Math.min(tier, travelTiers.length - 1)];
+    return {
+      deckList: Array.from({ length: NB.Cards.DECK_SIZE }, (_, index) => deck[index % deck.length]),
+      canOverclock: allowOverclock && Boolean(canOverclock)
+    };
+  }
+
+  NB.CityLife = { travelDeck, items, transport, beds, streetRest, streetRestArt, acknowledgeStreetRest, bagLimit, implantPrice, normalize, clock, maxEnergy, maxAwake,
     bagCount, routes, advance, travel, getTravelChallenge, requiredTravelChallenge, travelWithdrawalFee, settleTravelChallenge, finishTravelChallenge,
     advanceRoutePact, setRouteMask, cyberdecks, equipCyberdeck, initiativeItems, equipInitiative, rollInitiative, duelInitiative, sleep, buy, use, nightShift, workNightShift, helpContact, learnHillPath, hillPathLesson, takeNotice, consumablePrice, recoverEnergy,
     relayModes, demand, jobQuote, work, finishSignal, startDelivery, cancelDelivery };

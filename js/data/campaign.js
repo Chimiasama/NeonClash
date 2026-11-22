@@ -23,15 +23,11 @@
         { speaker: 'KIRA', text: 'Calma, fantasma! Eu só vendi a rota da sub-rede. Se quer o nome do contratante, tente acompanhar minha velocidade!' }
       ],
       deckList: [
-        'unit_04', 'unit_04', 'unit_04',
-        'unit_06', 'unit_06', 'unit_06',
-        'unit_13', 'unit_13',
-        'unit_01', 'unit_01',
-        'unit_02', 'unit_02',
-        'unit_05', 'unit_05',
-        'exploit_01', 'exploit_01',
-        'exploit_02', 'exploit_02',
-        'exploit_04', 'exploit_06'
+        'unit_04', 'unit_04', 'unit_06', 'unit_06',
+        'unit_13', 'unit_24', 'unit_24', 'unit_22',
+        'unit_01', 'unit_01', 'unit_02', 'unit_08',
+        'unit_37', 'unit_37', 'exploit_01', 'exploit_01',
+        'exploit_02', 'exploit_02', 'exploit_04', 'exploit_06'
       ],
       lines: {
         start: ['"Rápido demais pro seu firewall velho, Kairo!"', '"Zero-Day engatilhado. Tenta piscar!"'],
@@ -65,14 +61,11 @@
         { speaker: 'KAIRO', text: 'A Vértice pagou pela minha emboscada. Vou derrubar cada camada do seu Firewall até arrancar o nome do mandante.' }
       ],
       deckList: [
-        'unit_03', 'unit_03', 'unit_03',
-        'unit_10', 'unit_10', 'unit_10',
-        'unit_12', 'unit_12',
-        'unit_01', 'unit_01',
-        'unit_02', 'unit_02',
-        'unit_07', 'unit_07',
-        'exploit_01', 'exploit_01', 'exploit_01',
-        'exploit_04', 'exploit_04', 'exploit_04'
+        'unit_03', 'unit_03', 'unit_10', 'unit_12',
+        'unit_25', 'unit_25', 'unit_23', 'unit_01',
+        'unit_01', 'unit_02', 'unit_02', 'unit_28',
+        'unit_05', 'unit_05', 'exploit_01', 'exploit_01',
+        'exploit_04', 'exploit_09', 'exploit_10', 'exploit_16'
       ],
       lines: {
         start: ['"Perímetro selado. Nenhuma invasão passará pelo Firewall."', '"Autorização negada, Kairo. Iniciando expurgo."'],
@@ -106,16 +99,11 @@
         { speaker: 'VEX', text: 'Nada pessoal, Kairo — só negócios de alto escalão. Sobreviva aos meus Vírus e Drenos que eu te dou a chave do diretor.' }
       ],
       deckList: [
-        'unit_09', 'unit_09', 'unit_09',
-        'unit_11', 'unit_11',
-        'unit_08', 'unit_08',
-        'unit_12', 'unit_12',
-        'unit_14', 'unit_14',
-        'unit_02',
-        'exploit_02', 'exploit_02',
-        'exploit_03', 'exploit_03',
-        'exploit_05', 'exploit_05',
-        'exploit_06', 'exploit_06'
+        'unit_09', 'unit_09', 'unit_11', 'unit_11',
+        'unit_08', 'unit_08', 'unit_12', 'unit_14',
+        'unit_14', 'unit_02', 'unit_02', 'unit_26',
+        'unit_29', 'unit_05', 'exploit_02', 'exploit_03',
+        'exploit_05', 'exploit_06', 'exploit_06', 'exploit_10'
       ],
       lines: {
         start: ['"Kairo? Achei que a emboscada tinha apagado você..."', '"Prepare-se para ter sua RAM drenada até o osso."'],
@@ -149,16 +137,11 @@
         { speaker: 'KAIRO', text: 'Meu terminal já está no barramento central. Vou tirar a rede elétrica da contenção do Eclipse e entregar o controle a Renan.' }
       ],
       deckList: [
-        'unit_07', 'unit_07',
-        'unit_05', 'unit_05',
-        'unit_13', 'unit_13',
-        'unit_14', 'unit_14',
-        'unit_10', 'unit_10',
-        'unit_02', 'unit_02',
-        'unit_06', 'unit_08',
-        'exploit_01', 'exploit_01',
-        'exploit_03', 'exploit_04',
-        'exploit_05', 'exploit_06'
+        'unit_07', 'unit_07', 'unit_05', 'unit_05',
+        'unit_13', 'unit_13', 'unit_14', 'unit_14',
+        'unit_10', 'unit_10', 'unit_02', 'unit_02',
+        'unit_06', 'unit_08', 'exploit_01', 'exploit_01',
+        'exploit_03', 'exploit_04', 'exploit_05', 'exploit_06'
       ],
       lines: {
         start: ['"Archon no console: Você está usando o protocolo de campo que eu te ensinei contra a própria malha central, Kairo!"'],
