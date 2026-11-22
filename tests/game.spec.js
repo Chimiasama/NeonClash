@@ -589,7 +589,7 @@ test('quotes travel without charging, then spends time, energy and only the chos
   await expect(page.locator('#city-clock')).toHaveText('Dia 1 · 16:17 · Dia');
   await expect(page.locator('#city-energy')).toHaveAttribute('value', '100');
   await openCityMap(page);
-  await page.getByRole('button', { name: 'Ver local atual · Casa de Kairo' }).click();
+  await page.getByRole('button', { name: 'Ver local atual' }).click();
   await expect(map).toBeHidden();
   await expect(page.getByRole('heading', { name: 'Casa de Kairo' })).toBeInViewport();
 });
@@ -1736,6 +1736,8 @@ test('archives only displayed artwork and reopens full art with its description 
   await expect(gallery).toBeHidden();
   await expect(page.locator('#btn-title-gallery')).toBeFocused();
   await enterCity(page);
+  expect(await before()).not.toContain('./src/assets/baixa-luz-map.webp');
+  await openCityMap(page);
   await expect.poll(before).toContain('./src/assets/baixa-luz-map.webp');
   await expect(page.getByRole('navigation', { name: 'Navegação da cidade' }).getByRole('button', { name: 'Galeria' })).toHaveCount(0);
   await page.locator('#btn-netmap-settings').click();

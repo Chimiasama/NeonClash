@@ -214,7 +214,7 @@
     marker.style.left = `${x}%`;
     marker.style.top = `${y}%`;
     $('city-map-view').hidden = !showMap;
-    $('city-current-location').textContent = `Ver local atual · ${district.name}`;
+    $('city-current-location').setAttribute('aria-description', district.name);
     $('city-neighborhood-picker').hidden = view !== 'atlas';
     document.querySelector('.city-detail').hidden = showMap;
     const area = view === 'atlas' && NB.CityAtlas.neighborhoods.find(item => item.id === neighborhoodFilter);
