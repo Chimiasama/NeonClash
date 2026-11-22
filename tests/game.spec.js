@@ -2699,3 +2699,37 @@ test('describes the Feira guard relative to its controller on either side of the
     await expect(page.locator('#visor-desc')).not.toContainText(/Kairo|Cipher/i);
   }
 });
+
+test('lets Kairo take direct damage against a Firewall attacker and reserves Firewall priority for defense', async ({ page }) => {
+  await page.goto('/');
+  const hp = await page.evaluate(() => {
+    NB.Input.startMatch({ mode: 'campaign', boss: NB.Campaign.getNodeById('cipher') });
+    NB.State.wait = async () => true;
+    const state = NB.State.get();
+    state.player.field = [NB.State.createFieldUnit('unit_03', 1, 'player'), NB.State.createFieldUnit('unit_01', 2, 'player'), null];
+    state.enemy.field = [
+      { ...NB.State.createFieldUnit('unit_23', 3, 'enemy'), booting: false },
+      { ...NB.State.createFieldUnit('unit_01', 4, 'enemy'), booting: false }, null
+    ];
+    NB.Combat.preparePlayerDefense([0, 1]);
+    NB.UI.renderAll();
+    return state.player.hp;
+  });
+  await page.getByRole('button', { name: /^receber dano direto$/i }).click();
+  await expect.poll(() => page.evaluate(() => NB.State.get().player.hp)).toBe(hp - 7);
+  const result = await page.evaluate(async () => {
+    const state = NB.State.get();
+    const intact = state.player.field.slice(0, 2).map(unit => unit.def);
+    state.enemy.field[0].attacked = false;
+    state.enemy.field[1].attacked = false;
+    NB.Combat.preparePlayerDefense([0, 1]);
+    const priority = NB.Combat.prioritizeFirewallBlocks([0, 1], { 1: 1 }, state.player);
+    state.defenseMap = { 1: 1 };
+    await NB.Combat.confirmPlayerDefense();
+    const playerHp = state.player.hp;
+    state.player.field[0] = { ...NB.State.createFieldUnit('unit_23', 5, 'player'), atk: 1, def: 9 };
+    state.enemy.field = [{ ...NB.State.createFieldUnit('unit_01', 6, 'enemy'), atk: 1, def: 1 }, null, null];
+    return { intact, priority, playerHp, ai: NB.AI.computeAiBlocks([0]) };
+  });
+  expect(result).toEqual({ intact: [7, 4], priority: { 1: 0 }, playerHp: hp - 10, ai: {} });
+});

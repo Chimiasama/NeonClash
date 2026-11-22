@@ -47,7 +47,7 @@
       short: 'FW',
       icon: '🛡',
       color: '#38BDF8',
-      desc: 'Tem prioridade no bloqueio quando estiver apta a defender ou quando estiver atacando.'
+      desc: 'Tem prioridade entre as unidades aptas quando seu lado decide bloquear.'
     },
     VIRUS: {
       id: 'VIRUS',

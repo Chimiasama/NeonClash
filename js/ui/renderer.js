@@ -77,8 +77,9 @@
     if (state.phase !== 'PLAYER_DEFENSE') return;
     const overclock = state.enemyOverclock;
     const remainingDef = new Map();
+    const blocks = NB.Combat.prioritizeFirewallBlocks(state.enemyAttackers, state.defenseMap, state.player);
     for (const attackSlot of state.enemyAttackers) {
-      const defenseSlot = state.defenseMap[attackSlot];
+      const defenseSlot = blocks[attackSlot];
       const attacker = state.enemy.field[attackSlot];
       const defender = state.player.field[defenseSlot];
       if (!attacker || !defender) continue;
@@ -186,16 +187,18 @@
         hint.textContent = 'Sem unidades aptas para bloquear. Confirme para continuar.';
       } else if (state.enemyAttackers.length === 1) {
         hint.textContent = Object.keys(state.defenseMap).length
-          ? 'Bloqueio marcado. Toque na sua carta para desmarcar.'
-          : NB.Cards.hasKeyword(state.enemy.field[state.enemyAttackers[0]], 'FIREWALL')
-            ? 'Firewall inimigo. Toque na sua carta para bloquear.'
-            : 'Toque na sua carta para bloquear ou confirme para passar.';
+          ? 'Toque na carta para desmarcar. Seu Firewall tem prioridade se bloquear.'
+          : 'Toque na sua carta para bloquear ou aceite o dano direto.';
       } else if (state.activeDefenderSlot !== null) {
         hint.textContent = 'Toque no atacante que deseja bloquear.';
       } else {
         hint.textContent = 'Toque na sua unidade e depois no atacante inimigo.';
       }
       btnP.textContent = 'CONFIRMAR DEFESA';
+      if (state.player.field.some(unit => NB.Combat.canBlock(unit, state.player))) {
+        btnS.style.display = 'block';
+        btnS.textContent = 'RECEBER DANO DIRETO';
+      }
       btnP.classList.add('magenta');
     } else if (state.phase === 'ENEMY_TURN' || state.phase === 'COMBAT_ANIM') {
       strip.classList.add('mode-defense');

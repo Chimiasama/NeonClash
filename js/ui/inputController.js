@@ -324,8 +324,7 @@
         const existingEnemy = Object.keys(state.defenseMap).find(k => state.defenseMap[k] === slotIdx);
         if (state.enemyAttackers.length === 1) {
           const attacker = state.enemyAttackers[0];
-          state.defenseDeclined = state.defenseMap[attacker] === slotIdx;
-          if (state.defenseDeclined) delete state.defenseMap[attacker];
+          if (state.defenseMap[attacker] === slotIdx) delete state.defenseMap[attacker];
           else state.defenseMap[attacker] = slotIdx;
           state.activeDefenderSlot = null;
         } else if (NB.Combat.blockLimit(unit) > 1) {
@@ -337,6 +336,7 @@
           if (existingEnemy !== undefined) delete state.defenseMap[existingEnemy];
           state.activeDefenderSlot = slotIdx;
         }
+        state.defenseMap = NB.Combat.prioritizeFirewallBlocks(state.enemyAttackers, state.defenseMap, state.player);
         NB.Audio.playSelect();
         NB.Physics.vibrateCard();
         NB.UI.renderAll();
@@ -366,6 +366,7 @@
             state.defenseMap[targetEnemyKey] = defenderSlot;
             state.activeDefenderSlot = null;
           }
+          state.defenseMap = NB.Combat.prioritizeFirewallBlocks(state.enemyAttackers, state.defenseMap, state.player);
           NB.Audio.playSelect();
           NB.Physics.vibrateCard();
           NB.UI.renderAll();
@@ -582,6 +583,8 @@
         state.overclockUnits = [];
         NB.Physics.clearLasers();
         NB.UI.renderAll();
+      } else if (state.phase === 'PLAYER_DEFENSE') {
+        NB.Combat.confirmPlayerDefense(true);
       } else if (state.phase === 'SELECT_TARGET') {
         cancelTargetMode();
       }

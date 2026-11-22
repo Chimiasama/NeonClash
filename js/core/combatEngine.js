@@ -479,7 +479,6 @@
   function preparePlayerDefense(attackers) {
     const state = NB.State.get();
     state.enemyAttackers = attackers;
-    state.defenseDeclined = false;
     state.defenseMap = {};
     state.activeDefenderSlot = null;
     const eligible = state.player.field.flatMap((unit, slot) => canBlock(unit, state.player) ? [slot] : []);
@@ -491,12 +490,11 @@
       if (attackers.length === 1) state.defenseMap[attackers[0]] = eligible[0];
       else state.activeDefenderSlot = eligible[0];
     }
-    assignFirewallBlocks(state);
+    fillFirewallSuggestions(state);
     state.phase = 'PLAYER_DEFENSE';
   }
 
-  function assignFirewallBlocks(state) {
-    if (state.defenseDeclined) return;
+  function fillFirewallSuggestions(state) {
     for (const attacker of state.enemyAttackers) {
       if (state.defenseMap[attacker] !== undefined) continue;
       const slot = state.player.field.findIndex((unit, index) => NB.Cards.hasKeyword(unit, 'FIREWALL') &&
@@ -505,35 +503,23 @@
     }
   }
 
-  async function confirmPlayerDefense() {
+  function prioritizeFirewallBlocks(attackers, map, actor) {
+    const blocks = legalBlocks(attackers, map, actor);
+    for (const attacker of attackers) {
+      if (blocks[attacker] === undefined || NB.Cards.hasKeyword(actor.field[blocks[attacker]], 'FIREWALL')) continue;
+      const firewall = actor.field.findIndex((unit, slot) => NB.Cards.hasKeyword(unit, 'FIREWALL') &&
+        hasBlockRoom(unit, actor, blocks, slot));
+      if (firewall !== -1) blocks[attacker] = firewall;
+    }
+    return blocks;
+  }
+
+  async function confirmPlayerDefense(receiveDirectDamage = false) {
     const state = NB.State.get();
     if (state.phase !== 'PLAYER_DEFENSE') return;
 
-    state.defenseMap = legalBlocks(state.enemyAttackers, state.defenseMap, state.player);
-    const hasFreeDefender = state.player.field.some((unit, slot) =>
-      hasBlockRoom(unit, state.player, state.defenseMap, slot));
-
-    const unblockedEnemyFirewall = state.enemyAttackers.find(eSlot => {
-      const eu = state.enemy.field[eSlot];
-      return eu && NB.Cards.hasKeyword(eu, 'FIREWALL') && state.defenseMap[eSlot] === undefined;
-    });
-
-    if (unblockedEnemyFirewall !== undefined && hasFreeDefender) {
-      NB.Physics.showToast('🛡 BLOQUEIE O FIREWALL INIMIGO PRIMEIRO!', 'var(--amber)');
-      NB.Physics.vibrateCard();
-      return;
-    }
-
-    const marked = Object.keys(state.defenseMap).length;
-    assignFirewallBlocks(state);
-    if (Object.keys(state.defenseMap).length > marked) {
-      NB.Physics.showToast('🛡 SEU FIREWALL INTERCEPTOU O ATAQUE!', 'var(--cyan)');
-      NB.Physics.drawDefenseLasers('enemy', state.defenseMap);
-      if (!(await NB.State.wait(360))) return;
-    }
-
     const attackers = [...state.enemyAttackers];
-    const blockMap = { ...state.defenseMap };
+    const blockMap = receiveDirectDamage ? {} : prioritizeFirewallBlocks(attackers, state.defenseMap, state.player);
     const enemyOc = state.enemyOverclock;
     state.enemyAttackers = [];
     state.defenseMap = {};
@@ -567,6 +553,7 @@
     executeOverclockAttack,
     confirmPlayerAttack,
     preparePlayerDefense,
+    prioritizeFirewallBlocks,
     confirmPlayerDefense
   };
 })(window.NB = window.NB || {});

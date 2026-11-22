@@ -11,14 +11,8 @@
       .map((u, idx) => NB.Combat.canBlock(u, state.enemy) ? { idx, u, isFirewall: NB.Cards.hasKeyword(u, 'FIREWALL') } : null)
       .filter(Boolean);
 
-    const sortedAtks = [...playerAttackers].sort((a, b) => {
-      const uA = state.player.field[a];
-      const uB = state.player.field[b];
-      const fwA = NB.Cards.hasKeyword(uA, 'FIREWALL') ? 1 : 0;
-      const fwB = NB.Cards.hasKeyword(uB, 'FIREWALL') ? 1 : 0;
-      if (fwB !== fwA) return fwB - fwA;
-      return attackingPower(uB, state.player.field) - attackingPower(uA, state.player.field);
-    });
+    const sortedAtks = [...playerAttackers].sort((a, b) =>
+      attackingPower(state.player.field[b], state.player.field) - attackingPower(state.player.field[a], state.player.field));
 
     const totalIncoming = sortedAtks.reduce((acc, s) => acc + attackingPower(state.player.field[s], state.player.field), 0);
     const mustBlockLethal = totalIncoming >= state.enemy.hp;
@@ -27,7 +21,6 @@
       const atkU = state.player.field[pSlot];
       if (!atkU || availableDefenders.length === 0) continue;
 
-      const attackerIsFirewall = NB.Cards.hasKeyword(atkU, 'FIREWALL');
       const survives = d => d.u.def > NB.Combat.clashDamage(atkU, d.u, state.player.field);
       const destroys = d => d.u.atk + NB.Combat.affinityBonus(d.u, atkU) >= atkU.def;
       let pickIdx = availableDefenders.findIndex(d => d.isFirewall);
@@ -35,10 +28,10 @@
       if (pickIdx === -1) {
         pickIdx = availableDefenders.findIndex(d => destroys(d) && survives(d));
       }
-      if (pickIdx === -1 && (attackingPower(atkU, state.player.field) >= 4 || mustBlockLethal || attackerIsFirewall || NB.Cards.hasKeyword(atkU, 'DRENO'))) {
+      if (pickIdx === -1 && (attackingPower(atkU, state.player.field) >= 4 || mustBlockLethal || NB.Cards.hasKeyword(atkU, 'DRENO'))) {
         pickIdx = availableDefenders.findIndex(d => survives(d) || destroys(d));
       }
-      if (pickIdx === -1 && (mustBlockLethal || attackerIsFirewall)) {
+      if (pickIdx === -1 && (mustBlockLethal)) {
         pickIdx = 0;
       }
 

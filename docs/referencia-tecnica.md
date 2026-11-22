@@ -142,7 +142,7 @@ O catálogo atual tem **80 cartas**, sendo 50 unidades e 30 Exploits. Cada deck 
 | --- | --- |
 | Afinidade | Pulso vence Malha, Malha vence Sombra, Sombra vence Pulso. Em choque normal, vantagem dá +1 de dano se a unidade tem ATK positivo. Neutra fica fora do ciclo. Recompilar modifica a afinidade durante a partida. |
 | Zero-Day | A unidade pode atacar no turno em que entra. |
-| Firewall | Dá prioridade de bloqueio/ataque e pode interceptar automaticamente atacantes ainda sem bloqueio. |
+| Firewall | Tem prioridade defensiva sobre outras unidades aptas quando seu lado escolhe bloquear. |
 | Vírus | Após causar dano de combate a uma unidade que sobreviveu, reduz seu ATK em 2, até o mínimo de zero. |
 | Dreno | Rouba até 1 RAM ao causar dano direto a HP. Outros efeitos podem drenar valores próprios. |
 | Ressonância | Requer outra aliada da mesma afinidade não neutra. Condensador Coral recebe DEF permanente na entrada. Ferro de Pulso recebe ATK no ataque, inclusive no Overclock. |
@@ -170,7 +170,7 @@ O **Novo Jogo+** aparece na tela inicial depois do epílogo. Reinicia história,
 
 Durante o combate, os avisos flutuantes mostram a variação em HP ou DEF e uma causa curta, como afinidade, perfuração, escudo ou Escolta. A aba **Efeitos** em **LOG** preserva os detalhes por lado atingido e por turno.
 
-Após atacar, uma unidade fica exausta e não bloqueia até o início do próximo turno do seu lado. A regra vale para os dois lados e para as unidades usadas no Overclock. Firewall só intercepta se puder bloquear. Unidades em boot podem bloquear se estiverem aptas. Com um único atacante, tocar na unidade aliada marca ou desmarca o bloqueio. Se houver apenas um defensor apto, o bloqueio começa marcado. Contra vários atacantes, um defensor único já vem selecionado e o jogador escolhe o alvo. Firewall inimigo conserva a prioridade obrigatória.
+Após atacar, uma unidade fica exausta e não bloqueia até o início do próximo turno do seu lado. A regra vale para os dois lados e para as unidades usadas no Overclock. Firewall só intercepta se puder bloquear. Unidades em boot podem bloquear se estiverem aptas. Com um único atacante, tocar na unidade aliada marca ou desmarca o bloqueio. Se houver apenas um defensor apto, o bloqueio começa marcado. Contra vários atacantes, um defensor único já vem selecionado e o jogador escolhe o alvo. Um Firewall apto tem prioridade entre os bloqueios escolhidos pelo lado que se defende. A ação **Receber dano direto** ignora todas as sugestões de bloqueio.
 
 A seleção de ataque mostra **+1** nas unidades adversárias que tomariam bônus de afinidade se bloqueassem. A linha tracejada e a prévia de DEF indicam o lado que recebe o bônus quando o bloqueio já está marcado.
 
