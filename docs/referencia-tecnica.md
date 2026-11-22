@@ -128,6 +128,8 @@ A normalização do save deriva aliados antigos da evidência da conclusão paci
 
 ## Combate, cartas e progressão
 
+O [guia de equilíbrio PvE](equilibrio-de-cartas.md) reúne a régua de pontos, os níveis de encontro e os resultados das simulações.
+
 O catálogo atual tem **51 cartas**, sendo 32 unidades e 19 Exploits. Cada deck do jogador tem 20 cartas e aceita até duas cópias de cada ID. Há 12 cartas base antes da escolha do deck inicial. A coleção usa ID estável, metadados de arte, descrição e atributos. Cartas novas entram pelo catálogo em `cards.js` e pela respectiva rota de aquisição. IDs têm lacunas históricas e o sufixo maior não representa a contagem.
 
 1. Cada lado começa com 0 RAM. Kairo tem 20 HP. A partida distribui quatro cartas iniciais por lado. A mão comporta seis cartas, com descarte quando uma compra excede esse limite. Quando o deck fica vazio, o descarte é embaralhado para continuar comprando. A unidade atingida pelo Kill-Switch vai para a área de removidas e fica fora da reciclagem. O botão LOG e a tela de resultado permitem consultar as cartas que cada lado jogou, o descarte atual e as cartas removidas. Cada entrada abre a arte e os atributos de catálogo.
