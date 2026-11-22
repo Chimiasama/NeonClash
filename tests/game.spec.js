@@ -897,6 +897,7 @@ test('opens the kiosk job only in its night window and prevents duplicate pay', 
   const job = page.getByRole('button', { name: /Trabalhar no quiosque/ });
   await expect(job).toBeDisabled();
   await page.evaluate(() => { NB.Save.get().city.life.minute = 1190; });
+  await openCityMap(page);
   await kiosk.click();
   await expect(job).toBeEnabled();
   await job.click();
