@@ -9,9 +9,9 @@
   let jobTimer = null;
   let view = 'district';
   const residentDuels = {
-    10: { hp: 10, credits: 5, deck: ['unit_01', 'unit_02', 'unit_37', 'unit_24', 'exploit_19'] },
-    33: { hp: 14, credits: 7, card: 'unit_21', deck: sparringBoss.deckList },
-    39: { hp: 22, credits: 12, card: 'unit_23', deck: wagerBoss.deckList, canOverclock: true },
+    10: { hp: 10, credits: 5, expansionCard: 'unit_52', deck: ['unit_01', 'unit_02', 'unit_37', 'unit_24', 'exploit_19'] },
+    33: { hp: 14, credits: 7, expansionCard: 'unit_53', card: 'unit_21', deck: sparringBoss.deckList },
+    39: { hp: 22, credits: 12, expansionCard: 'unit_54', card: 'unit_23', deck: wagerBoss.deckList, canOverclock: true },
     ...NB.CityAtlas.residentDuels
   };
   const aline = NB.CityAtlas.residents.find(person => person.id === 44);
@@ -432,6 +432,8 @@
     decorateService(summary, 'Aline', { portrait: aline.portrait });
     choices.append(summary);
     addButton(choices, 'Desafiar Aline', () => startResidentDuel(aline));
+    const prize = residentDuels[aline.id].expansionCard;
+    if (!NB.Save.get().unlockedCards.includes(prize)) addText(choices, `Prêmio especial · ${NB.Cards.CARD_DB[prize].name}`);
     if (life.vehicles.includes('bike')) {
       const learned = life.favors.includes('hillPath');
       const lesson = document.createElement('details');
@@ -486,10 +488,13 @@
       const duel = residentDuels[person.id];
       const card = NB.Cards.CARD_DB[duel.card];
       const firstWin = !NB.Save.get().city.residentWins.includes(person.id);
+      const extra = duel.expansionCard && !NB.Save.get().unlockedCards.includes(duel.expansionCard)
+        ? NB.Cards.CARD_DB[duel.expansionCard].name : '';
       const row = document.createElement('div');
       row.className = 'city-local-duel';
       serviceButton(row, `Desafiar ${person.name}`, () => startResidentDuel(person), person.name, { portrait: person.portrait });
       addText(row, `${duel.hp} HP · +${duel.credits} créditos por vitória${card && firstWin ? ` · primeira vitória: ${card.name}` : ''}`);
+      if (extra) addText(row, `Prêmio especial · ${extra}`);
       section.append(row);
     }
     content.append(section);
@@ -858,7 +863,7 @@
       row.append(art);
       const details = document.createElement('div');
       addText(details, card.name, 'city-clue-title');
-      addText(details, card.kind === 'unit' ? 'Unidade' : 'Exploit');
+      addText(details, [card.kind === 'unit' ? 'Unidade' : 'Exploit', NB.Cards.rarityLabel(card.rarity)].filter(Boolean).join(' · '));
       if (owned) {
         addText(details, card.kind === 'unit'
           ? `${card.atk} ATK · ${card.def} DEF · +${card.ramGain} RAM · ${NB.Cards.affinityLabel(NB.Save.getAffinity(id))}`
@@ -1366,6 +1371,10 @@
         save.unlockedCards.push(duel.card);
         state.residentReward = duel.card;
       }
+    }
+    if (winner === 'player' && duel?.expansionCard && !save.unlockedCards.includes(duel.expansionCard)) {
+      save.unlockedCards.push(duel.expansionCard);
+      state.expansionReward = duel.expansionCard;
     }
     save.city.credits += payout;
     NB.Save.save();

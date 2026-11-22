@@ -49,6 +49,9 @@
 
   const actorPanel = side => document.getElementById(side === 'player' ? 'player-hud' : 'enemy-panel');
 
+  const unitDamage = (effect, unit) => effect.value +
+    (effect.type === 'woundedDamage' && unit.def < unit.maxDef ? effect.bonus : 0);
+
   function adjustUnit(type, unit, value) {
     if (type === 'atk' && NB.Cards.hasKeyword(unit, 'GUARD_ONLY')) return 'SEM ATK';
     if ((type === 'def' || type === 'repair') && NB.Cards.hasKeyword(unit, 'ATTACK_ONLY')) return 'SEM DEF';
@@ -70,6 +73,10 @@
     if (type === 'damage') {
       unit.def -= value;
       return `-${value} DEF`;
+    }
+    if (type === 'blockLock') {
+      unit.blockLock = true;
+      return 'SEM BLOQUEIO';
     }
     if (type === 'affinity') {
       unit.affinity = NB.Cards.AFFINITIES[unit.affinity]?.beats || 'pulso';
@@ -114,7 +121,7 @@
         const damage = type === 'direct' ? value : discardDamage(actor, effect);
         if (damage > 0) {
           NB.Physics.fireLaserBeam(caster, actorPanel(enemy), card.accent, 7);
-          NB.State.applyDirectDamage(enemy, damage, side === 'player');
+          NB.State.applyDirectDamage(enemy, damage, side === 'player', card.name);
         }
       } else if (type === 'recycle') {
         const options = recyclable(actor, effect);
@@ -132,12 +139,18 @@
         actor.overclockCoupler = true;
       } else if (type === 'counterFormation') {
         actor.counterFormation = true;
+      } else if (type === 'shieldBreak') {
+        const removed = Math.min(value, state[enemy].hpShield);
+        state[enemy].hpShield -= removed;
+        if (removed) NB.State.reportImpact(enemy, actorPanel(enemy), `−${removed} ESCUDO`, card.name);
       } else if (type === 'hpShield') {
+        const gained = Math.max(0, value - actor.hpShield);
         actor.hpShield = Math.max(actor.hpShield, value);
+        if (gained) NB.State.reportImpact(side, caster, `+${gained} ESCUDO`, card.name, '#83e8f5');
       } else if (type === 'heal') {
         const healed = Math.min(value, actor.maxHp - actor.hp);
         actor.hp += healed;
-        if (healed) NB.Physics.spawnFloatText(caster, `+${healed} HP`, '#39FF14');
+        if (healed) NB.State.reportImpact(side, caster, `+${healed} HP`, card.name, '#9dffb6');
       } else if (type === 'drain') {
         NB.State.applyRamDrain(side, value);
       } else if (type === 'draw') {
@@ -154,14 +167,19 @@
           if (appliesModifier && alreadyModified(card, target.unit)) continue;
           const before = type === 'atk' ? target.unit.atk : target.unit.def;
           const node = NB.State.getSlotEl(target.side, target.slot);
-          const label = adjustUnit(type, target.unit, value);
+          const damage = type === 'damage' || type === 'woundedDamage';
+          const label = adjustUnit(damage ? 'damage' : type, target.unit,
+            damage ? unitDamage(effect, target.unit) : value);
+          const gone = damage && target.unit.def <= 0;
+          const detail = [card.name, type === 'woundedDamage' && before < target.unit.maxDef ? 'Alvo avariado' : '',
+            gone ? 'Destruída' : ''].filter(Boolean).join(' · ');
+          NB.State.reportImpact(target.side, node, damage ? `−${Math.min(before, before - target.unit.def)} DEF` : label, detail, card.accent);
           if (appliesModifier && (type === 'atk' ? target.unit.atk : target.unit.def) > before) modified.add(target.unit);
-          if (type === 'banish' || type === 'destroy' || (type === 'damage' && target.unit.def <= 0)) {
+          if (type === 'banish' || type === 'destroy' || gone) {
             NB.State.destroyUnit(target.side, target.slot, side === 'player' && target.side !== side, type === 'banish');
           }
           if (node) {
             NB.Physics.fireLaserBeam(caster, node, card.accent, 5);
-            NB.Physics.spawnFloatText(node, label, card.accent);
           }
         }
       }
@@ -196,6 +214,7 @@
           NB.Combat.canBlock(unit, actor) && !NB.Cards.hasKeyword(unit, 'VIGILANCE'));
         return sum + (!actor.counterFormation && opponent.field.some(Boolean) ? candidates.length * 1.5 : 0);
       }
+      if (type === 'shieldBreak') return sum + Math.min(value, opponent.hpShield) * 0.8;
       if (type === 'hpShield') return sum + (opponent.field.some(Boolean) ? Math.max(0, value - actor.hpShield) : 0);
       if (type === 'heal') return sum + Math.min(value, actor.maxHp - actor.hp) * 0.8;
       if (type === 'drain') return sum + Math.min(value, opponent.ram) * 1.4;
@@ -204,7 +223,11 @@
       return targets(state, card, effect, side, slot).reduce((total, { unit }) => {
         if (isModifier(effect) && alreadyModified(card, unit)) return total;
         if (type === 'destroy' || type === 'banish') return total + 2 + (unit.atk + unit.def) * 0.6;
-        if (type === 'damage') return total + Math.min(value, unit.def) + (value >= unit.def ? 3 : 0);
+        if (type === 'damage' || type === 'woundedDamage') {
+          const damage = unitDamage(effect, unit);
+          return total + Math.min(damage, unit.def) + (damage >= unit.def ? 3 : 0);
+        }
+        if (type === 'blockLock') return total + (NB.Combat.canBlock(unit, opponent) ? 1.5 + unit.def * 0.45 : 0);
         if (type === 'repair') return total + Math.min(value, Math.max(0, unit.maxDef - unit.def));
         if (type === 'atk') return total + (value > 0 ? value * (unit.booting ? 0.7 : 1.3) : Math.min(-value, unit.atk));
         if (type === 'def') return total + value * 0.8;

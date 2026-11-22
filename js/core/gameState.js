@@ -57,6 +57,7 @@
         discard: [],
         removed: [],
         played: [],
+        impacts: [],
         field: [null, null, null],
         counterFormation: false,
         hpShield: 0,
@@ -71,6 +72,7 @@
         discard: [],
         removed: [],
         played: [],
+        impacts: [],
         field: [null, null, null],
         counterFormation: false,
         hpShield: 0,
@@ -191,14 +193,16 @@
   function applyVirusDebuff(targetSide, targetSlot) {
     const unit = state[targetSide].field[targetSlot];
     if (!unit || unit.def <= 0) return;
-    unit.atk = Math.max(0, unit.atk - 2);
+    const lost = Math.min(2, unit.atk);
+    if (!lost) return;
+    unit.atk -= lost;
     NB.Audio.playVirus();
     const slotEl = getSlotEl(targetSide, targetSlot);
     if (slotEl) {
       const c = NB.Physics.getElCenterInShell(slotEl);
       NB.Physics.spawnBurst(c.x, c.y, '#39FF14', 12);
-      NB.Physics.spawnFloatText(slotEl, '☣ -2 ATK', '#39FF14', 18);
     }
+    reportImpact(targetSide, slotEl, `−${lost} ATK`, 'Vírus', '#9dffb6', 21);
   }
 
   function applyRamDrain(thiefSide, amount = 1) {
@@ -213,8 +217,8 @@
     const thiefEl = document.getElementById(thiefSide === 'player' ? 'player-hud' : 'enemy-panel');
     const victimEl = document.getElementById(victimSide === 'player' ? 'player-hud' : 'enemy-panel');
     NB.Physics.fireLaserBeam(victimEl, thiefEl, '#E879F9', 5);
-    NB.Physics.spawnFloatText(thiefEl, `⟐ +${stolen} RAM`, '#E879F9', -14);
-    NB.Physics.spawnFloatText(victimEl, `-${stolen} RAM`, '#E879F9', 16);
+    reportImpact(thiefSide, thiefEl, `+${stolen} RAM`, 'Dreno', '#efb5ff', -14);
+    reportImpact(victimSide, victimEl, `−${stolen} RAM`, 'Dreno', '#efb5ff', 16);
     return stolen;
   }
 
@@ -324,14 +328,24 @@
     return true;
   }
 
-  function applyDirectDamage(targetSide, amount, countedForPlayer, labelPrefix = '') {
+  function reportImpact(side, node, text, detail = '', color = '#ff9aa9', offsetY = 0) {
+    const target = node?.dataset?.slot;
+    const cardId = target === undefined ? null : state[side].field[target]?.cardId;
+    const events = state[side].impacts;
+    events.push({ turn: state.turn, text, detail, target: NB.Cards.CARD_DB[cardId]?.name || '' });
+    NB.Physics.spawnFloatText(node, text, color, offsetY, detail);
+  }
+
+  function applyDirectDamage(targetSide, amount, countedForPlayer, detail = '') {
     if (amount <= 0) return 0;
     const target = state[targetSide];
     const absorbed = Math.min(target.hpShield, amount);
     target.hpShield -= absorbed;
     amount -= absorbed;
     const panel = document.getElementById(targetSide === 'enemy' ? 'enemy-panel' : 'player-hud');
-    if (absorbed && panel) NB.Physics.spawnFloatText(panel, `ESCUDO · ${absorbed}`, '#62e8fd');
+    const hpNode = document.getElementById(targetSide === 'enemy' ? 'enemy-hp-text' : 'player-hp-text') || panel;
+    const cause = [detail, absorbed ? `${absorbed} absorvidos` : ''].filter(Boolean).join(' · ');
+    if (absorbed && !amount) reportImpact(targetSide, hpNode, 'ESCUDO', cause, '#62e8fd');
     if (!amount) {
       NB.UI.renderAll();
       return 0;
@@ -352,9 +366,10 @@
       const c = NB.Physics.getElCenterInShell(panel);
       NB.Physics.spawnBurst(c.x, c.y, '#FF0055', amount >= 4 ? 30 : 20);
       NB.Physics.spawnShockwave(c.x, c.y, '#FF0055', amount >= 4 ? 76 : 48);
-      NB.Physics.spawnFloatText(panel, `${labelPrefix}-${amount} HP`, '#FF0055');
+
     }
 
+    reportImpact(targetSide, hpNode, `−${amount} HP`, cause);
     if (targetSide === 'enemy') {
       NB.Dialogue.setDialogue(target.hp <= 7 ? NB.Dialogue.pickLine('critical') : NB.Dialogue.pickLine('hit'));
     } else if (target.hp <= 7) {
@@ -444,6 +459,7 @@
     executeExploit,
     resolveDeployTarget,
     applyDirectDamage,
+    reportImpact,
     destroyUnit,
     checkWinCondition,
     triggerGameOver

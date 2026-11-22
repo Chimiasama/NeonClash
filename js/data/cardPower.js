@@ -2,7 +2,7 @@
   'use strict';
 
   // Estimates for a contested board. These weights are independent of tactical AI scoring.
-  const version = '0.4';
+  const version = '0.5';
   const weights = Object.freeze({ atk: 1, def: 0.75, ram: 0.9, card: 2.5 });
   const effectValue = {
     atk: effect => Math.abs(effect.value) * weights.atk,
@@ -18,6 +18,9 @@
     recycle: effect => weights.card * (effect.order === 'latest' ? 0.7 : 0.6),
     scan: () => weights.card * 1.25 * 0.9,
     discardDamage: effect => Math.min(effect.cap, 2) * 1.6,
+    woundedDamage: effect => (effect.value + effect.bonus * 0.55) * 0.9 + 0.6,
+    blockLock: () => 1.75,
+    shieldBreak: effect => effect.value * 0.6 * 0.35,
     affinity: () => 0.5,
     destroy: () => 6,
     banish: () => 6.5,
@@ -45,7 +48,7 @@
       (has('VIRUS') ? 0.9 : 0) + (has('DRENO') ? 0.8 : 0) + (has('VIGILANCE') ? 1.2 : 0) -
       (has('ATTACK_ONLY') ? 0.5 : 0) + Math.max(0, (card.blockLimit || 1) - 1) * 0.8;
     const overclock = (card.overclock?.counterReduction || 0) * 0.75 * 0.45 +
-      (card.overclock?.partnerBlock ? 0.6 : 0) + (card.overclock?.refund || 0) * weights.ram * 0.45;
+      (card.overclock?.escort ? 0.9 : 0) + (card.overclock?.partnerBlock ? 0.6 : 0) + (card.overclock?.refund || 0) * weights.ram * 0.45;
     const bonuses = effects(card) + traits + overclock + (card.ability === 'PING_1' ? 1.6 : 0);
     return Object.freeze({ base: round(base), bonuses: round(bonuses), total: round(base + bonuses) });
   }

@@ -1370,7 +1370,7 @@ test('limits repair, protects RAM on invalid targets and previews affinity damag
     return { invalid, unspent, valid, def: defender.def, ram: state.player.ram };
   });
   expect(repair).toEqual({ invalid: false, unspent: 4, valid: true, def: 5, ram: 3 });
-  await expect(page.locator('#defense-preview')).toHaveText('Sua posição 1 DEF 5→1 · Inimigo 2 DEF 5→3 · +1 afinidade (ataque)');
+  await expect(page.locator('#defense-preview')).toHaveText('Sua posição 1 DEF 5→1 · Inimigo 2 DEF 5→3 · +1 Pulso (ataque)');
 });
 
 test('rejects a repeat modifier without spending the card and lets Kairo pick another unit', async ({ page }) => {
@@ -2549,4 +2549,79 @@ test('settles a reloaded card wager as a loss and lets Risco return the same car
     lost: 'unit_33', hasLost: false, proposal: { prize: 'unit_33', stakes: [], fee: 12 },
     accepted: true, recovered: expect.stringContaining('Estilhaço de Pulso'), duplicate: '', count: 1
   });
+});
+
+test('redirects all of the Overclock counterattack to the escort on either side', async ({ page }) => {
+  await page.goto('/');
+  const outcome = await page.evaluate(async () => {
+    NB.State.wait = async () => true;
+    NB.AI.startEnemyTurn = () => {};
+    const results = [];
+    for (const side of ['player', 'enemy']) {
+      NB.Input.startMatch({ mode: 'quick', boss: NB.Campaign.NODES[0] });
+      const state = NB.State.get();
+      const other = side === 'player' ? 'enemy' : 'player';
+      const made = (id, uid) => ({ ...NB.State.createFieldUnit(id, uid, side), booting: false });
+      const leader = { ...made('unit_07', 1), def: 2 };
+      state[side].field = [leader, made('unit_42', 2), null];
+      state[other].field = [{ ...made('unit_03', 3), atk: 5, def: 5 }, null, null];
+      const hp = state[other].hp;
+      if (side === 'player') {
+        state.player.ram = 3;
+        state.overclockUnits = [0, 1];
+        state.phase = 'PLAYER_OVERCLOCK';
+        await NB.Combat.executeOverclockAttack();
+      } else {
+        state.enemyOverclock = { slots: [0, 1], combinedAtk: 7 };
+        NB.Combat.preparePlayerDefense([0]);
+        await NB.Combat.confirmPlayerDefense();
+      }
+      results.push([leader.def, state[side].field[1], hp - state[other].hp,
+        state[side].impacts.some(event => event.detail.includes('Escolta protegeu a líder'))]);
+    }
+    return results;
+  });
+  expect(outcome).toEqual([[2, null, 3, true], [2, null, 3, true]]);
+});
+
+test('shows the source of combat bonuses and archives them in the effects history', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(async () => {
+    NB.Input.startMatch({ mode: 'quick', boss: NB.Campaign.NODES[0] });
+    NB.State.wait = async () => true;
+    const state = NB.State.get();
+    state.player.field[0] = { ...NB.State.createFieldUnit('unit_04', 1, 'player'), booting: false };
+    state.enemy.field[0] = { ...NB.State.createFieldUnit('unit_05', 2, 'enemy'), def: 8 };
+    await NB.Combat.resolveCombatSequence('player', [0], { 0: 0 });
+    state.phase = 'PLAYER_MAIN';
+    NB.UI.renderAll();
+  });
+  await expect(page.locator('.float-impact').filter({ hasText: '+1 Sombra' })).toContainText('−4 DEF');
+  await page.locator('#btn-duel-log').click();
+  await page.getByRole('button', { name: 'Adversário', exact: true }).click();
+  await page.getByRole('button', { name: /Efeitos/ }).click();
+  await expect(page.locator('#duel-log-grid')).toContainText('−4 DEF · +1 Sombra');
+});
+
+test('applies the expansion effects and assigns a finite power value to all eighty cards', async ({ page }) => {
+  await page.goto('/');
+  const result = await page.evaluate(() => {
+    NB.Input.startMatch({ mode: 'quick', boss: NB.Campaign.NODES[0] });
+    const { player, enemy } = NB.State.get();
+    const target = NB.State.createFieldUnit('unit_03', 12, 'enemy');
+    enemy.field[0] = target;
+    player.ram = 12;
+    player.hand = ['exploit_21', 'exploit_22', 'exploit_22', 'exploit_23'].map((cardId, uid) => ({ cardId, uid }));
+    NB.State.executeExploit('player', 0, 0);
+    const wasLocked = !NB.Combat.canBlock(target, enemy);
+    NB.State.executeExploit('player', 1, 0);
+    const firstDamage = target.def;
+    NB.State.executeExploit('player', 2, 0);
+    enemy.hpShield = 4;
+    const hp = enemy.hp;
+    NB.State.executeExploit('player', 3);
+    return [wasLocked, firstDamage, target.def, hp - enemy.hp, enemy.hpShield,
+      Object.values(NB.CardPower.byId).filter(value => Number.isFinite(value.total)).length];
+  });
+  expect(result).toEqual([true, 5, 1, 2, 0, 80]);
 });

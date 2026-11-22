@@ -130,12 +130,12 @@ A normalização do save deriva aliados antigos da evidência da conclusão paci
 
 O [guia de equilíbrio PvE](equilibrio-de-cartas.md) reúne a régua de pontos, os níveis de encontro e os resultados das simulações.
 
-O catálogo atual tem **55 cartas**, sendo 35 unidades e 20 Exploits. Cada deck do jogador tem 20 cartas e aceita até duas cópias de cada ID. Há 12 cartas base antes da escolha do deck inicial. A coleção usa ID estável, metadados de arte, descrição e atributos. Cartas novas entram pelo catálogo em `cards.js` e pela respectiva rota de aquisição. IDs têm lacunas históricas e o sufixo maior não representa a contagem.
+O catálogo atual tem **80 cartas**, sendo 50 unidades e 30 Exploits. Cada deck do jogador tem 20 cartas e aceita até duas cópias de cada ID. Há 12 cartas base antes da escolha do deck inicial. A coleção usa ID estável, metadados de arte, descrição e atributos. Cartas novas entram pelo catálogo em `cards.js` e pela respectiva rota de aquisição. IDs têm lacunas históricas e o sufixo maior não representa a contagem.
 
 1. Cada lado começa com 0 RAM. Kairo tem 20 HP. A partida distribui quatro cartas iniciais por lado. A mão comporta seis cartas, com descarte quando uma compra excede esse limite. Quando o deck fica vazio, o descarte é embaralhado para continuar comprando. A unidade atingida pelo Kill-Switch vai para a área de removidas e fica fora da reciclagem. O botão LOG e a tela de resultado permitem consultar as cartas que cada lado jogou, o descarte atual e as cartas removidas. Cada entrada abre a arte e os atributos de catálogo.
 2. Em seu turno, Kairo pode invocar uma unidade se houver posição livre, obter a RAM da carta e usar Exploits enquanto puder pagar. Uma unidade normalmente passa por boot antes de poder atacar. O turno seguinte libera as unidades e compra uma carta. A IA segue fluxo de compra, invocação, Exploits e ataque, com perfil do oponente.
 3. Ataques são escolhidos antes da confirmação. Um atacante bloqueado troca dano simultâneo de ATK contra DEF com a unidade que bloqueou. DEF perdida persiste e uma unidade com DEF zero é destruída. Ataques sem bloqueio atingem HP. O painel prevê dano para bloqueios atribuídos, inclusive perfuração.
-4. Overclock consome 3 RAM e duas unidades prontas. Elas combinam o ataque, concentram a resposta do bloqueio na unidade líder e o excesso sobre a DEF do bloqueador atinge HP. Se ninguém bloquear, o ataque ganha +1 de dano direto ao HP. Se houver bloqueio, a dupla ganha +1 contra o bloqueador somente com duas afinidades não neutras e diferentes.
+4. Overclock consome 3 RAM e duas unidades prontas. Elas combinam o ataque, recebem a resposta do bloqueio na líder ou na parceira com Escolta e o excesso sobre a DEF do bloqueador atinge HP. Se ninguém bloquear, o ataque ganha +1 de dano direto ao HP. Se houver bloqueio, a dupla ganha +1 contra o bloqueador somente com duas afinidades não neutras e diferentes.
 5. HP zero encerra o duelo. A tela final registra turnos, dano, unidades inimigas destruídas e Exploits usados. Partidas urbanas resolvidas normalmente custam 40 min e 8 de energia. **Sair do duelo** abre confirmação e registra derrota, com até 3 créditos de taxa fora da aposta. Aposta já paga fica no Ringue e o duelo rápido é gratuito.
 
 | Regra | Aplicação |
@@ -165,6 +165,10 @@ O catálogo atual tem **55 cartas**, sendo 35 unidades e 20 Exploits. Cada deck 
 `PLAYER_MAIN` concentra invocações e Exploits. `SELECT_TARGET` aguarda o alvo de um Exploit. `PLAYER_ATTACK` permite seleção de atacantes e `PLAYER_OVERCLOCK` prepara a dupla. `ENEMY_TURN` executa a IA. `PLAYER_DEFENSE` recebe os bloqueios. `COMBAT_ANIM` protege a resolução animada. `GAME_OVER` encerra as ações da partida. A IA avalia alvos e efeitos possíveis, conserva RAM para Overclock quando seu perfil permite e considera prioridades de Firewall.
 
 O **Novo Jogo+** aparece na tela inicial depois do epílogo. Reinicia história, prólogo e vida da cidade, preservando coleção, decks, afinidades, Galeria, estatísticas e recompensas já conquistadas no Ringue. O duelo rápido começa com Kira como oponente inicial e inclui os demais conforme os encontros são resolvidos. Archon entra nessa seleção no Novo Jogo+.
+
+**Escolta de Overclock.** Se a segunda unidade tiver Escolta, todo o contra-ataque do bloqueador vai para ela. O excesso nunca transborda para a líder. Vírus acompanha o alvo real do contra-ataque e a retirada de unidades Só Ataque continua valendo em bloqueios. As unidades com Escolta deste lote podem atacar, e muralhas Só Defesa continuam sem poder entrar na dupla.
+
+Durante o combate, os avisos flutuantes mostram a variação em HP ou DEF e uma causa curta, como afinidade, perfuração, escudo ou Escolta. A aba **Efeitos** em **LOG** preserva os detalhes por lado atingido e por turno.
 
 Após atacar, uma unidade fica exausta e não bloqueia até o início do próximo turno do seu lado. A regra vale para os dois lados e para as unidades usadas no Overclock. Firewall só intercepta se puder bloquear. Unidades em boot podem bloquear se estiverem aptas. Com um único atacante, tocar na unidade aliada marca ou desmarca o bloqueio. Se houver apenas um defensor apto, o bloqueio começa marcado. Contra vários atacantes, um defensor único já vem selecionado e o jogador escolhe o alvo. Firewall inimigo conserva a prioridade obrigatória.
 
@@ -227,7 +231,7 @@ A Galeria registra o quadro quando sua imagem termina de carregar e a moldura ap
 
 ## Conteúdo atual e metas
 
-O jogo disponível tem 55 cartas, 10 bairros, 23 locais, 34 personagens com função no jogo, quatro chefes, quatro desafios de arquétipo e 37 cenas da investigação. O [plano de expansão](plano-expansao.md) descreve a meta de 500 cartas, sendo 495 encontráveis e cinco secretas de missão. Os roteiros de construção e descrições de moradores nos demais arquivos de `docs/` registram escopo planejado além dos recursos já descritos aqui.
+O jogo disponível tem 80 cartas, 10 bairros, 23 locais, 34 personagens com função no jogo, quatro chefes, quatro desafios de arquétipo e 37 cenas da investigação. O [plano de expansão](plano-expansao.md) descreve a meta de 500 cartas, sendo 495 encontráveis e cinco secretas de missão. Os roteiros de construção e descrições de moradores nos demais arquivos de `docs/` registram escopo planejado além dos recursos já descritos aqui.
 
 O lote piloto usa arte procedural. Condensador Coral, Ímã de Núcleo e Janela Espectral são vendidos na Feira. Catadora de Ecos, Ferro de Pulso e Pressão de Sucata são prêmios das primeiras vitórias sobre Giba, Aline e Nanda, respectivamente. Os três adversários também usam cartas do lote.
 

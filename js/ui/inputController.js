@@ -133,6 +133,7 @@
         u.booting = false;
         u.attacked = false;
         u.overclockGuard = false;
+        u.blockLock = false;
       }
     });
 

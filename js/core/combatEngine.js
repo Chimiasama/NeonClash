@@ -7,7 +7,7 @@
   }
 
   function canBlock(unit, actor) {
-    return Boolean(unit && unit.def > 0 && !NB.Cards.hasKeyword(unit, 'ATTACK_ONLY') &&
+    return Boolean(unit && unit.def > 0 && !unit.blockLock && !NB.Cards.hasKeyword(unit, 'ATTACK_ONLY') &&
       (!unit.attacked || unit.overclockGuard || actor.counterFormation || NB.Cards.hasKeyword(unit, 'VIGILANCE')));
   }
 
@@ -54,6 +54,10 @@
     return base + (coupled && neutralPair ? 1 : overclockSynergy(first, second));
   }
 
+  function overclockCounterTarget(leader, partner) {
+    return NB.Cards.CARD_DB[partner.cardId].overclock?.escort ? partner : leader;
+  }
+
   function overclockCounter(leader, blocker) {
     return Math.max(0, blocker.atk - (NB.Cards.CARD_DB[leader.cardId].overclock?.counterReduction || 0));
   }
@@ -72,6 +76,14 @@
     const atk = attackingField ? NB.CardEffects.attackPower(attacker, attackingField) : attacker.atk;
     return atk + affinityBonus({ ...attacker, atk }, defender);
   }
+
+  function reportDefenseHit(side, node, damage, hpBefore, reasons = []) {
+    if (damage <= 0) return;
+    const detail = [...reasons, damage >= hpBefore ? 'Destruída' : ''].filter(Boolean).join(' · ');
+    NB.State.reportImpact(side, node, `−${Math.min(hpBefore, damage)} DEF`, detail);
+  }
+
+  const affinityCause = (unit, bonus) => bonus ? `+1 ${NB.Cards.AFFINITIES[unit.affinity].name}` : '';
 
   /* Motor de Combate:
      - Choques simultâneos (ATK vs DEF), destruição com partículas
@@ -123,11 +135,10 @@
         if (defSlotEl) {
           const p = NB.Physics.getElCenterInShell(defSlotEl);
           NB.Physics.spawnBurst(p.x, p.y, '#FFB800', heavyHit ? 26 : 18);
-          NB.Physics.spawnFloatText(defSlotEl, `-${atkDmg}${atkBonus ? " · AFINIDADE" : ""}`, '#FFB800');
         }
-        if (atkSlotEl) {
-          NB.Physics.spawnFloatText(atkSlotEl, `-${defDmg}${defBonus ? " · AFINIDADE" : ""}`, '#FF0055');
-        }
+        reportDefenseHit(defenderSide, defSlotEl, atkDmg, defender.def + atkDmg,
+          [affinityCause(attacker, atkBonus), attack > attacker.atk ? `+${attack - attacker.atk} Ressonância` : '']);
+        reportDefenseHit(attackerSide, atkSlotEl, defDmg, attacker.def + defDmg, [affinityCause(defender, defBonus)]);
 
         // [VÍRUS]: Ao causar dano a unidade inimiga, reduz permanentemente o ATK dela em -2
         if (atkDmg > 0 && NB.Cards.hasKeyword(attacker, 'VIRUS') && defender.def > 0) {
@@ -142,11 +153,9 @@
 
         if (defender.def <= 0) {
           NB.State.destroyUnit(defenderSide, defSlot, attackerSide === 'player');
-          if (defSlotEl) NB.Physics.spawnFloatText(defSlotEl, 'DESTRUÍDO!', '#FF0055');
         }
         if (attacker.def <= 0) {
           NB.State.destroyUnit(attackerSide, atkSlot, defenderSide === 'player');
-          if (atkSlotEl) NB.Physics.spawnFloatText(atkSlotEl, 'DESTRUÍDO!', '#FF0055');
         } else {
           attacker.attacked = true;
         }
@@ -154,7 +163,8 @@
       } else {
         // Ataque direto ao HP do hacker!
         const attack = NB.CardEffects.attackPower(attacker, state[attackerSide].field);
-        const hpDamage = NB.State.applyDirectDamage(defenderSide, attack, attackerSide === 'player');
+        const hpDamage = NB.State.applyDirectDamage(defenderSide, attack, attackerSide === 'player',
+          attack > attacker.atk ? `+${attack - attacker.atk} Ressonância` : '');
         attacker.attacked = true;
 
         // [DRENO]: Ao causar dano direto ao HP do hacker inimigo, rouba 1 RAM dele
@@ -250,27 +260,25 @@
 
       blocker.def -= damage;
       // Contra-ataque do bloqueador atinge a unidade líder (unitA)
-      const counterDmg = overclockCounter(unitA, blocker);
-      unitA.def -= counterDmg;
+      const counterTarget = overclockCounterTarget(unitA, unitB);
+      const escorted = counterTarget === unitB;
+      const counterSlot = escorted ? slotB : slotA;
+      const counterEl = escorted ? slotElB : slotElA;
+      const counterDmg = overclockCounter(counterTarget, blocker);
+      counterTarget.def -= counterDmg;
 
       NB.Audio.playClash();
       NB.Physics.shakeScreen(true);
       NB.Physics.vibrateDamage();
 
-      if (blockerSlotEl) {
-        const bCard = blockerSlotEl.querySelector('.field-card');
-        if (bCard) bCard.classList.add('anim-hit');
-        NB.Physics.spawnFloatText(blockerSlotEl, `-${damage}${synergy ? " · SINERGIA" : ""}`, '#39FF14');
-      }
-      if (slotElA && counterDmg > 0) {
-        NB.Physics.spawnFloatText(slotElA, `-${counterDmg}`, '#FF0055');
-      }
+      reportDefenseHit('enemy', blockerSlotEl, damage, blockerDefBefore, [synergy ? '+1 Sinergia' : 'Overclock']);
+      if (escorted) NB.Physics.fireLaserBeam(blockerSlotEl, counterEl, '#70e9ed', 4);
+      reportDefenseHit('player', counterEl, counterDmg, counterTarget.def + counterDmg,
+        [escorted ? 'Escolta protegeu a líder' : blocker.atk > counterDmg ? 'Âncora reduziu o contra-ataque' : 'Contra-ataque']);
 
-      if (hasVirus && blocker.def > 0) {
-        NB.State.applyVirusDebuff('enemy', blockerSlot);
-      }
-      if (counterDmg > 0 && NB.Cards.hasKeyword(blocker, 'VIRUS') && unitA.def > 0) {
-        NB.State.applyVirusDebuff('player', slotA);
+      if (hasVirus && blocker.def > 0) NB.State.applyVirusDebuff('enemy', blockerSlot);
+      if (counterDmg > 0 && NB.Cards.hasKeyword(blocker, 'VIRUS') && counterTarget.def > 0) {
+        NB.State.applyVirusDebuff('player', counterSlot);
       }
 
       NB.UI.renderAll();
@@ -279,17 +287,17 @@
       finishOverclockBonus(state.player, unitA, unitB, blocker.def <= 0);
       if (blocker.def <= 0) {
         NB.State.destroyUnit('enemy', blockerSlot, true);
-        if (blockerSlotEl) NB.Physics.spawnFloatText(blockerSlotEl, 'DESTRUÍDO!', '#FF0055');
       }
       if (unitA.def <= 0) {
         NB.State.destroyUnit('player', slotA, false);
-        if (slotElA) NB.Physics.spawnFloatText(slotElA, 'DESTRUÍDO!', '#FF0055');
       } else {
         unitA.attacked = true;
       }
-      if (NB.Cards.hasKeyword(unitB, 'ATTACK_ONLY')) {
+      if (unitB.def <= 0 || NB.Cards.hasKeyword(unitB, 'ATTACK_ONLY')) {
+        if (NB.Cards.hasKeyword(unitB, 'ATTACK_ONLY')) {
+          NB.State.reportImpact('player', slotElB, 'DESTRUÍDA', 'Só Ataque');
+        }
         NB.State.destroyUnit('player', slotB, false);
-        if (slotElB) NB.Physics.spawnFloatText(slotElB, 'DESTRUÍDO!', '#FF0055');
       } else {
         unitB.attacked = true;
       }
@@ -300,8 +308,7 @@
         if (!(await NB.State.wait(240))) return;
         NB.Audio.playLaser();
         NB.Physics.fireLaserBeam(blockerSlotEl, enemyPanel, '#FFB800', 9);
-        NB.Physics.showToast(`PERFURAÇÃO! -${overflowDmg} HP DIRETO`, 'var(--amber)');
-        const hpDamage = NB.State.applyDirectDamage('enemy', overflowDmg, true, 'PERFURAÇÃO ');
+        const hpDamage = NB.State.applyDirectDamage('enemy', overflowDmg, true, synergy ? 'Perfuração · +1 Sinergia' : 'Perfuração');
         if (hasDreno && hpDamage > 0) {
           NB.State.applyRamDrain('player', 1);
           NB.UI.renderAll();
@@ -314,7 +321,7 @@
       if (!(await NB.State.wait(240))) return;
 
       finishOverclockBonus(state.player, unitA, unitB, false);
-      const hpDamage = NB.State.applyDirectDamage('enemy', directDamage, true, 'OVERCLOCK ');
+      const hpDamage = NB.State.applyDirectDamage('enemy', directDamage, true, '+1 Overclock sem bloqueio');
       if (hasDreno && hpDamage > 0) {
         NB.State.applyRamDrain('player', 1);
         NB.UI.renderAll();
@@ -398,19 +405,25 @@
       const synergy = damage > combinedAtk;
       const overflowDmg = Math.max(0, damage - blockerDefBefore);
       blocker.def -= damage;
-      const counterDmg = overclockCounter(unitA, blocker);
-      unitA.def -= counterDmg;
+      const counterTarget = overclockCounterTarget(unitA, unitB);
+      const escorted = counterTarget === unitB;
+      const counterSlot = escorted ? slotB : slotA;
+      const counterEl = escorted ? slotElB : slotElA;
+      const counterDmg = overclockCounter(counterTarget, blocker);
+      counterTarget.def -= counterDmg;
 
       NB.Audio.playClash();
       NB.Physics.shakeScreen(true);
       NB.Physics.vibrateDamage();
 
-      if (defSlotEl) NB.Physics.spawnFloatText(defSlotEl, `-${damage}${synergy ? " · SINERGIA" : ""}`, '#FF0055');
-      if (slotElA && counterDmg > 0) NB.Physics.spawnFloatText(slotElA, `-${counterDmg}`, '#FFB800');
+      reportDefenseHit('player', defSlotEl, damage, blockerDefBefore, [synergy ? '+1 Sinergia' : 'Overclock']);
+      if (escorted) NB.Physics.fireLaserBeam(defSlotEl, counterEl, '#70e9ed', 4);
+      reportDefenseHit('enemy', counterEl, counterDmg, counterTarget.def + counterDmg,
+        [escorted ? 'Escolta protegeu a líder' : blocker.atk > counterDmg ? 'Âncora reduziu o contra-ataque' : 'Contra-ataque']);
 
       if (hasVirus && blocker.def > 0) NB.State.applyVirusDebuff('player', defSlot);
-      if (counterDmg > 0 && NB.Cards.hasKeyword(blocker, 'VIRUS') && unitA.def > 0) {
-        NB.State.applyVirusDebuff('enemy', slotA);
+      if (counterDmg > 0 && NB.Cards.hasKeyword(blocker, 'VIRUS') && counterTarget.def > 0) {
+        NB.State.applyVirusDebuff('enemy', counterSlot);
       }
 
       NB.UI.renderAll();
@@ -419,17 +432,17 @@
       finishOverclockBonus(state.enemy, unitA, unitB, blocker.def <= 0);
       if (blocker.def <= 0) {
         NB.State.destroyUnit('player', defSlot, false);
-        if (defSlotEl) NB.Physics.spawnFloatText(defSlotEl, 'DESTRUÍDO!', '#FF0055');
       }
       if (unitA.def <= 0) {
         NB.State.destroyUnit('enemy', slotA, true);
-        if (slotElA) NB.Physics.spawnFloatText(slotElA, 'DESTRUÍDO!', '#FF0055');
       } else {
         unitA.attacked = true;
       }
-      if (NB.Cards.hasKeyword(unitB, 'ATTACK_ONLY')) {
+      if (unitB.def <= 0 || NB.Cards.hasKeyword(unitB, 'ATTACK_ONLY')) {
+        if (NB.Cards.hasKeyword(unitB, 'ATTACK_ONLY')) {
+          NB.State.reportImpact('enemy', slotElB, 'DESTRUÍDA', 'Só Ataque');
+        }
         NB.State.destroyUnit('enemy', slotB, true);
-        if (slotElB) NB.Physics.spawnFloatText(slotElB, 'DESTRUÍDO!', '#FF0055');
       } else {
         unitB.attacked = true;
       }
@@ -439,8 +452,7 @@
         if (!(await NB.State.wait(240))) return;
         NB.Audio.playLaser();
         NB.Physics.fireLaserBeam(defSlotEl, playerHud, '#FFB800', 9);
-        NB.Physics.showToast(`PERFURAÇÃO INIMIGA! -${overflowDmg} HP`, 'var(--magenta)');
-        const hpDamage = NB.State.applyDirectDamage('player', overflowDmg, false, 'PERFURAÇÃO ');
+        const hpDamage = NB.State.applyDirectDamage('player', overflowDmg, false, synergy ? 'Perfuração · +1 Sinergia' : 'Perfuração');
         if (hasDreno && hpDamage > 0) {
           NB.State.applyRamDrain('enemy', 1);
           NB.UI.renderAll();
@@ -451,7 +463,7 @@
       NB.Physics.fireLaserBeam(slotElA, playerHud, '#FF0055', 9);
       NB.Physics.fireLaserBeam(slotElB, playerHud, '#FFB800', 9);
       if (!(await NB.State.wait(240))) return;
-      const hpDamage = NB.State.applyDirectDamage('player', overclockDamage(combinedAtk, unitA, unitB, false), false, 'OVERCLOCK ');
+      const hpDamage = NB.State.applyDirectDamage('player', overclockDamage(combinedAtk, unitA, unitB, false), false, '+1 Overclock sem bloqueio');
       if (hasDreno && hpDamage > 0) {
         NB.State.applyRamDrain('enemy', 1);
         NB.UI.renderAll();
@@ -550,6 +562,7 @@
     overclockDamage,
     overclockCost,
     overclockCounter,
+    overclockCounterTarget,
     resolveCombatSequence,
     executeOverclockAttack,
     confirmPlayerAttack,

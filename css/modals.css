@@ -168,6 +168,30 @@
   animation: floatUp 0.95s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   white-space: nowrap;
 }
+.float-impact {
+  z-index: 1;
+  padding: 3px 6px;
+  border-radius: 5px;
+  background: #0d1222ee;
+  text-align: center;
+  line-height: 1.15;
+  pointer-events: none;
+}
+.float-impact small {
+  color: #eff5ff;
+  font-size: 10px;
+  letter-spacing: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  white-space: normal;
+  max-width: 132px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .float-impact { animation: none; }
+}
+.duel-impact-entry { grid-column: 1 / -1; text-align: left; }
 @keyframes floatUp {
   0% { transform: translate(-50%, -40%) scale(0.75); opacity: 0; }
   20% { transform: translate(-50%, -70%) scale(1.15); opacity: 1; }

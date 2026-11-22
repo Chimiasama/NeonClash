@@ -34,8 +34,8 @@
   const eliteTravel = { label: 'Elite · Especialista', fee: 9, hp: 24, reward: 28, canOverclock: true,
     deck: ['unit_02', 'unit_07', 'unit_10', 'unit_13', 'unit_14', 'exploit_01', 'exploit_05'] };
   const travelCards = {
-    rare: ['unit_22', 'unit_23', 'unit_32', 'exploit_17'],
-    common: ['unit_07', 'unit_21', 'unit_28', 'exploit_07']
+    rare: ['unit_22', 'unit_23', 'unit_32', 'exploit_17', 'exploit_28', 'exploit_30'],
+    common: ['unit_07', 'unit_21', 'unit_28', 'exploit_07', 'exploit_27', 'exploit_29']
   };
   const cyberdecks = {
     stock: { name: 'Terminal de Campo', ram: 0 },

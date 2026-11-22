@@ -86,7 +86,8 @@
         ? state.enemy.field[overclock.slots[1]] : null;
       const attack = partner ? NB.Combat.overclockDamage(overclock.combinedAtk, attacker, partner, true, state.enemy.overclockCoupler)
         : NB.Combat.clashDamage(attacker, defender, state.enemy.field);
-      const counter = partner ? NB.Combat.overclockCounter(attacker, defender) : NB.Combat.clashDamage(defender, attacker);
+      const counterTarget = partner ? NB.Combat.overclockCounterTarget(attacker, partner) : attacker;
+      const counter = partner ? NB.Combat.overclockCounter(counterTarget, defender) : NB.Combat.clashDamage(defender, attacker);
       const before = remainingDef.get(defenseSlot) ?? defender.def;
       const bonuses = partner ? { attack: 0, counter: 0 } : NB.Combat.clashAffinity(attacker, defender, state.enemy.field);
       const pierce = partner ? Math.max(0, attack - before) : 0;
@@ -94,7 +95,7 @@
       remainingDef.set(defenseSlot, after);
       const clash = document.createElement('span');
       clash.textContent = before === 0 ? `Ataque ${attackSlot + 1} segue para o HP se a muralha cair.` :
-        `Sua posição ${defenseSlot + 1} DEF ${before}→${after} · Inimigo ${attackSlot + 1} DEF ${attacker.def}→${Math.max(0, attacker.def - counter)}${pierce ? ` · −${pierce} HP` : ''}${bonuses.attack ? ' · +1 afinidade (ataque)' : bonuses.counter ? ' · +1 afinidade (contra-ataque)' : ''}`;
+        `Sua posição ${defenseSlot + 1} DEF ${before}→${after} · Inimigo ${(counterTarget === attacker ? attackSlot : overclock.slots[1]) + 1} DEF ${counterTarget.def}→${Math.max(0, counterTarget.def - counter)}${counterTarget !== attacker ? ' · Escolta' : ''}${pierce ? ` · −${pierce} HP` : ''}${bonuses.attack ? ` · +1 ${NB.Cards.AFFINITIES[attacker.affinity].name} (ataque)` : bonuses.counter ? ` · +1 ${NB.Cards.AFFINITIES[defender.affinity].name} (contra-ataque)` : ''}`;
       preview.appendChild(clash);
     }
     preview.hidden = preview.childElementCount === 0;
@@ -166,7 +167,7 @@
         const second = state.player.field[sel[1]];
         const direct = NB.Combat.overclockDamage(totalAtk, first, second, false);
         const blocked = NB.Combat.overclockDamage(totalAtk, first, second, true, state.player.overclockCoupler);
-        hint.textContent = `${direct} ao HP sem bloqueio (+1 direto) · ${blocked} se bloqueado${blocked > totalAtk ? ' (+1 de sinergia)' : ''}`;
+        hint.textContent = `${direct} ao HP sem bloqueio (+1 direto) · ${blocked} se bloqueado${blocked > totalAtk ? ' (+1 de sinergia)' : ''}${NB.Combat.overclockCounterTarget(first, second) === second ? ' · Escolta assume o contra-ataque' : ''}`;
         btnP.textContent = 'DISPARAR';
         btnP.classList.add('ram-surge');
         btnP.disabled = false;
@@ -667,6 +668,15 @@
         clueBox.style.display = 'flex';
         document.getElementById('go-clue-title').textContent = 'CARTA CONQUISTADA';
         document.getElementById('go-clue-text').textContent = NB.Cards.CARD_DB[state.residentReward].name;
+      }
+      if (state.expansionReward) {
+        const text = document.getElementById('go-clue-text');
+        if (clueBox.style.display === 'none') {
+          document.getElementById('go-clue-title').textContent = 'PRÊMIO ESPECIAL';
+          text.textContent = '';
+          clueBox.style.display = 'flex';
+        }
+        text.textContent += ` Carta conquistada: ${NB.Cards.CARD_DB[state.expansionReward].name}.`;
       }
       primaryBtn.textContent = 'VOLTAR À CIDADE';
       primaryBtn.dataset.action = 'netmap';

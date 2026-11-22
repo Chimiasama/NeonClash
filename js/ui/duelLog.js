@@ -19,7 +19,7 @@
     }
     for (const button of $('duel-log-zones').querySelectorAll('button')) {
       const key = button.dataset.zone;
-      const labels = { played: 'Usadas', discard: 'Descarte', removed: 'Removidas' };
+      const labels = { played: 'Usadas', discard: 'Descarte', removed: 'Removidas', impacts: 'Efeitos' };
       button.textContent = `${labels[key]} (${actor[key].length})`;
       button.setAttribute('aria-pressed', String(key === zone));
     }
@@ -31,10 +31,18 @@
     empty.textContent = {
       played: 'Este lado ainda não usou cartas.',
       discard: 'O descarte está vazio.',
-      removed: 'Nenhuma carta deste lado foi removida da partida.'
+      removed: 'Nenhuma carta deste lado foi removida da partida.',
+      impacts: 'Este lado ainda não recebeu efeitos de combate.'
     }[zone];
 
     for (const entry of [...entries].reverse()) {
+      if (zone === 'impacts') {
+        const item = document.createElement('p');
+        item.className = 'duel-impact-entry';
+        item.textContent = [`T${entry.turn}`, entry.target, entry.text, entry.detail].filter(Boolean).join(' · ');
+        grid.append(item);
+        continue;
+      }
       const card = NB.Cards.CARD_DB[entry.cardId];
       const tile = document.createElement('button');
       tile.type = 'button';

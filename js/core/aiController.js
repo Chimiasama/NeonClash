@@ -91,6 +91,10 @@
     return best;
   }
 
+  function playerDefendersThreat(player) {
+    return Math.max(0, ...player.field.filter(unit => NB.Combat.canBlock(unit, player)).map(unit => unit.atk));
+  }
+
   async function startEnemyTurn({ opening = false } = {}) {
     if (NB.State.checkWinCondition()) return;
     const state = NB.State.get();
@@ -115,6 +119,7 @@
         u.booting = false;
         u.attacked = false;
         u.overclockGuard = false;
+        u.blockLock = false;
       }
     });
 
@@ -177,7 +182,10 @@
     if (boss && boss.canOverclock && state.enemy.ram >= NB.Cards.OVERCLOCK_COST && readyEnemySlots.length >= 2) {
       const sorted = [...readyEnemySlots].sort((a, b) => attackingPower(state.enemy.field[b], state.enemy.field) - attackingPower(state.enemy.field[a], state.enemy.field));
       const slotA = sorted[0];
-      const slotB = sorted[1];
+      const attackersFaceBlock = playerDefendersThreat(state.player) >= state.enemy.field[slotA].def;
+      const escort = attackersFaceBlock ? sorted.slice(1).find(slot =>
+        NB.Cards.CARD_DB[state.enemy.field[slot].cardId].overclock?.escort) : undefined;
+      const slotB = escort ?? sorted[1];
       const combinedAtk = attackingPower(state.enemy.field[slotA], state.enemy.field) + attackingPower(state.enemy.field[slotB], state.enemy.field);
 
       state.enemy.ram -= NB.Cards.OVERCLOCK_COST;

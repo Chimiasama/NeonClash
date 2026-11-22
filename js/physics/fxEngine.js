@@ -108,12 +108,21 @@
     };
   }
 
-  function spawnFloatText(targetEl, text, color, offsetY = 0) {
+  function spawnFloatText(targetEl, text, color, offsetY = 0, detail = null) {
     if (!targetEl) return;
     const pos = getElCenterInShell(targetEl);
     const pop = document.createElement('div');
     pop.className = 'float-pop';
     pop.textContent = text;
+    if (detail !== null) {
+      pop.classList.add('float-impact');
+      pop.setAttribute('aria-hidden', 'true');
+      if (detail) {
+        const cause = document.createElement('small');
+        cause.textContent = detail;
+        pop.appendChild(cause);
+      }
+    }
     pop.style.left = pos.x + 'px';
     pop.style.top = (pos.y + offsetY) + 'px';
     pop.style.color = color;

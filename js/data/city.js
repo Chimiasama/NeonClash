@@ -41,7 +41,23 @@
     { id: 'unit_39', price: 110, chapter: 3 },
     { id: 'unit_40', price: 95, chapter: 3 },
     { id: 'unit_41', price: 120, chapter: 4 },
-    { id: 'exploit_20', price: 75, chapter: 3 }
+    { id: 'exploit_20', price: 75, chapter: 3 },
+    { id: 'unit_42', price: 48, chapter: 1 },
+    { id: 'unit_43', price: 128, chapter: 4 },
+    { id: 'unit_44', price: 72, chapter: 2 },
+    { id: 'unit_45', price: 36 },
+    { id: 'unit_46', price: 62, chapter: 1 },
+    { id: 'unit_47', price: 77, chapter: 2 },
+    { id: 'unit_48', price: 65, chapter: 1 },
+    { id: 'unit_49', price: 56, chapter: 2 },
+    { id: 'unit_50', price: 79, chapter: 2 },
+    { id: 'unit_51', price: 114, chapter: 4 },
+    { id: 'exploit_21', price: 64, chapter: 2 },
+    { id: 'exploit_22', price: 75, chapter: 2 },
+    { id: 'exploit_23', price: 70, chapter: 3 },
+    { id: 'exploit_24', price: 39 },
+    { id: 'exploit_25', price: 98, chapter: 4 },
+    { id: 'exploit_26', price: 78, chapter: 3 }
   ];
 
   const traces = {

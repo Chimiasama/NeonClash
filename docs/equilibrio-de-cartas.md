@@ -136,3 +136,13 @@ A [tabela por carta](poder-das-cartas-v0.4.csv) contém base, bônus e total est
 | Acoplador de Fase | 0,35 PP | −3,05 PP | Cap. 4 · 75 cr |
 
 Na Âncora, conte 2 DEF preservadas ponderadas pela frequência de liderar um Overclock bloqueado. Na Operadora, conte uma oportunidade parcial de bloqueio. O Recuperador devolve 1 RAM se liderar e destruir o bloqueador, no máximo uma vez por turno. O Acoplador vale para o próximo Overclock do turno e só muda a sinergia de uma dupla Neutra + afinidade que seja bloqueada. O bônus de dano direto segue valendo apenas no ramo sem bloqueio. Os quatro efeitos precisam de testes de desempenho em decks dedicados antes de revisar a régua.
+
+## Expansão 0.5
+
+O catálogo tem **80 cartas** e a [régua por carta](poder-das-cartas-v0.5.csv) inclui as 25 novas fichas. Adotei **+0,9 PP** para Escolta, **1,75 PP** para impedir bloqueio por uma janela, chance de **55%** de o alvo já estar avariado no orçamento de dano condicional e **35%** de aproveitamento para remoção de escudo. São estimativas para comparação de fichas. A disponibilidade e os preços são definidos à parte.
+
+- **Feira do Viaduto, 16 cartas.** Os desbloqueios vão do capítulo inicial ao capítulo 5, com preços entre 36 e 128 créditos. Os vendedores de viagem podem oferecer as cartas da Feira às condições do comércio de viagem.
+- **Duelos de bairro, 5 cartas.** Damião libera Drone de Bancada, Tuca libera Escudeira do Ringue, Dora libera Ponta de Retorno, Aline libera Sombra de Desvio e Nanda libera Cargueira Blindada. Uma vitória após a atualização concede o prêmio novo se ainda estiver ausente da coleção.
+- **Abordagens vencidas, 4 cartas.** Varredura Noturna e Reserva de Peças entram no grupo comum. Ruído de Vizinhança e Isolamento de Cabine entram no grupo raro. Os sorteios pulam cartas que já foram obtidas.
+
+As novas cartas têm arte procedural, com a mesma imagem por ID em partidas distintas. Raridade explícita aparece no inspetor e nas lojas. O registro 0.4 permanece como referência histórica.

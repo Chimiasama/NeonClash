@@ -78,8 +78,8 @@
 
   const residentDuels = {
     43: { hp: 15, credits: 8, card: 'unit_29', deck: ['unit_02', 'unit_08', 'unit_29', 'unit_01', 'exploit_01', 'exploit_14'] },
-    44: { hp: 17, credits: 9, card: 'unit_30', deck: ['unit_05', 'unit_06', 'unit_28', 'unit_30', 'unit_02', 'exploit_13', 'exploit_19'] },
-    84: { hp: 19, credits: 10, card: 'exploit_14', deck: ['unit_03', 'unit_28', 'unit_29', 'unit_08', 'unit_01', 'exploit_01', 'exploit_14'] }
+    44: { hp: 17, credits: 9, expansionCard: 'unit_55', card: 'unit_30', deck: ['unit_05', 'unit_06', 'unit_28', 'unit_30', 'unit_02', 'exploit_13', 'exploit_19'] },
+    84: { hp: 19, credits: 10, expansionCard: 'unit_56', card: 'exploit_14', deck: ['unit_03', 'unit_28', 'unit_29', 'unit_08', 'unit_01', 'exploit_01', 'exploit_14'] }
   };
 
   const mapPins = {

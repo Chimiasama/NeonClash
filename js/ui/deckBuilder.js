@@ -268,7 +268,8 @@
     panel.classList.toggle('exploit-theme', card.kind === 'exploit');
 
     document.getElementById('insp-subtitle').textContent =
-      (card.kind === 'unit' ? `UNIDADE · ${NB.Cards.affinityLabel(NB.Save.getAffinity(card.id))} · ` : 'EXPLOIT · ') + card.subtitle.toUpperCase();
+      (card.kind === 'unit' ? `UNIDADE · ${NB.Cards.affinityLabel(NB.Save.getAffinity(card.id))} · ` : 'EXPLOIT · ') + card.subtitle.toUpperCase() +
+      (card.rarity ? ` · ${NB.Cards.rarityLabel(card.rarity).toUpperCase()}` : '');
     document.getElementById('insp-name').textContent = card.name.toUpperCase();
 
     const { total: power } = NB.CardPower.byId[card.id];

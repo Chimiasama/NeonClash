@@ -539,6 +539,89 @@
     CARD_DB[id].proceduralOnly = true;
   }
 
+  addUnit('unit_42', 'Escudo de Reboque', 'Escolta de Overclock', 1, 4, 'malha', [],
+    'Como segunda unidade de um Overclock bloqueado, recebe todo o contra-ataque no lugar da líder.');
+  CARD_DB.unit_42.overclock = { escort: true };
+  addUnit('unit_43', 'Guarda do Barramento', 'Escolta de Overclock', 1, 7, 'malha', [],
+    'Como segunda unidade de um Overclock bloqueado, recebe todo o contra-ataque no lugar da líder. Gera 1 RAM.');
+  CARD_DB.unit_43.overclock = { escort: true };
+  CARD_DB.unit_43.ramGain = 1;
+  addUnit('unit_44', 'Chassi de Choque', 'Liderança de Overclock', 3, 3, 'pulso', [],
+    'Ao liderar um Overclock bloqueado, recebe 1 a menos de dano do contra-ataque.');
+  CARD_DB.unit_44.overclock = { counterReduction: 1 };
+  addUnit('unit_45', 'Técnica do Intervalo', 'Suporte', 1, 3, 'malha', [],
+    'Ao entrar, restaura até 2 DEF de cada unidade aliada.', [{ type: 'repair', target: 'allies', value: 2 }]);
+  addUnit('unit_46', 'Marcadora de Trincas', 'Dano de entrada', 2, 2, 'sombra', [],
+    'Ao entrar, causa 1 de dano a uma unidade inimiga escolhida, ou 3 se ela já tiver perdido DEF.',
+    [{ type: 'woundedDamage', target: 'selected', value: 1, bonus: 2 }]);
+  CARD_DB.unit_46.targetType = 'enemy_unit';
+  addUnit('unit_47', 'Corta-Sinal', 'Sabotagem', 2, 2, 'sombra', [],
+    'Ao entrar, uma unidade inimiga escolhida perde a capacidade de bloquear até o próximo turno dela.',
+    [{ type: 'blockLock', target: 'selected' }]);
+  CARD_DB.unit_47.targetType = 'enemy_unit';
+  addUnit('unit_48', 'Pulso de Amparo', 'Proteção', 2, 3, 'pulso', [],
+    'Ao entrar, concede um escudo de 2 HP até o início do seu próximo turno.', [{ type: 'hpShield', value: 2 }]);
+  addUnit('unit_49', 'Observadora de Malha', 'Varredura', 1, 3, 'malha', [],
+    'Ao entrar, compre 1 carta. Se o topo era Malha, compre mais uma.', [{ type: 'scan', affinity: 'malha' }]);
+  addUnit('unit_50', 'Muralha Basculante', 'Bloqueio múltiplo', 0, 8, 'malha', ['GUARD_ONLY', 'MULTI_BLOCK'],
+    'Só Defesa. Pode bloquear até dois atacantes, usando a mesma reserva de DEF. Gera 1 RAM.');
+  CARD_DB.unit_50.blockLimit = 2;
+  CARD_DB.unit_50.ramGain = 1;
+  addUnit('unit_51', 'Estafeta dos Ecos', 'Reciclagem rápida', 2, 2, 'sombra', ['ZERO_DAY'],
+    'Zero-Day. Ao entrar, recupera a unidade mais recente do descarte se houver espaço.', [{ type: 'recycle', kind: 'unit', order: 'latest' }]);
+  addUnit('unit_52', 'Drone de Bancada', 'Dano de entrada', 2, 3, null, [],
+    'Ao entrar, causa 1 de dano à unidade inimiga com maior ATK.', [{ type: 'damage', target: 'strongestEnemy', value: 1 }]);
+  addUnit('unit_53', 'Escudeira do Ringue', 'Escolta de Overclock', 2, 4, null, [],
+    'Como segunda unidade de um Overclock bloqueado, recebe todo o contra-ataque no lugar da líder.');
+  CARD_DB.unit_53.overclock = { escort: true };
+  addUnit('unit_54', 'Ponta de Retorno', 'Recarga de Overclock', 4, 2, 'pulso', [],
+    'Ao liderar um Overclock que destrói o bloqueador, recupera 1 RAM. Uma vez por turno.');
+  CARD_DB.unit_54.overclock = { refund: 1 };
+  addUnit('unit_55', 'Sombra de Desvio', 'Ressonância', 2, 4, 'sombra', [],
+    'Ressonância de ataque: +1 ATK neste ataque se outra unidade aliada for Sombra.');
+  CARD_DB.unit_55.onAttack = [{ type: 'atk', value: 1, resonance: true }];
+  addUnit('unit_56', 'Cargueira Blindada', 'Vigilância e proteção', 2, 5, 'malha', ['VIGILANCE'],
+    'Vigilância. Ao entrar, concede escudo de 2 HP até o início do seu próximo turno. Gera 1 RAM.', [{ type: 'hpShield', value: 2 }]);
+  CARD_DB.unit_56.ramGain = 1;
+
+  addExploit('exploit_21', 'Corte de Guarda', 'Sabotagem', 2, 'enemy_unit',
+    'A unidade perde a capacidade de bloquear até o próximo turno dela.', [{ type: 'blockLock', target: 'selected' }]);
+  addExploit('exploit_22', 'Sonda de Fratura', 'Sabotagem', 2, 'enemy_unit',
+    'Causa 2 de dano à unidade, ou 4 se ela já tiver perdido DEF.', [{ type: 'woundedDamage', target: 'selected', value: 2, bonus: 2 }]);
+  addExploit('exploit_23', 'Curto de Escudo', 'Ataque direto', 2, 'none',
+    'Remove até 4 pontos do escudo inimigo e causa 2 de dano ao HP.', [{ type: 'shieldBreak', value: 4 }, { type: 'direct', value: 2 }]);
+  addExploit('exploit_24', 'Manutenção Expressa', 'Blindagem', 2, 'none',
+    'Restaura até 2 DEF de cada unidade aliada.', [{ type: 'repair', target: 'allies', value: 2 }]);
+  addExploit('exploit_25', 'Eco de Retaguarda', 'Proteção', 3, 'none',
+    'Concede escudo de 2 HP e permite que suas unidades aptas bloqueiem depois de atacar até seu próximo turno.',
+    [{ type: 'hpShield', value: 2 }, { type: 'counterFormation' }]);
+  addExploit('exploit_26', 'Ponte de Emergência', 'Overclock', 2, 'none',
+    'Compre 1 carta. No próximo Overclock deste turno, Neutra + afinidade pode ativar a sinergia contra bloqueio.',
+    [{ type: 'draw', value: 1 }, { type: 'overclockCoupler' }]);
+  addExploit('exploit_27', 'Varredura Noturna', 'Varredura', 1, 'none',
+    'Compre 1 carta. Se o topo era Sombra, compre mais uma.', [{ type: 'scan', affinity: 'sombra' }]);
+  addExploit('exploit_28', 'Ruído de Vizinhança', 'Sabotagem', 3, 'none',
+    'Causa 1 de dano a cada inimigo, ou 3 em cada inimigo que já perdeu DEF.', [{ type: 'woundedDamage', target: 'enemies', value: 1, bonus: 2 }]);
+  addExploit('exploit_29', 'Reserva de Peças', 'Reciclar', 2, 'none',
+    'Recupera o Exploit mais recente do descarte se houver espaço e restaura até 1 DEF das aliadas.',
+    [{ type: 'recycle', kind: 'exploit', order: 'latest' }, { type: 'repair', target: 'allies', value: 1 }]);
+  addExploit('exploit_30', 'Isolamento de Cabine', 'Proteção', 3, 'ally_unit',
+    'Restaura até 3 DEF da unidade e concede escudo de 3 HP até o início do seu próximo turno.',
+    [{ type: 'repair', target: 'selected', value: 3 }, { type: 'hpShield', value: 3 }]);
+
+  const expansionRarity = {
+    common: ['unit_42', 'unit_45', 'unit_52', 'unit_55', 'exploit_24', 'exploit_27', 'exploit_29'],
+    uncommon: ['unit_44', 'unit_46', 'unit_47', 'unit_48', 'unit_49', 'unit_50', 'unit_53',
+      'exploit_21', 'exploit_22', 'exploit_23', 'exploit_26'],
+    rare: ['unit_43', 'unit_51', 'unit_54', 'unit_56', 'exploit_25', 'exploit_28', 'exploit_30']
+  };
+  for (const [rarity, ids] of Object.entries(expansionRarity)) {
+    for (const id of ids) {
+      CARD_DB[id].rarity = rarity;
+      CARD_DB[id].proceduralOnly = true;
+    }
+  }
+
   for (const id of ['unit_28', 'unit_29', 'unit_30', 'exploit_12', 'exploit_13', 'exploit_14', 'exploit_15', 'exploit_16', 'unit_31', 'unit_32', 'unit_33', 'unit_34', 'exploit_17', 'exploit_18', 'unit_37', 'unit_38', 'exploit_19']) {
     CARD_DB[id].proceduralOnly = true;
   }
@@ -597,6 +680,7 @@
     affinityLabel,
     describeAffinity,
     CARD_DB,
+    rarityLabel: rarity => ({ common: 'Comum', uncommon: 'Incomum', rare: 'Rara' })[rarity] || '',
     STARTER_CARD_IDS,
     STARTER_DECKS,
     AVATAR_ASSETS,
