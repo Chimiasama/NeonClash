@@ -5,6 +5,8 @@
   function hideAllScreens() {
     NB.DuelLog.close();
     NB.City.cancelJob();
+    document.getElementById('float-layer').replaceChildren();
+    document.getElementById('toast-banner').classList.remove('show');
     ['title-modal', 'netmap-modal', 'starter-modal', 'prologue-modal', 'abandon-modal', 'street-rest-modal', 'story-modal', 'dossier-modal', 'gameover-modal', 'settings-modal', 'deck-modal', 'card-inspector-modal'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.classList.remove('open');

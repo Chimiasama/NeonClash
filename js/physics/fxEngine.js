@@ -108,6 +108,8 @@
     };
   }
 
+  const impactPops = new WeakMap();
+
   function spawnFloatText(targetEl, text, color, offsetY = 0, detail = null) {
     if (!targetEl) return;
     const pos = getElCenterInShell(targetEl);
@@ -123,11 +125,26 @@
         pop.appendChild(cause);
       }
     }
-    pop.style.left = pos.x + 'px';
-    pop.style.top = (pos.y + offsetY) + 'px';
+    const layer = document.getElementById('float-layer');
+    const duration = detail === null ? 1650 : 3000;
+    pop.style.setProperty('--float-duration', `${duration}ms`);
     pop.style.color = color;
-    document.getElementById('float-layer').appendChild(pop);
-    setTimeout(() => pop.remove(), 980);
+    if (detail === null) {
+      pop.style.left = pos.x + 'px';
+      pop.style.top = (pos.y + offsetY) + 'px';
+      layer.appendChild(pop);
+    } else {
+      const active = (impactPops.get(targetEl) || []).filter(item => item.pop.isConnected);
+      if (active.length === 3) active.shift().pop.remove();
+      const lane = [0, 1, 2].find(number => !active.some(item => item.lane === number));
+      layer.appendChild(pop);
+      const margin = pop.offsetWidth / 2 + 4;
+      pop.style.left = `${Math.max(margin, Math.min(layer.clientWidth - margin, pos.x))}px`;
+      pop.style.top = `${pos.y + (lane ? (lane % 2 ? 1 : -1) * 40 : offsetY)}px`;
+      active.push({ lane, pop });
+      impactPops.set(targetEl, active);
+    }
+    setTimeout(() => pop.remove(), duration);
   }
 
   function shakeScreen(heavy) {
@@ -144,7 +161,7 @@
     el.style.color = color;
     el.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove('show'), 1450);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
   }
 
   /* =========================================================================

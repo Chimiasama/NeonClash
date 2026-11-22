@@ -2584,7 +2584,8 @@ test('redirects all of the Overclock counterattack to the escort on either side'
   expect(outcome).toEqual([[2, null, 3, true], [2, null, 3, true]]);
 });
 
-test('shows the source of combat bonuses and archives them in the effects history', async ({ page }) => {
+test('keeps combat bonuses readable and archives them in the effects history', async ({ page }) => {
+  await page.clock.install();
   await page.goto('/');
   await page.evaluate(async () => {
     NB.Input.startMatch({ mode: 'quick', boss: NB.Campaign.NODES[0] });
@@ -2596,7 +2597,11 @@ test('shows the source of combat bonuses and archives them in the effects histor
     state.phase = 'PLAYER_MAIN';
     NB.UI.renderAll();
   });
-  await expect(page.locator('.float-impact').filter({ hasText: '+1 Sombra' })).toContainText('−4 DEF');
+  const impact = page.locator('.float-impact').filter({ hasText: '+1 Sombra' });
+  await page.clock.fastForward(1800);
+  await expect(impact).toContainText('−4 DEF');
+  await page.clock.fastForward(1300);
+  await expect(impact).toHaveCount(0);
   await page.locator('#btn-duel-log').click();
   await page.getByRole('button', { name: 'Adversário', exact: true }).click();
   await page.getByRole('button', { name: /Efeitos/ }).click();
