@@ -233,20 +233,23 @@
             <div><h2 id="city-heading">Baixa Luz</h2><p id="city-credits"></p><p id="city-clock"></p>
               <label class="city-energy" for="city-energy"><span id="city-energy-label">Energia</span><progress id="city-energy" max="100" value="70"></progress></label><p id="city-awake"></p></div>
           </header>
-          <div id="city-map-legend" role="group" aria-label="Filtros e legenda do mapa">
-            <button type="button" data-map-filter="all" aria-pressed="true">Todos</button>
-            <button type="button" data-map-filter="clue" aria-pressed="false"><span aria-hidden="true">◆</span> Pistas</button>
-            <button type="button" data-map-filter="duel" aria-pressed="false"><span aria-hidden="true">⚔</span> Duelos</button>
-            <button type="button" data-map-filter="secret" aria-pressed="false"><span aria-hidden="true">✦</span> Segredos</button>
-          </div>
-          <label id="city-neighborhood-picker" hidden>
-            Bairro no mapa
-            <select id="city-neighborhood" aria-label="Bairro no mapa"></select>
-          </label>
-          <p id="city-map-objectives" aria-live="polite"></p>
-          <div id="city-map" data-gallery-art="./src/assets/baixa-luz-map.webp" aria-label="Mapa interativo de Baixa Luz">
-            <span id="city-marker" data-gallery-art="./src/assets/kairo-token.webp" aria-hidden="true"></span>
-          </div>
+          <section id="city-map-view" aria-label="Mapa da cidade" hidden>
+            <div id="city-map-legend" role="group" aria-label="Filtros e legenda do mapa">
+              <button type="button" data-map-filter="all" aria-pressed="true">Todos</button>
+              <button type="button" data-map-filter="clue" aria-pressed="false"><span aria-hidden="true">◆</span> Pistas</button>
+              <button type="button" data-map-filter="duel" aria-pressed="false"><span aria-hidden="true">⚔</span> Duelos</button>
+              <button type="button" data-map-filter="secret" aria-pressed="false"><span aria-hidden="true">✦</span> Segredos</button>
+            </div>
+            <label id="city-neighborhood-picker" hidden>
+              Bairro no mapa
+              <select id="city-neighborhood" aria-label="Bairro no mapa"></select>
+            </label>
+            <p id="city-map-objectives" aria-live="polite"></p>
+            <div id="city-map" data-gallery-art="./src/assets/baixa-luz-map.webp" aria-label="Mapa interativo de Baixa Luz">
+              <span id="city-marker" data-gallery-art="./src/assets/kairo-token.webp" aria-hidden="true"></span>
+            </div>
+            <button id="city-current-location" type="button"></button>
+          </section>
           <div class="city-detail">
             <h3 id="city-name"></h3>
             <p id="city-feedback" role="status"></p>
@@ -257,8 +260,8 @@
                 <p id="city-line"></p>
               </div>
             </div>
-            <img id="city-scene" alt="" hidden />
             <div id="city-content"></div>
+            <img id="city-scene" alt="" hidden />
           </div>
         </div>
         <nav class="city-nav" aria-label="Navegação da cidade">

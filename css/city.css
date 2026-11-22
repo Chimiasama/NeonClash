@@ -114,6 +114,8 @@
 .city-panel button:disabled { opacity: .62; cursor: default; }
 .city-panel button[aria-pressed='true'] { border-color: var(--cyan); color: var(--cyan); }
 
+#city-map-view[hidden] { display: none; }
+#city-current-location { margin: 8px 12px; }
 #city-map {
   position: relative;
   isolation: isolate;

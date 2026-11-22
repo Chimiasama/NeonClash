@@ -8,6 +8,7 @@
   let job = null;
   let jobTimer = null;
   let view = 'district';
+  let travelOrigin = 'map';
   const residentDuels = {
     10: { hp: 10, credits: 5, expansionCard: 'unit_52', deck: ['unit_01', 'unit_02', 'unit_37', 'unit_24', 'exploit_19'] },
     33: { hp: 14, credits: 7, expansionCard: 'unit_53', card: 'unit_21', deck: sparringBoss.deckList },
@@ -106,6 +107,7 @@
   function selectDestination(id) {
     cancelJob();
     announce('');
+    if (view !== 'travel') travelOrigin = view;
     destination = id === districtAtPosition().id ? null : id;
     view = destination ? 'travel' : 'district';
     if (!destination) {
@@ -113,7 +115,7 @@
       NB.Audio.setScene(district.music || district.id);
     }
     render();
-    $('city-name').scrollIntoView({ block: 'start' });
+    scrollCityTop();
   }
 
   function move(mode) {
@@ -127,7 +129,7 @@
     const challenge = NB.CityLife.getTravelChallenge();
     announce([`Destino alcançado: ${district.name}.`, notice,
       challenge && `${challenge.name} ofereceu um duelo no trajeto.`].filter(Boolean).join(' '));
-    $('city-feedback').scrollIntoView({ block: 'center' });
+    scrollCityTop();
     if (challenge && !challenge.optional) document.querySelector('.city-travel-challenge button')?.focus();
   }
 
@@ -178,7 +180,9 @@
     $('city-energy').value = life.energy;
     $('city-energy-label').textContent = `Energia ${life.energy}/${maxEnergy}`;
     $('city-awake').textContent = `Limite de vigília em ${duration(Math.max(0, NB.CityLife.maxAwake(life) - life.awake))}`;
-    $('city-map-tab').setAttribute('aria-pressed', view === 'district');
+    const mandatory = NB.CityLife.requiredTravelChallenge();
+    const showMap = !mandatory && ['map', 'atlas'].includes(view);
+    $('city-map-tab').setAttribute('aria-pressed', view === 'map');
     $('city-bag').setAttribute('aria-pressed', view === 'bag');
     $('city-story').setAttribute('aria-pressed', view === 'story');
     $('city-atlas').setAttribute('aria-pressed', view === 'atlas');
@@ -209,8 +213,10 @@
     const [x, y] = NB.CityAtlas.mapPins[district.id];
     marker.style.left = `${x}%`;
     marker.style.top = `${y}%`;
+    $('city-map-view').hidden = !showMap;
+    $('city-current-location').textContent = `Ver local atual · ${district.name}`;
     $('city-neighborhood-picker').hidden = view !== 'atlas';
-    document.querySelector('.city-detail').hidden = view === 'atlas';
+    document.querySelector('.city-detail').hidden = showMap;
     const area = view === 'atlas' && NB.CityAtlas.neighborhoods.find(item => item.id === neighborhoodFilter);
     const objectives = [...clueLocations].map(id => districts.find(place => place.id === id).name);
     $('city-map-objectives').textContent = objectives.length ? `◆ Destino da investigação · ${objectives.join(' · ')}` : '';
@@ -236,7 +242,6 @@
     if (!$('city-map').querySelector('button:not([hidden])')) $('city-map-objectives').textContent = 'Nenhum local corresponde aos filtros.';
     const content = $('city-content');
     content.replaceChildren();
-    const mandatory = NB.CityLife.requiredTravelChallenge();
     for (const panel of [$('city-map'), $('city-map-legend'), document.querySelector('.city-nav')]) {
       panel.inert = Boolean(mandatory);
     }
@@ -249,7 +254,7 @@
     if (view === 'story') {
       $('city-name').textContent = 'Investigação';
       renderMissionLog(content, district, save);
-    } else if (view === 'atlas') {
+    } else if (showMap) {
       return;
     } else if (view === 'travel') {
       renderTravel(content, save);
@@ -586,10 +591,7 @@
       }
       content.append(row);
     }
-    addButton(content, 'Cancelar viagem', () => {
-      resetView();
-      $('city-map').querySelector('[aria-current]')?.focus();
-    });
+    addButton(content, 'Cancelar viagem', cancelTravel);
   }
 
   function renderRest(content, state, bedId) {
@@ -1376,12 +1378,29 @@
     NB.Save.save();
   }
 
-  function resetView() {
-    view = 'district';
+  function scrollCityTop() {
+    document.querySelector('.city-scroll').scrollTop = 0;
+  }
+
+  function showView(next) {
+    view = next;
     destination = null;
     cancelJob();
     announce('');
     render();
+    scrollCityTop();
+  }
+
+  function cancelTravel() {
+    const pin = $('city-map').querySelector(`[data-district="${destination}"]`);
+    showView(travelOrigin);
+    if (['map', 'atlas'].includes(view)) {
+      (pin?.hidden ? $('city-current-location') : pin)?.focus({ preventScroll: true });
+    }
+  }
+
+  function resetView() {
+    showView('district');
   }
 
   function open(message = '') {
@@ -1393,7 +1412,7 @@
     document.querySelector('.city-scroll').scrollTop = 0;
     if (message) $('city-feedback').scrollIntoView({ block: 'center' });
     if (NB.CityLife.requiredTravelChallenge()) document.querySelector('.city-travel-challenge button')?.focus();
-    else $('city-map').querySelector('[aria-current]')?.focus({ preventScroll: true });
+    else $('city-map-tab').focus({ preventScroll: true });
   }
 
   function bindEvents() {
@@ -1425,43 +1444,31 @@
       const filter = event.target.closest('[data-map-filter]');
       if (!filter) return;
       mapFilter = filter.dataset.mapFilter;
-      view = view === 'atlas' ? 'atlas' : 'district';
-      destination = null;
-      cancelJob();
-      announce('');
       render();
     });
-    $('city-map-tab').addEventListener('click', () => {
-      resetView();
-      $('city-map-legend').scrollIntoView({ block: 'start' });
-    });
+    $('city-map-tab').addEventListener('click', () => showView('map'));
+    $('city-current-location').addEventListener('click', () => selectDestination(districtAtPosition().id));
     $('city-journal').addEventListener('click', toggleJournal);
     for (const [id, target] of [['city-bag', 'bag'], ['city-atlas', 'atlas'], ['city-story', 'story']]) {
       $(id).addEventListener('click', () => {
-        view = view === target ? 'district' : target;
-        destination = null;
-        cancelJob();
-        announce('');
-        render();
-        if (view === 'atlas') $('city-neighborhood-picker').scrollIntoView({ block: 'nearest' });
-        else if (view !== 'district') $('city-name').scrollIntoView({ block: 'start' });
+        showView(view === target ? 'district' : target);
       });
     }
   }
 
   function toggleJournal() {
     const district = districtAtPosition();
-    view = view === 'journal' ? 'district' : 'journal';
-    destination = null;
-    NB.Audio.setScene(view === 'journal' ? 'city' : district.music || district.id);
-    cancelJob();
-    announce('');
-    render();
-    if (view === 'journal') $('city-name').scrollIntoView({ block: 'start' });
+    const next = view === 'journal' ? 'district' : 'journal';
+    NB.Audio.setScene(next === 'journal' ? 'city' : district.music || district.id);
+    showView(next);
   }
 
   function handleBack() {
     if (NB.CityLife.requiredTravelChallenge()) return false;
+    if (view === 'travel') {
+      cancelTravel();
+      return true;
+    }
     if (view === 'journal') {
       toggleJournal();
       $('city-journal').focus();

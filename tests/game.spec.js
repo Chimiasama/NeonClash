@@ -9,7 +9,15 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
+async function openCityMap(page) {
+  if (!await page.locator('#city-map').isVisible()) {
+    await page.getByRole('navigation', { name: 'Navegação da cidade' })
+      .getByRole('button', { name: 'Mapa', exact: true }).click();
+  }
+}
+
 async function walkTo(page, pin, encounterRoll = 0.99) {
+  if (!await pin.isVisible()) await openCityMap(page);
   await pin.click();
   const walking = page.getByRole('button', { name: 'A pé', exact: true });
   if (!await walking.isVisible()) return;
@@ -554,8 +562,13 @@ test('quotes travel without charging, then spends time, energy and only the chos
   await page.goto('/');
   await enterCity(page);
   await expect(page.locator('#city-clock')).toHaveText('Dia 1 · 08:00 · Dia');
-  const home = page.getByRole('button', { name: 'Casa de Kairo' });
+  const map = page.locator('#city-map');
+  await expect(map).toBeHidden();
+  await openCityMap(page);
+  await expect(page.locator('.city-detail')).toBeHidden();
+  const home = map.getByRole('button', { name: 'Casa de Kairo' });
   await home.click();
+  await expect(map).toBeHidden();
   await expect(page.getByRole('heading', { name: 'Ir para Casa de Kairo' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Bicicleta', exact: true })).toBeDisabled();
   await page.getByRole('button', { name: 'Cancelar viagem' }).click();
@@ -565,18 +578,26 @@ test('quotes travel without charging, then spends time, energy and only the chos
   await home.click();
   await page.evaluate(() => { Math.random = () => 0.99; });
   await page.getByRole('button', { name: 'Ônibus', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Casa de Kairo' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Casa de Kairo' })).toBeInViewport();
+  await expect(map).toBeHidden();
   await expect(page.locator('#city-credits')).toHaveText('31 créditos');
   await expect(page.locator('#city-clock')).toHaveText('Dia 1 · 08:17 · Dia');
   await expect(page.locator('#city-energy')).toHaveAttribute('value', '96');
-  await page.getByRole('button', { name: 'Dormir · 8 h · Grátis' }).click();
+  const sleep = page.getByRole('button', { name: 'Dormir · 8 h · Grátis' });
+  await expect(sleep).toBeInViewport();
+  await sleep.click();
   await expect(page.locator('#city-clock')).toHaveText('Dia 1 · 16:17 · Dia');
   await expect(page.locator('#city-energy')).toHaveAttribute('value', '100');
+  await openCityMap(page);
+  await page.getByRole('button', { name: 'Ver local atual · Casa de Kairo' }).click();
+  await expect(map).toBeHidden();
+  await expect(page.getByRole('heading', { name: 'Casa de Kairo' })).toBeInViewport();
 });
 
 test('previews hotel services and rolls lasting travel offers by vehicle, fatigue and story progress', async ({ page }) => {
   await page.goto('/');
   await enterCity(page);
+  await openCityMap(page);
   await page.locator('[data-district="vex"]').click();
   await expect(page.locator('#city-content')).toContainText('Descanso · 5 h · 26 créditos');
   const chances = await page.evaluate(() => {
@@ -814,6 +835,7 @@ test('stores supplies and vehicles, restores the backpack and uses its contents'
   await page.getByRole('button', { name: 'Ver implante' }).click();
   await page.getByRole('button', { name: 'Comprar · 130 créditos' }).click();
   await expect(page.locator('#city-energy')).toHaveAttribute('max', '120');
+  await openCityMap(page);
   await page.getByRole('button', { name: 'Casa de Kairo' }).click();
   await expect(page.getByRole('button', { name: 'Bicicleta', exact: true })).toBeEnabled();
   await expect(page.getByRole('button', { name: 'Moto', exact: true })).toBeEnabled();
@@ -827,6 +849,7 @@ test('warns of exhaustion, resolves a street robbery and offers paid rest', asyn
     Object.assign(NB.Save.get().city, { credits: 100 });
     Object.assign(NB.Save.get().city.life, { energy: 100, awake: 940 });
   });
+  await openCityMap(page);
   await page.getByRole('button', { name: 'Pensão do Canal' }).click();
   await expect(page.getByText(/Você vai precisar dormir ao chegar/).first()).toBeVisible();
   await page.getByRole('button', { name: 'A pé', exact: true }).click();
@@ -912,6 +935,7 @@ test('filters the illustrated map by neighborhood and visits its locations direc
   await page.goto('/');
   await enterCity(page);
   const map = page.locator('#city-map');
+  await openCityMap(page);
   await expect(map).toBeInViewport({ ratio: 0.95 });
   await expect(map.getByRole('button', { name: 'Quiosque 24h' }).locator('.city-place-icon')).toHaveText('☕');
   await expect(map.getByRole('button', { name: 'Casa de Kairo' }).locator('.city-place-icon')).toHaveText('⌂');
@@ -1598,6 +1622,7 @@ test('shows the illustrated prologue only when starting the adventure', async ({
   await openAdventure(page);
   await expect(prologue).toBeHidden();
   await expect(page.locator('#city-story')).toHaveCSS('box-shadow', 'none');
+  await openCityMap(page);
   await expect(page.locator('#city-map [data-district="home"] .city-badge-clue')).toHaveCSS('animation-name', 'city-clue-pulse');
   const missionPin = page.locator('#city-map [data-district="home"] .city-place-icon');
   const haloAnimation = () => missionPin.evaluate(icon => getComputedStyle(icon, '::before').animationName);
@@ -1821,6 +1846,7 @@ test('warns before a trip that drains the last energy and sleeps at the destinat
     Math.random = () => 0.9;
     NB.Save.get().city.life.energy = 4;
   });
+  await openCityMap(page);
   await page.getByRole('button', { name: 'Casa de Kairo', exact: true }).click();
   const bus = page.locator('.city-life-row').filter({ has: page.getByRole('button', { name: 'Ônibus', exact: true }) });
   await expect(bus).toContainText('Energia ao chegar: 0/100');
@@ -2006,6 +2032,7 @@ test('filters pins by story, duels and actionable secrets on the same map', asyn
   const home = page.locator('[data-district="home"]');
   const arena = page.locator('[data-district="arena"]');
   const pump = page.locator('[data-district="pump"]');
+  await openCityMap(page);
   const filter = page.getByRole('group', { name: 'Filtros e legenda do mapa' });
   await expect(home).toHaveAttribute('data-markers', 'clue');
   await expect(arena).toHaveAttribute('data-markers', 'duel');
