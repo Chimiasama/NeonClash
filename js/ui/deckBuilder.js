@@ -151,6 +151,13 @@
         ramTag.className = 'col-ram-tag tabular ' + (card.kind === 'unit' ? 'gain' : 'cost');
         ramTag.textContent = card.kind === 'unit' ? `+${card.ramGain}R` : `-${card.cost}R`;
         tags.appendChild(ramTag);
+        if (NB.Save.isCardNew(card.id)) {
+          const badge = document.createElement('span');
+          badge.className = 'col-new-badge';
+          badge.textContent = 'Nova';
+          tags.appendChild(badge);
+          tile.setAttribute('aria-description', 'Carta recém-adquirida');
+        }
 
         const copyBadge = document.createElement('span');
         copyBadge.className = 'col-copy-badge tabular' +

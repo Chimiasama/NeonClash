@@ -79,6 +79,7 @@
       defeatedBosses: [],
       clues: [],
       unlockedCards: starter,
+      newCardUntil: {},
       starterDeck: null,
       customDeck: buildBalancedDeck(starter, []),
       deckSlot: 0,
@@ -113,10 +114,15 @@
           ? cleanedDeck
           : buildBalancedDeck(unlockedCards, cleanedDeck);
 
+        const life = NB.CityLife.normalize(parsed.city?.life);
+        const newCardUntil = Object.fromEntries(Object.entries(parsed.newCardUntil || {}).filter(([id, until]) =>
+          unlockedSet.has(id) && Number.isSafeInteger(until) && until > life.minute && until <= life.minute + 1440));
+
         data = {
           defeatedBosses: Array.isArray(parsed.defeatedBosses) ? parsed.defeatedBosses : def.defeatedBosses,
           clues: Array.isArray(parsed.clues) ? parsed.clues : def.clues,
           unlockedCards,
+          newCardUntil,
           starterDeck: Object.hasOwn(NB.Cards.STARTER_DECKS, parsed.starterDeck) ? parsed.starterDeck
             : parsed.prologueSeen || parsed.story?.started ? 'balanced' : null,
           customDeck: finalDeck,
@@ -138,7 +144,7 @@
               .filter(Number.isSafeInteger))],
             encounterWins: (Array.isArray(parsed.city?.encounterWins) ? parsed.city.encounterWins : [])
               .filter(key => typeof key === 'string' && /^(day|night):-?\d+$/.test(key)).slice(-4),
-            life: NB.CityLife.normalize(parsed.city?.life)
+            life
           },
           story: NB.Story.normalize(parsed.story, parsed.prologueSeen === true && !parsed.defeatedBosses?.length && !parsed.clues?.length),
           affinities: Object.fromEntries(Object.entries(parsed.affinities || {}).filter(([id, type]) =>
@@ -163,6 +169,19 @@
   function get() {
     if (!data) load();
     return data;
+  }
+
+  function unlockCard(id) {
+    const progress = get();
+    if (!Object.hasOwn(NB.Cards.CARD_DB, id) || progress.unlockedCards.includes(id)) return false;
+    progress.unlockedCards.push(id);
+    progress.newCardUntil[id] = progress.city.life.minute + 1440;
+    return true;
+  }
+
+  function isCardNew(id) {
+    const progress = get();
+    return progress.newCardUntil[id] > progress.city.life.minute;
   }
 
   const recalibrationPrice = 15;
@@ -234,6 +253,7 @@
     fresh.city.life.activeInitiative = progress.city.life.activeInitiative;
     Object.assign(progress, {
       newGamePlus: true,
+      newCardUntil: {},
       story: fresh.story,
       city: fresh.city,
       prologueSeen: false,
@@ -254,9 +274,7 @@
     if (!progress.challengeWins.includes(id)) {
       progress.challengeWins.push(id);
       for (const cardId of challenge.cards) {
-        if (progress.unlockedCards.includes(cardId)) continue;
-        progress.unlockedCards.push(cardId);
-        rewards.push(cardId);
+        if (unlockCard(cardId)) rewards.push(cardId);
       }
     }
     save();
@@ -325,10 +343,7 @@
 
     const newlyUnlockedCards = [];
     (boss.rewardCards || []).forEach(cardId => {
-      if (!s.unlockedCards.includes(cardId) && NB.Cards.CARD_DB[cardId]) {
-        s.unlockedCards.push(cardId);
-        newlyUnlockedCards.push(cardId);
-      }
+      if (unlockCard(cardId)) newlyUnlockedCards.push(cardId);
     });
 
     const nextNode = NB.Campaign.NODES[boss.index + 1] || null;
@@ -344,7 +359,7 @@
   function applyInvestigationReward(reward) {
     const progress = get();
     progress.city.credits += reward.credits;
-    if (!progress.unlockedCards.includes(reward.card)) progress.unlockedCards.push(reward.card);
+    unlockCard(reward.card);
   }
 
   function recordMatchLoss() {
@@ -366,6 +381,8 @@
     get,
     getActiveDeck,
     chooseStarterDeck,
+    unlockCard,
+    isCardNew,
     getAffinity,
     recalibrate,
     recalibrationPrice,

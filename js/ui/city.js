@@ -873,7 +873,7 @@
       addButton(row, owned ? 'Adquirida' : `Comprar · ${price}`, () => {
         if (save.city.credits < price || save.unlockedCards.includes(id)) return;
         save.city.credits -= price;
-        save.unlockedCards.push(id);
+        NB.Save.unlockCard(id);
         NB.Save.save();
         render();
         announce(`${card.name} disponível em Meu Deck.`);
@@ -1367,13 +1367,9 @@
     state.payout = payout;
     if (winner === 'player' && duel && !save.city.residentWins.includes(residentId)) {
       save.city.residentWins.push(residentId);
-      if (duel.card && !save.unlockedCards.includes(duel.card)) {
-        save.unlockedCards.push(duel.card);
-        state.residentReward = duel.card;
-      }
+      if (duel.card && NB.Save.unlockCard(duel.card)) state.residentReward = duel.card;
     }
-    if (winner === 'player' && duel?.expansionCard && !save.unlockedCards.includes(duel.expansionCard)) {
-      save.unlockedCards.push(duel.expansionCard);
+    if (winner === 'player' && duel?.expansionCard && NB.Save.unlockCard(duel.expansionCard)) {
       state.expansionReward = duel.expansionCard;
     }
     save.city.credits += payout;

@@ -71,6 +71,25 @@ test('earns credits, buys a card, and keeps the purchase after reloading', async
   await expect(page.getByRole('button', { name: 'Adquirida' })).toHaveCount(0);
   await page.getByRole('button', { name: 'Ver cartas à venda' }).click();
   await expect(page.getByRole('button', { name: 'Adquirida' })).toBeDisabled();
+  await page.evaluate(() => {
+    const save = NB.Save.get();
+    NB.Save.saveCustomDeck(NB.Save.buildBalancedDeck(save.unlockedCards, ['unit_21']));
+    NB.Input.openTitleScreen();
+  });
+  await page.locator('#btn-title-deck').click();
+  const tile = page.locator('#collection-grid [data-card-id="unit_21"]');
+  await expect(tile.locator('.col-new-badge')).toHaveText('Nova');
+  await expect(page.locator('#collection-grid [data-card-id="unit_01"] .col-new-badge')).toHaveCount(0);
+  await page.locator('[data-filter="indeck"]').click();
+  await expect(tile.locator('.col-new-badge')).toHaveCount(await tile.count());
+  await page.evaluate(() => {
+    const save = NB.Save.get();
+    save.city.life.minute = save.newCardUntil.unit_21;
+  });
+  await page.locator('[data-filter="all"]').click();
+  await expect(tile).toBeVisible();
+  await expect(tile.locator('.col-new-badge')).toHaveCount(0);
+
 });
 
 test('penalizes wrong symbols and ends a paid job when time runs out', async ({ page }) => {

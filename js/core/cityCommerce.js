@@ -103,7 +103,7 @@
     if (!cost || save.city.credits < cost) return false;
     if (entry.kind === 'cards') {
       if (save.unlockedCards.includes(id) || ledger().lost === id) return false;
-      save.unlockedCards.push(id);
+      NB.Save.unlockCard(id);
     } else if (id === 'navigator') {
       if (ledger().navigator) return false;
       ledger().navigator = true;
@@ -174,7 +174,7 @@
     const save = state();
     ledger().pending = null;
     if (won) {
-      if (!save.unlockedCards.includes(entry.prize)) save.unlockedCards.push(entry.prize);
+      NB.Save.unlockCard(entry.prize);
       if (entry.stake) ledger().claimed.push(entry.prize);
       else {
         ledger().lost = null;
@@ -184,6 +184,7 @@
       ledger().lost = entry.stake;
       ledger().recoveryMisses = 0;
       save.unlockedCards = save.unlockedCards.filter(id => id !== entry.stake);
+      delete save.newCardUntil[entry.stake];
       save.customDeck = NB.Save.buildBalancedDeck(save.unlockedCards, save.customDeck);
       for (const slot of Object.keys(save.deckSlots)) {
         save.deckSlots[slot] = NB.Save.buildBalancedDeck(save.unlockedCards, save.deckSlots[slot]);

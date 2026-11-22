@@ -230,6 +230,14 @@
   gap: 2px;
   padding: 2px 3px;
 }
+.col-new-badge {
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: #a9fff2;
+  color: #102225;
+  font: 800 9px var(--font-mono);
+  white-space: nowrap;
+}
 .col-copy-badge {
   font-family: var(--font-mono);
   font-size: 9px;

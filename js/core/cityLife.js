@@ -380,7 +380,7 @@
         const eligible = pool.filter(id => !save.unlockedCards.includes(id));
         if (eligible.length) {
           const cardId = eligible[Math.floor(Math.random() * eligible.length)];
-          save.unlockedCards.push(cardId);
+          NB.Save.unlockCard(cardId);
           bonus = { type: 'card', id: cardId };
         } else if (bagCount(life) < bagLimit) {
           life.inventory.energyDrink++;
