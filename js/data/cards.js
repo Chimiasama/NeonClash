@@ -609,11 +609,18 @@
     'Restaura até 3 DEF da unidade e concede escudo de 3 HP até o início do seu próximo turno.',
     [{ type: 'repair', target: 'selected', value: 3 }, { type: 'hpShield', value: 3 }]);
 
+  addExploit('exploit_31', 'Canal Paralelo', 'Implantação', 4, 'none',
+    'Eleva o limite total para 2 invocações neste turno. Invocações já usadas contam. Não acumula.',
+    [{ type: 'deployLimit', value: 2 }]);
+  addExploit('exploit_32', 'Barramento Triplo', 'Implantação', 7, 'none',
+    'Eleva o limite total para 3 invocações neste turno. Invocações já usadas contam. Não acumula.',
+    [{ type: 'deployLimit', value: 3 }]);
+
   const expansionRarity = {
     common: ['unit_42', 'unit_45', 'unit_52', 'unit_55', 'exploit_24', 'exploit_27', 'exploit_29'],
     uncommon: ['unit_44', 'unit_46', 'unit_47', 'unit_48', 'unit_49', 'unit_50', 'unit_53',
-      'exploit_21', 'exploit_22', 'exploit_23', 'exploit_26'],
-    rare: ['unit_43', 'unit_51', 'unit_54', 'unit_56', 'exploit_25', 'exploit_28', 'exploit_30']
+      'exploit_21', 'exploit_22', 'exploit_23', 'exploit_26', 'exploit_31'],
+    rare: ['unit_43', 'unit_51', 'unit_54', 'unit_56', 'exploit_25', 'exploit_28', 'exploit_30', 'exploit_32']
   };
   for (const [rarity, ids] of Object.entries(expansionRarity)) {
     for (const id of ids) {

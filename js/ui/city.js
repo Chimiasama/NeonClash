@@ -204,7 +204,7 @@
     };
     $('city-line').textContent = view === 'journal' ? 'Pistas extraídas e rastros confirmados na Antena.' : (cleared ? lines[district.id] : district.line);
     $('city-journal').setAttribute('aria-pressed', view === 'journal');
-    const clueLocations = new Set(NB.Story.getScenes().map(scene => scene.location));
+    const clueLocations = new Set(NB.Story.getScenes().map(NB.Story.sceneLocation));
     const pending = NB.Story.pendingDuel();
     if (pending) clueLocations.add(pending[0]);
     const encounter = urbanEncounter(save);
@@ -381,13 +381,18 @@
     return routePactLog[life.routePact]?.location;
   }
 
+  function missionHeading(section, title, status) {
+    addText(section, `Missão secundária · ${title}`, 'city-clue-title');
+    addText(section, status, 'city-mission-status');
+  }
+
   function renderRoutePact(content, location, life) {
     const step = life.routePact;
     if (location !== routePactDestination(life)) return;
     const section = document.createElement('section');
     section.className = 'city-local-duels';
     section.setAttribute('aria-label', 'Acordo das Rotas');
-    addText(section, 'Acordo das Rotas', 'city-clue-title');
+    missionHeading(section, 'Acordo das Rotas', step ? 'Em andamento' : 'Disponível para iniciar');
 
     const mediator = NB.CityAtlas.residents.find(person => person.id === 45);
     const speakers = [
@@ -411,7 +416,8 @@
       addButton(section, labels[step === 3 ? 2 : step], () => {
         if (!NB.CityLife.advanceRoutePact(step)) return;
         const next = ['Leila está no Arquivo do Ringue.', 'Procure Sinal no Depósito de Peças.'];
-        refreshStory(next[step] || `Prêmio recebido: ${maskReward}`);
+        const status = step === 0 ? 'Missão iniciada' : step === 3 ? 'Missão concluída' : 'Missão avançou';
+        refreshStory(`${status} · Acordo das Rotas. ${next[step] || maskReward}`);
       }, step === 3 && (NB.Story.get().chapter < 2 || !life.favors.includes('pumpRelay')));
       if (step === 3) addText(section, 'Disponível a partir do capítulo 3, depois de ajudar Maíra na bomba.');
     }
@@ -445,9 +451,17 @@
       const topic = document.createElement('summary');
       topic.textContent = learned ? 'Rever a dica da Aline' : 'Aprender com Aline o atalho de bicicleta';
       lesson.append(topic);
+      missionHeading(lesson, 'Atalho da Aline', learned ? 'Concluída' : life.hillPathStarted ? 'Em andamento' : 'Disponível para iniciar');
       const intro = 'Vi que você comprou uma bicicleta. Conheço uma passagem que poupa tempo e perna. Se me vencer num duelo, eu te mostro por onde entrar.';
       addContactDialogue(lesson, aline.name, aline.portrait, learned ? NB.CityLife.hillPathLesson : intro);
-      if (!learned) addButton(lesson, 'Duelar com Aline pelo atalho', () => startResidentDuel(aline, intro, true));
+      if (!learned) {
+        addText(lesson, life.hillPathStarted ? 'Vença o duelo para concluir a missão.' : 'O duelo inicia a missão do atalho.');
+        addButton(lesson, 'Duelar com Aline pelo atalho', () => {
+          life.hillPathStarted = true;
+          NB.Save.save();
+          startResidentDuel(aline, intro, true);
+        });
+      }
       choices.append(lesson);
     }
     content.append(choices);
@@ -458,10 +472,14 @@
     const { favors } = life;
     if (location === 'garage') renderAline(content, life);
     if (location === 'pump' && !favors.includes('pumpRelay')) {
-      serviceButton(content, 'Ajudar Maíra na bomba · 30 min · +16 créditos', () => {
+      const section = document.createElement('section');
+      section.className = 'city-mission-entry';
+      missionHeading(section, 'Travessia da Ressaca', 'Disponível · ajudar Maíra conclui a missão');
+      serviceButton(section, 'Ajudar Maíra na bomba · 30 min · +16 créditos', () => {
         if (!NB.CityLife.helpContact('pumpRelay')) return;
-        refreshStory('A bomba voltou a funcionar. A travessia para o Cais reabriu.');
+        refreshStory('Missão concluída · Travessia da Ressaca. +16 créditos. A travessia para o Cais reabriu.');
       }, 'Maíra', { portrait: './avatars/maira.webp' });
+      content.append(section);
     } else if (location === 'pump') {
       addText(content, 'A balsa para o Cais está aberta das 7h às 18h.');
     }
@@ -810,7 +828,8 @@
     for (const [kind, merchant] of Object.entries(NB.CityCommerce.merchants)) {
       if (!life.commerce.seen.includes(kind)) continue;
       const done = life.commerce.discounts.includes(kind);
-      const section = entry(merchant.mission, done ? 'Concluída' : 'Em andamento');
+      const section = entry(merchant.mission, done ? 'Concluída' :
+        life.commerce.missionsStarted.includes(kind) ? 'Em andamento' : 'Disponível');
       if (done) reward(section, `15 créditos e 10% de desconto com ${merchant.name}.`);
       else next(section, { location: merchant.location, contact: merchant.name, task: 'Vencer a escolta do depósito.' });
     }
@@ -825,7 +844,7 @@
 
     const shortcut = life.favors.includes('hillPath');
     const aline = entry('Atalho da Aline', shortcut ? 'Concluída · Garagem da Íris · Aline'
-      : life.vehicles.includes('bike') ? 'Disponível' : 'Requer bicicleta');
+      : life.hillPathStarted ? 'Em andamento' : life.vehicles.includes('bike') ? 'Disponível' : 'Requer bicicleta');
     if (shortcut) reward(aline, 'Viagens de bicicleta entre Oficinas e Morro gastam menos tempo e energia.');
     else next(aline, { location: 'garage', contact: 'Aline',
       task: life.vehicles.includes('bike') ? 'Conversar sobre o atalho e vencer o duelo.' : 'Comprar a bicicleta para liberar a conversa.' });
@@ -1225,19 +1244,41 @@
     if (offer) {
       const section = document.createElement('section');
       section.className = 'city-story-section';
-      addText(section, commerce.merchants[offer.kind].name, 'city-clue-title');
+      const merchant = commerce.merchants[offer.kind];
+      addText(section, merchant.approach, 'city-clue-title');
+      addContactDialogue(section, merchant.name, merchant.portrait, merchant.line);
       if (save.city.life.commerce.discounts.includes(offer.kind)) addText(section, 'Desconto de confiança · 10%.');
+      const stock = document.createElement('div');
+      if (offer.kind === 'cards') stock.className = 'city-merchant-stock';
       for (const id of offer.stock) {
         const item = offer.kind === 'cards' ? NB.Cards.CARD_DB[id] :
           id === 'navigator' ? commerce.navigator : NB.CityLife.cyberdecks[id];
         const amount = commerce.price(offer.kind, id);
-        const details = id === 'navigator' ? ' · reduz abordagens de ônibus e bicicleta' :
-          offer.kind === 'gear' ? ` · +${item.ram} RAM inicial${id === 'tram' ? ' · primeiro Overclock custa 1 RAM a menos' : ''}` :
-            item.rarity === 'rare' ? ' · rara' : '';
-        addButton(section, `Comprar ${item.name}${details} · ${amount} créditos`, () => {
+        const row = document.createElement('div');
+        if (offer.kind === 'cards') {
+          const preview = addButton(row, item.name, () => NB.DeckBuilder.previewOffer(id, preview));
+          preview.className = 'city-merchant-card';
+          preview.setAttribute('aria-label', `Ver ${item.name}`);
+          preview.setAttribute('aria-haspopup', 'dialog');
+          const art = document.createElement('span');
+          art.className = 'city-merchant-art';
+          art.append(NB.Sprites.createArtMarkup(item.id, item.img, ''));
+          preview.prepend(art);
+          const rarity = NB.Cards.rarityLabel(item.rarity);
+          if (rarity) addText(row, rarity);
+        } else {
+          const detail = id === 'navigator' ? 'Reduz abordagens de ônibus e bicicleta.' :
+            `+${item.ram} RAM inicial${id === 'tram' ? ' · primeiro Overclock custa 1 RAM a menos' : ''}`;
+          addText(row, item.name, 'city-clue-title');
+          addText(row, detail);
+        }
+        const buy = addButton(row, `Comprar · ${amount} créditos`, () => {
           if (commerce.buyOffer(id)) refreshStory(`${item.name} adquirido.`);
         }, save.city.credits < amount);
+        buy.setAttribute('aria-label', `Comprar ${item.name} · ${amount} créditos`);
+        stock.append(row);
       }
+      section.append(stock);
       if (!offer.stock.length) addText(section, 'Estoque esgotado.');
       addButton(section, 'Dispensar oferta', () => {
         save.city.life.commerce.offer = null;
@@ -1248,15 +1289,21 @@
     }
     for (const [kind, contact] of Object.entries(commerce.merchants)) {
       if (!commerce.missionAvailable(kind)) continue;
-      addText(content, `${contact.name} pediu ajuda para recuperar sua mercadoria. Vença a escolta para receber 15 créditos e desconto. Derrota ou abandono custa até 3 créditos.`, 'city-notice');
-      addButton(content, contact.mission + ' · duelar', () => {
-        if (!commerce.missionAvailable(kind)) return;
+      const mission = document.createElement('section');
+      mission.className = 'city-mission-entry';
+      const started = save.city.life.commerce.missionsStarted.includes(kind);
+      missionHeading(mission, contact.mission, started ? 'Em andamento' : 'Disponível para iniciar');
+      addContactDialogue(mission, contact.name, contact.portrait, 'Uma escolta ficou com a minha mercadoria. Se você recuperar o lote, eu te pago 15 créditos e faço desconto nas próximas compras.');
+      addText(mission, 'Derrota ou abandono custa até 3 créditos.', 'city-notice');
+      addButton(mission, started ? 'Continuar missão · duelar' : 'Iniciar missão · duelar', () => {
+        if (!commerce.startMission(kind)) return;
         NB.Input.startMatch({ mode: 'arena', boss: {
           ...wagerBoss, ...NB.CityLife.travelDeck(kind === 'cards' ? 1 : 2),
           hp: kind === 'cards' ? 15 : 17, name: 'Escolta do depósito',
-          fullTitle: 'Escolta do depósito // Contrabando', commerceMission: kind
+          fullTitle: `Escolta do depósito // ${contact.mission}`, commerceMission: kind
         } });
       });
+      content.append(mission);
     }
   }
 

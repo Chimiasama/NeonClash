@@ -240,17 +240,18 @@
   scene('ending', 5, 'archon', 'Decidir como divulgar as provas', ['archonDeal'], 'ending', [
     'O Núcleo Eclipse perdeu o controle do barramento. Kairo confirma a transferência e Renan assume a rede elétrica. Nina e Isa esperam para saber quais provas vão circular e quando.',
     'Kairo separa os textos autorizados dos registros pessoais. A equipe pode divulgar agora com o plano de transição, entregar os arquivos a um conselho ou aceitar a regularização limitada oferecida por Archon.'
-  ], { when: 'archonWon', next: true, choices: [
-    { id: 'publish', label: 'Publicar com transição comunitária', reaction: 'Isa distribui a primeira edição na praça. A Clínica continua ligada durante a troca de controle.' },
-    { id: 'council', label: 'Entregar as provas ao conselho dos bairros', reaction: 'Os depoimentos ficam sob guarda enquanto os bairros combinam a transição. Isa marca uma data para cobrar o próximo relatório.' },
-    { id: 'settle', label: 'Aceitar a regularização limitada', reaction: 'O endereço de Kairo volta à lista. Dona Nair guarda as cópias dos outros pedidos para uma nova audiência.' }
+  ], { when: 'archonWon', next: true, followup: 'epilogue', choices: [
+    { id: 'publish', label: 'Publicar com transição comunitária', reaction: 'Isa publica as provas com os dados pessoais protegidos. Renan mantém a Clínica ligada durante a transição, e os bairros passam a acompanhar em público quais endereços voltam à rede. A Vértice perde o controle sobre a versão oficial dos cortes.' },
+    { id: 'council', label: 'Entregar as provas ao conselho dos bairros', reaction: 'O conselho dos bairros recebe as provas sob custódia. Os depoimentos ficam protegidos enquanto as equipes revisam as ordens de corte. A divulgação espera a audiência, e Isa publica a data para que os moradores possam cobrar o relatório.' },
+    { id: 'settle', label: 'Aceitar a regularização limitada', reaction: 'O acordo devolve o endereço de Kairo ao cadastro e garante a linha da Clínica. As outras casas continuam em análise. Dona Nair guarda as cópias para uma nova audiência, enquanto o relatório completo permanece fora da versão pública do acordo.' }
   ] });
 
-  scene('epilogue', 6, 'home', 'Voltar à Casa e falar com Dona Nair', ['ending'], 'epilogue', [
+  scene('epilogue', 6, 'archon', 'O que ficou em Baixa Luz', ['ending'], 'epilogue', [
     'A chave antiga ainda serve. Dentro de casa, Dona Nair pede para Kairo escrever a nova leitura do contador no verso do primeiro recibo.',
     'Kira compartilhou os horários que pode divulgar. A Pensão continua aberta, com o registro de hóspedes sob guarda de Cris. Vex deixou uma via protegida para as testemunhas. A escala de Cipher foi devolvida à equipe que acompanha a transição.',
-    'Nair coloca outra solicitação sobre a mesa. É de uma casa que ainda aparece como vazia. No verso do primeiro recibo, ao lado da leitura nova, as duas anotam o endereço e deixam um espaço para a resposta.'
-  ]);
+    'Nair coloca outra solicitação sobre a mesa. É de uma casa que ainda aparece como vazia. No verso do primeiro recibo, ao lado da leitura nova, as duas anotam o endereço e deixam um espaço para a resposta.',
+    'Obrigado por jogar NeonClash. O Novo Jogo+ está disponível na tela inicial depois de concluir este epílogo.'
+  ], { finishLabel: 'Voltar à tela inicial' });
 
   const alliedLines = {
     preparation: 'Kira — Os drones foram atrás do sinal da minha sub-rede. Fica onde está e respira. Quando eu abrir a passagem, você sobe. Kairo recupera até 10 de energia sem gastar tempo nem créditos.',

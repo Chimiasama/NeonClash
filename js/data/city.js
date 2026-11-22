@@ -57,7 +57,9 @@
     { id: 'exploit_23', price: 70, chapter: 3 },
     { id: 'exploit_24', price: 39 },
     { id: 'exploit_25', price: 98, chapter: 4 },
-    { id: 'exploit_26', price: 78, chapter: 3 }
+    { id: 'exploit_26', price: 78, chapter: 3 },
+    { id: 'exploit_31', price: 92, chapter: 3 },
+    { id: 'exploit_32', price: 145, chapter: 5 }
   ];
 
   const traces = {

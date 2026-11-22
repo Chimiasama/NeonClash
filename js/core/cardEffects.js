@@ -135,6 +135,9 @@
         NB.State.drawCard(side);
         if (bonus) NB.State.drawCard(side);
         if (top && side === 'player') NB.Physics.showToast(`VARREDURA · ${NB.Cards.CARD_DB[top.cardId].name}${bonus ? ' · COMPRA EXTRA' : ''}`, 'var(--cyan)');
+      } else if (type === 'deployLimit') {
+        actor.summonLimit = Math.max(actor.summonLimit, value);
+        NB.State.reportImpact(side, caster, `${actor.summonLimit} INVOCAÇÕES`, 'Limite deste turno', '#83e8f5');
       } else if (type === 'overclockCoupler') {
         actor.overclockCoupler = true;
       } else if (type === 'counterFormation') {
@@ -201,6 +204,13 @@
       if (type === 'direct' || type === 'discardDamage') {
         const damage = type === 'direct' ? value : discardDamage(actor, effect);
         return sum + (damage >= opponent.hp ? 100 : damage * 1.3);
+      }
+      if (type === 'deployLimit') {
+        const available = Math.min(actor.field.filter(unit => !unit).length,
+          actor.hand.filter(item => NB.Cards.CARD_DB[item.cardId].kind === 'unit').length);
+        const existing = Math.max(0, actor.summonLimit - actor.summonsUsed);
+        const usable = Math.min(available, value - actor.summonsUsed) - Math.min(available, existing);
+        return sum + Math.max(0, usable) * 4.5;
       }
       if (type === 'overclockCoupler') {
         const ready = actor.field.filter(unit => NB.Combat.canAttack(unit, actor.field));

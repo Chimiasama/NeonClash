@@ -123,6 +123,7 @@
       implant,
       inventory,
       vehicles: ['bike', 'motorbike'].filter(id => Array.isArray(raw?.vehicles) && raw.vehicles.includes(id)),
+      hillPathStarted: raw?.hillPathStarted === true,
       favors: ['hillPath', 'pumpRelay'].filter(id => Array.isArray(raw?.favors) && raw.favors.includes(id)),
       lastShift: integer(raw?.lastShift, -2, -2, Number.MAX_SAFE_INTEGER),
       notice: typeof raw?.notice === 'string' ? raw.notice.slice(0, 350) : ''

@@ -199,7 +199,7 @@
   function open(id, replay = false) {
     const scene = NB.Story.sceneById[id];
     if (!scene || (replay ? !NB.Story.has(scene.grants) : !NB.Story.available(scene))) return;
-    if (!replay && scene.location !== NB.Save.get().city.district) return;
+    if (!replay && NB.Story.sceneLocation(scene) !== NB.Save.get().city.district) return;
     const lines = NB.Story.getLines(scene);
     const cursor = replay ? 0 : Math.min(NB.Story.get().read[id] ?? 0, lines.length - 1);
     const location = NB.CityData.districts.find(item => item.id === scene.location);
@@ -244,6 +244,10 @@
     const reward = scene.reward && `+ ${scene.reward.credits} créditos e ${NB.Cards.CARD_DB[scene.reward.card].name}.`;
     const recovered = scene.id === 'archonPrep' ? NB.Save.get().city.life.energy - energyBefore : 0;
     close();
+    if (scene.id === 'epilogue') {
+      NB.Input.openTitleScreen();
+      return;
+    }
     const duel = NB.Story.pendingDuel(scene.location);
     if (duel?.[1].deal === scene.grants && NB.Input.startStoryDuel(scene.location)) return;
     NB.City.refreshStory([reaction || (scene.evidence ? 'Prova registrada no diário.' : 'Investigação atualizada.'), reward,
@@ -351,9 +355,9 @@
     if (warning) text(content, warning).className = 'city-notice';
     const current = NB.Story.getScenes();
     for (const scene of current) {
-      const location = NB.CityData.districts.find(place => place.id === scene.location);
+      const location = NB.CityData.districts.find(place => place.id === NB.Story.sceneLocation(scene));
       text(content, `${scene.title} · ${location.name} · ${sceneContact(scene, location)}`);
-      if (scene.location === district.id) button(content, scene.title, () => open(scene.id));
+      if (location.id === district.id) button(content, scene.title, () => open(scene.id));
       else button(content, `Ir para ${location.name}`, () => travel(location.id));
     }
     const schedule = NB.Story.unavailableSchedule();
@@ -374,7 +378,7 @@
       text(history, 'Histórico da missão principal', 'summary');
       for (const id of [...story.completed].reverse()) {
         const scene = NB.Story.sceneById[id];
-        const location = NB.CityData.districts.find(place => place.id === scene.location);
+        const location = NB.CityData.districts.find(place => place.id === NB.Story.sceneLocation(scene));
         const item = document.createElement('article');
         text(item, scene.title, 'h5');
         text(item, `${location.name} · ${sceneContact(scene, location)}`);
@@ -461,5 +465,5 @@
     });
   }
 
-  NB.StoryUI = { local, journal, bindEvents, prologue, openPrologue };
+  NB.StoryUI = { open, local, journal, bindEvents, prologue, openPrologue };
 })(window.NB = window.NB || {});

@@ -50,6 +50,9 @@
     for (const person of NB.CityAtlas.residents) {
       add(person.portrait, person.name, person.line, 'people');
     }
+    for (const merchant of Object.values(NB.CityCommerce.merchants)) {
+      add(merchant.portrait, merchant.name, merchant.line, 'people');
+    }
     for (const encounter of Object.values(NB.CityAtlas.encounters).flat()) {
       const place = NB.CityData.districts.find(district => district.id === encounter.location);
       add(encounter.portrait, encounter.name, `Duelista de um encontro urbano em ${place.name}.`, 'people');

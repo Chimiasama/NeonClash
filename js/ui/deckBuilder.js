@@ -7,6 +7,7 @@
   let searchWords = [];
   let inspectedCardId = null;
   let inspectorOrigin = null;
+  let offerOrigin = null;
   let returnTarget = 'title';
 
   function getAllCardDefs() {
@@ -239,17 +240,32 @@
     document.getElementById('btn-insp-close').focus();
   }
 
+  function previewOffer(cardId, origin) {
+    const offer = NB.CityCommerce.offer();
+    if (offer?.kind !== 'cards' || !offer.stock.includes(cardId)) return;
+    offerOrigin = origin;
+    inspectedCardId = cardId;
+    renderInspector();
+    document.querySelector('.city-panel').inert = true;
+    document.getElementById('card-inspector-modal').classList.add('open');
+    document.getElementById('inspector-panel').scrollTop = 0;
+    document.getElementById('btn-insp-close').focus();
+  }
+
   function closeInspector() {
     if (!inspectedCardId) return;
     inspectedCardId = null;
     document.getElementById('card-inspector-modal').classList.remove('open');
     document.getElementById('deck-modal').inert = false;
-    const origin = document.querySelector(inspectorOrigin);
+    if (offerOrigin) document.querySelector('.city-panel').inert = false;
+    const origin = offerOrigin || document.querySelector(inspectorOrigin);
     (origin || document.querySelector('.deck-filter-btn.active'))?.focus();
+    offerOrigin = null;
     inspectorOrigin = null;
   }
 
   function getInspectableCards() {
+    if (offerOrigin) return [];
     const owned = getUnlockedSet();
     return getFilteredCards().filter(card => owned.has(card.id));
   }
@@ -323,6 +339,8 @@
     }
 
     document.getElementById('insp-desc').textContent = card.desc + NB.Cards.describeAffinity(NB.Save.getAffinity(card.id));
+    panel.classList.toggle('offer-preview', Boolean(offerOrigin));
+    if (offerOrigin) return;
 
     const copies = countCopies(card.id);
     const total = draftDeck.length;
@@ -491,6 +509,7 @@
     removeCard,
     autoComplete,
     openInspector,
+    previewOffer,
     closeInspector,
     bindEvents
   };

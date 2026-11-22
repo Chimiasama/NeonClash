@@ -94,8 +94,8 @@ for (const { id, deckList } of bosses) {
 
 function playCards(state) {
   const { player } = state;
-  const slot = player.field.indexOf(null);
   function candidates(kind, evaluate) {
+    const slot = player.field.indexOf(null);
     return player.hand.flatMap(item => {
       const card = CARD_DB[item.cardId];
       if (card.kind !== kind || !State.canPlayHandCard('player', item).ok) return [];
@@ -107,15 +107,17 @@ function playCards(state) {
     }).sort((a, b) => b.power - a.power);
   }
 
-  const unit = candidates('unit', (card, effects) => card.atk + 0.75 * card.def + card.ramGain + effects +
-    (NB.Cards.hasKeyword(card, 'ZERO_DAY') ? 1.5 : 0))[0];
-  if (unit && slot !== -1) {
-    State.deployUnit('player', unit.item.uid, slot);
-    if (state.pendingTarget?.kind === 'deploy') State.resolveDeployTarget(unit.target);
-  }
-  for (let count = 0; count < 6 && !state.winner; count++) {
-    const next = candidates('exploit', (card, effects) => effects - card.cost * 0.65)[0];
+  let exploits = 0;
+  while (!state.winner) {
+    const unit = candidates('unit', (card, effects) => card.atk + 0.75 * card.def + card.ramGain + effects +
+      (NB.Cards.hasKeyword(card, 'ZERO_DAY') ? 1.5 : 0))[0];
+    if (unit && State.deployUnit('player', unit.item.uid)) {
+      if (state.pendingTarget?.kind === 'deploy') State.resolveDeployTarget(unit.target);
+      continue;
+    }
+    const next = exploits < 6 ? candidates('exploit', (card, effects) => effects - card.cost * 0.65)[0] : null;
     if (!next || next.power <= 0 || !State.executeExploit('player', next.item.uid, next.target)) break;
+    exploits++;
   }
 }
 
@@ -174,7 +176,8 @@ async function simulate(player, boss, index, modifier = {}) {
     }
     await enemyTurn;
   }
-  return { openingSide, winner: state.winner, turn: state.turn };
+  const deployBoosts = actor => actor.played.filter(entry => CARD_DB[entry.cardId].effects?.some(effect => effect.type === 'deployLimit')).length;
+  return { openingSide, winner: state.winner, turn: state.turn, playerBoosts: deployBoosts(state.player), enemyBoosts: deployBoosts(state.enemy) };
 }
 
 async function report(player, boss, modifier, label = boss.id) {
@@ -183,10 +186,11 @@ async function report(player, boss, modifier, label = boss.id) {
   const wins = rows => Math.round(1000 * rows.filter(row => row.winner === 'player').length / rows.length) / 10;
   return [player.id, label, wins(outcomes), wins(outcomes.filter(row => row.openingSide === 'player')),
     wins(outcomes.filter(row => row.openingSide === 'enemy')), outcomes.filter(row => !row.winner).length,
-    (outcomes.reduce((sum, row) => sum + row.turn, 0) / games).toFixed(1)].join(',');
+    (outcomes.reduce((sum, row) => sum + row.turn, 0) / games).toFixed(1),
+    outcomes.filter(row => row.playerBoosts).length, outcomes.filter(row => row.enemyBoosts).length].join(',');
 }
 
-console.log('deck,oponente,vitorias%,kairo_inicia%,npc_inicia%,sem_desfecho,turnos_medios');
+console.log('deck,oponente,vitorias%,kairo_inicia%,npc_inicia%,sem_desfecho,turnos_medios,partidas_invo_extra_kairo,partidas_invo_extra_npc');
 for (const player of starters) {
   for (const boss of bosses) console.log(await report(player, boss));
 }
@@ -213,4 +217,11 @@ for (const attribute of ['atk', 'def', 'ramGain']) {
   });
   const player = { id: `mais-1-${attribute}`, cards };
   for (const boss of [...NB.Campaign.NODES, travel[1], travel[4]]) console.log(await report(player, boss));
+}
+
+const late = starters.find(player => player.id === 'fim-de-campanha');
+for (const id of ['exploit_31', 'exploit_32']) {
+  const cards = late.cards.slice();
+  cards[cards.indexOf('exploit_01')] = id;
+  console.log(await report({ ...late, id }, final, { overclock: true }, 'archon-implantacao'));
 }

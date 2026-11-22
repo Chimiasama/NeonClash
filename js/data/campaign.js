@@ -65,7 +65,7 @@
         'unit_25', 'unit_25', 'unit_23', 'unit_01',
         'unit_01', 'unit_02', 'unit_02', 'unit_28',
         'unit_05', 'unit_05', 'exploit_01', 'exploit_01',
-        'exploit_04', 'exploit_09', 'exploit_10', 'exploit_16'
+        'exploit_04', 'exploit_31', 'exploit_10', 'exploit_16'
       ],
       lines: {
         start: ['"Perímetro selado. Nenhuma invasão passará pelo Firewall."', '"Autorização negada, Kairo. Iniciando expurgo."'],
@@ -140,7 +140,7 @@
         'unit_07', 'unit_07', 'unit_05', 'unit_05',
         'unit_13', 'unit_13', 'unit_14', 'unit_14',
         'unit_10', 'unit_10', 'unit_02', 'unit_02',
-        'unit_06', 'unit_08', 'exploit_01', 'exploit_01',
+        'unit_06', 'unit_08', 'exploit_01', 'exploit_32',
         'exploit_03', 'exploit_04', 'exploit_05', 'exploit_06'
       ],
       lines: {

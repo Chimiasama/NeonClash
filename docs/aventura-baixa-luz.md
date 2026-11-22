@@ -98,7 +98,7 @@ O final altera falas no epílogo, na Praça, na Clínica e na Antena. A prova de
 
 ## 7. De volta ao Viaduto
 
-Na **Casa de Kairo**, escolha **Voltar à Casa e falar com Dona Nair**. A cena combina o resultado da divulgação com a decisão de quando contar sobre a assinatura. Registre a conversa final para concluir a investigação. Baixa Luz continua disponível para revisitas, compras, descanso, duelos e consulta às provas.
+A escolha na Torre abre imediatamente **O que ficou em Baixa Luz**. O primeiro quadro mostra a consequência da escolha. As cenas seguintes retomam Dona Nair, a decisão sobre a assinatura e os aliados. Depois de “Obrigado por jogar”, **Voltar à tela inicial** conclui a campanha e libera **Novo Jogo+**. O save concluído também pode ser continuado.
 
 ## Provas, atalhos e recompensas de combate
 
@@ -519,7 +519,7 @@ Escolhas exibidas
 
 ### 7. De volta ao Viaduto
 
-#### Voltar à Casa e falar com Dona Nair
+#### O que ficou em Baixa Luz
 
 **Local** · Casa de Kairo
 

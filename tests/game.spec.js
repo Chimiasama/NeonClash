@@ -1127,7 +1127,7 @@ test('learns the bicycle shortcut from Aline only after buying the bike and winn
     NB.State.get().enemy.hp = 0;
     NB.State.checkWinCondition();
   });
-  await expect(page.locator('#go-clue-title')).toHaveText('ATALHO DA ALINE');
+  await expect(page.locator('#go-clue-title')).toHaveText('MISSÃO CONCLUÍDA · ATALHO DA ALINE');
   await expect(page.locator('#go-clue-text')).toContainText('entre o Pátio das Oficinas e o Morro das Casas');
   await expect(page.locator('#go-clue-text')).toContainText('menos tempo e chega com mais energia');
   await expect(page.locator('#go-clue-text')).toContainText('Ferro de Pulso');
@@ -2659,7 +2659,7 @@ test('keeps combat bonuses readable and archives them in the effects history', a
   await expect(page.locator('#duel-log-grid')).toContainText('−4 DEF · +1 Sombra');
 });
 
-test('applies the expansion effects and assigns a finite power value to all eighty cards', async ({ page }) => {
+test('applies the expansion effects and assigns a finite power value to all eighty-two cards', async ({ page }) => {
   await page.goto('/');
   const result = await page.evaluate(() => {
     NB.Input.startMatch({ mode: 'quick', boss: NB.Campaign.NODES[0] });
@@ -2679,7 +2679,7 @@ test('applies the expansion effects and assigns a finite power value to all eigh
     return [wasLocked, firstDamage, target.def, hp - enemy.hp, enemy.hpShield,
       Object.values(NB.CardPower.byId).filter(value => Number.isFinite(value.total)).length];
   });
-  expect(result).toEqual([true, 5, 1, 2, 0, 80]);
+  expect(result).toEqual([true, 5, 1, 2, 0, 82]);
 });
 
 test('continues an existing adventure or resets it only after confirmation', async ({ page }) => {
@@ -2763,3 +2763,89 @@ test('lets Kairo take direct damage against a Firewall attacker and reserves Fir
   });
   expect(result).toEqual({ intact: [7, 4], priority: { 1: 0 }, playerHp: hp - 10, ai: {} });
 });
+
+test('shows merchant artwork, previews an unowned offered card, and names the side mission', async ({ page }) => {
+  await page.goto('/');
+  await enterCity(page);
+  await page.evaluate(() => {
+    const save = NB.Save.get();
+    save.city.district = 'ringArchive';
+    save.city.life.commerce.seen = ['cards'];
+    save.city.life.commerce.offer = { kind: 'cards', destination: 'ringArchive', stock: ['unit_43'] };
+    NB.Input.openNetMap();
+  });
+  await expect(page.getByText('Você foi abordada por uma vendedora de cartas')).toBeVisible();
+  await expect(page.locator('img[src="./avatars/nara.webp"]').first()).toBeVisible();
+  const tile = page.getByRole('button', { name: 'Ver Guarda do Barramento' });
+  await expect(tile.locator('img')).toBeVisible();
+  await expect(page.getByRole('button', { name: /Comprar Guarda do Barramento.*créditos/ })).toBeVisible();
+  await tile.click();
+  const preview = page.getByRole('dialog', { name: 'GUARDA DO BARRAMENTO' });
+  await expect(preview.locator('#insp-desc')).toContainText('lugar da líder');
+  await expect(preview.locator('.inspector-deck-controls')).toBeHidden();
+  await preview.getByRole('button', { name: 'Fechar', exact: false }).click();
+  await expect(tile).toBeFocused();
+  await page.getByRole('button', { name: 'Dispensar oferta' }).click();
+  await expect(tile).toHaveCount(0);
+  const mission = page.locator('.city-mission-entry').filter({ hasText: 'Recuperar a caixa de cartas de Nara' });
+  await expect(mission).toContainText('Disponível para iniciar');
+  await mission.getByRole('button', { name: 'Iniciar missão · duelar' }).click();
+  await expect.poll(() => page.evaluate(() => NB.Save.get().city.life.commerce.missionsStarted)).toEqual(['cards']);
+});
+
+test('raises total summon limits without stacking and lets the AI use extra summons', async ({ page }) => {
+  await page.goto('/');
+  const result = await page.evaluate(async () => {
+    NB.Input.startMatch({ mode: 'quick' });
+    const state = NB.State.get();
+    const cards = ids => ids.map((cardId, uid) => ({ cardId, uid }));
+    state.player.ram = 20;
+    state.player.hand = cards(['unit_01', 'exploit_31', 'unit_01', 'exploit_31', 'exploit_32', 'unit_02']);
+    const first = NB.State.deployUnit('player', 0);
+    const blocked = NB.State.deployUnit('player', 2);
+    const parallel = NB.State.executeExploit('player', 1);
+    const duplicate = NB.State.executeExploit('player', 3);
+    const second = NB.State.deployUnit('player', 2);
+    const triple = NB.State.executeExploit('player', 4);
+    const third = NB.State.deployUnit('player', 5);
+    NB.Input.startPlayerTurn();
+    const reset = [state.player.summonLimit, state.player.summonsUsed];
+    state.enemy.ram = 8;
+    state.enemy.hand = cards(['unit_01', 'unit_01', 'unit_02', 'exploit_32']);
+    NB.State.wait = async () => true;
+    await NB.AI.startEnemyTurn({ opening: true });
+    return { first, blocked, parallel, duplicate, second, triple, third, reset, enemy: state.enemy.summonsUsed };
+  });
+  expect(result).toEqual({ first: true, blocked: false, parallel: true, duplicate: false,
+    second: true, triple: true, third: true, reset: [1, 0], enemy: 3 });
+});
+
+for (const [choice, consequence] of [
+  ['Publicar com transição comunitária', 'Isa publica as provas'],
+  ['Entregar as provas ao conselho dos bairros', 'O conselho dos bairros recebe as provas'],
+  ['Aceitar a regularização limitada', 'O acordo devolve o endereço de Kairo']
+]) {
+  test(`shows the distinct ending and unlocks New Game Plus after ${choice}`, async ({ page }) => {
+    await page.goto('/');
+    await enterCity(page);
+    await page.evaluate(() => {
+      const save = NB.Save.get();
+      save.city.district = 'archon';
+      save.story = NB.Story.normalize({ started: true, chapter: 5, flags: ['archonDeal'] });
+      NB.Input.startMatch({ mode: 'campaign', boss: NB.Campaign.getNodeById('archon') });
+      NB.State.get().enemy.hp = 0;
+      NB.State.checkWinCondition();
+    });
+    await page.getByRole('button', { name: /Decidir o destino das provas/i }).click();
+    const next = page.locator('#story-options').getByRole('button', { name: 'Continuar', exact: true });
+    await next.click();
+    await page.getByRole('button', { name: choice, exact: true }).click();
+    const epilogue = page.getByRole('dialog', { name: 'O que ficou em Baixa Luz' });
+    await expect(epilogue.locator('#story-line')).toContainText(consequence);
+    while (await next.isVisible()) await next.click();
+    await expect(epilogue.locator('#story-line')).toContainText('Obrigado por jogar');
+    await epilogue.getByRole('button', { name: 'Voltar à tela inicial' }).click();
+    await expect(page.getByText('Novo Jogo+', { exact: true })).toBeVisible();
+    await expect.poll(() => page.evaluate(() => NB.Story.has('epilogue'))).toBe(true);
+  });
+}

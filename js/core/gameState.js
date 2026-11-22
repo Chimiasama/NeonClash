@@ -61,7 +61,8 @@
         field: [null, null, null],
         counterFormation: false,
         hpShield: 0,
-        summonedThisTurn: false
+        summonsUsed: 0,
+        summonLimit: 1
       },
       enemy: {
         hp: enemyMaxHp,
@@ -76,7 +77,8 @@
         field: [null, null, null],
         counterFormation: false,
         hpShield: 0,
-        summonedThisTurn: false
+        summonsUsed: 0,
+        summonLimit: 1
       },
       selectedHandUid: null,
       inspectFieldCard: null,
@@ -166,13 +168,18 @@
     const opp = state[side === 'player' ? 'enemy' : 'player'];
     const card = NB.Cards.CARD_DB[handItem.cardId];
     if (card.kind === 'unit') {
-      if (actor.summonedThisTurn) return { ok: false, reason: 'Limite de 1 Unidade por turno já usado.' };
+      if (actor.summonsUsed >= actor.summonLimit) return { ok: false, reason: 'Limite de invocações deste turno já usado.' };
       const freeSlot = actor.field.findIndex(u => u === null);
       if (freeSlot === -1) return { ok: false, reason: 'Todos os 3 slots de Unidade estão ocupados.' };
       return { ok: true };
     }
     if (actor.ram < card.cost) {
       return { ok: false, reason: `RAM insuficiente (precisa ${card.cost} RAM, você tem ${actor.ram}).` };
+    }
+    const deployLimit = card.effects?.find(effect => effect.type === 'deployLimit')?.value;
+    if (deployLimit && (deployLimit <= actor.summonLimit ||
+        actor.field.filter(unit => !unit).length <= actor.summonLimit - actor.summonsUsed)) {
+      return { ok: false, reason: 'A carta não abre outra invocação neste turno.' };
     }
     if (card.targetType === 'ally_unit' && !actor.field.some(Boolean)) {
       return { ok: false, reason: 'Precisa de pelo menos 1 Unidade aliada em campo.' };
@@ -228,6 +235,7 @@
     if (idx === -1) return false;
     const item = actor.hand[idx];
     const card = NB.Cards.CARD_DB[item.cardId];
+    if (card.kind !== 'unit' || !canPlayHandCard(side, item).ok) return false;
     const slot = forcedSlot >= 0 && actor.field[forcedSlot] === null
       ? forcedSlot
       : actor.field.findIndex(u => u === null);
@@ -237,7 +245,7 @@
     const unit = createFieldUnit(card.id, item.uid, side);
     actor.field[slot] = unit;
     actor.played.push({ cardId: item.cardId, turn: state.turn });
-    actor.summonedThisTurn = true;
+    actor.summonsUsed++;
     actor.ram += card.ramGain;
 
     NB.Audio.playSummon();

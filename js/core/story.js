@@ -83,8 +83,12 @@
       ? 'Mara está no Terminal das 6h às 19h. Fora desse horário, procure Severino na Estação Fantasma.' : '';
   }
 
+  function sceneLocation(scene) {
+    return scene.id === 'epilogue' && NB.Save.get().city.district === 'home' ? 'home' : scene.location;
+  }
+
   function getScenes(location) {
-    return scenes.filter(scene => (!location || scene.location === location) && available(scene));
+    return scenes.filter(scene => (!location || sceneLocation(scene) === location) && available(scene));
   }
 
   function getLines(scene) {
@@ -94,9 +98,9 @@
     if (scene.id !== 'epilogue') return scene.lines;
     const ending = sceneById.ending.choices.find(option => option.id === choice('ending'));
     return [
-      scene.lines[0],
       ending?.reaction || 'O destino das cópias está registrado no diário.',
       ...(story.allies.vex && ending ? [alliedLines[ending.id]] : []),
+      scene.lines[0],
       story.nairTruthEarly ? alliedLines.tell : alliedLines.check,
       ...scene.lines.slice(1)
     ];
@@ -172,6 +176,6 @@
     return '';
   }
 
-  NB.Story = { normalize, get, start, active, matchAccess, pendingDuel, getScenes, available, unavailableSchedule, finish,
+  NB.Story = { normalize, get, start, active, matchAccess, pendingDuel, getScenes, sceneLocation, available, unavailableSchedule, finish,
     remember, getLines, aftermath, applyKiraSupport, finalBattle, eclipseInterference, archonWarning: () => active() && get().chapter === 5 && has('protocol') && !won('archon') ? NB.StoryData.archonWarning : '', has, choice, sceneById, chapters };
 })(window.NB = window.NB || {});

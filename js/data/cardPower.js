@@ -2,7 +2,7 @@
   'use strict';
 
   // Estimates for a contested board. These weights are independent of tactical AI scoring.
-  const version = '0.5';
+  const version = '0.6';
   const weights = Object.freeze({ atk: 1, def: 0.75, ram: 0.9, card: 2.5 });
   const effectValue = {
     atk: effect => Math.abs(effect.value) * weights.atk,
@@ -25,7 +25,8 @@
     destroy: () => 6,
     banish: () => 6.5,
     counterFormation: () => 1.2,
-    overclockCoupler: () => 0.35
+    overclockCoupler: () => 0.35,
+    deployLimit: effect => (effect.value - 1) * 4.5
   };
 
   function effects(card) {

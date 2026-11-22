@@ -539,3 +539,7 @@
   box-shadow: 0 0 14px rgba(0, 240, 255, 0.18);
 }
 .btn-my-deck:active { transform: scale(0.98); }
+
+.offer-preview .inspector-deck-controls,
+.offer-preview .inspector-nav-group { display: none; }
+.offer-preview .inspector-topbar { justify-content: flex-end; }

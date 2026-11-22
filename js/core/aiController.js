@@ -102,7 +102,8 @@
     state.enemyOverclock = null;
     NB.UI.closeVisor();
 
-    state.enemy.summonedThisTurn = false;
+    state.enemy.summonsUsed = 0;
+    state.enemy.summonLimit = 1;
     state.enemy.counterFormation = false;
     state.enemy.overclockCoupler = false;
     state.enemy.overclockRefunded = false;
@@ -121,14 +122,14 @@
     NB.Physics.showToast(opening ? `${bossName} COMEÇA · TURNO 1` : `TURNO DE ${bossName}`, 'var(--magenta)');
     if (!(await NB.State.wait(680))) return;
 
-    // 1) IA baixa Unidade priorizando arquétipo do chefe
-    const freeSlot = state.enemy.field.findIndex(u => u === null);
-    if (freeSlot !== -1 && !state.enemy.summonedThisTurn) {
+    function deployBestUnit() {
+      const freeSlot = state.enemy.field.indexOf(null);
+      if (freeSlot === -1 || state.enemy.summonsUsed >= state.enemy.summonLimit) return false;
       const unitsInHand = state.enemy.hand
         .map(item => ({ item, def: CARD_DB[item.cardId] }))
-        .filter(x => x.def.kind === 'unit');
+        .filter(x => x.def.kind === 'unit' && NB.State.canPlayHandCard('enemy', x.item).ok);
 
-      if (unitsInHand.length > 0) {
+      if (unitsInHand.length) {
         unitsInHand.sort((a, b) => {
           const score = (x) => {
             const effects = x.def.targetType === 'enemy_unit'
@@ -146,25 +147,26 @@
           };
           return score(b) - score(a);
         });
-        NB.State.deployUnit('enemy', unitsInHand[0].item.uid, freeSlot);
-        if (NB.State.checkWinCondition()) return;
-        if (!(await NB.State.wait(680))) return;
+        return NB.State.deployUnit('enemy', unitsInHand[0].item.uid, freeSlot);
       }
+      return false;
     }
 
-    // 2) IA dispara Exploits
-    let safety = 0;
-    while (safety++ < 4) {
-      if (NB.State.checkWinCondition()) return;
-      const playableExploit = pickBestAiExploit();
-      if (!playableExploit) break;
-
-      NB.Physics.showToast(`${bossName} USOU ${CARD_DB[playableExploit.cardId].name.toUpperCase()}!`, 'var(--magenta)');
+    let exploits = 0;
+    while (!NB.State.checkWinCondition()) {
+      if (deployBestUnit()) {
+        if (!(await NB.State.wait(680))) return;
+        continue;
+      }
+      const playable = exploits < 4 ? pickBestAiExploit() : null;
+      if (!playable) break;
+      NB.Physics.showToast(`${bossName} USOU ${CARD_DB[playable.cardId].name.toUpperCase()}!`, 'var(--magenta)');
       if (!(await NB.State.wait(450))) return;
-      NB.State.executeExploit('enemy', playableExploit.uid, playableExploit.targetSlot);
-      if (NB.State.checkWinCondition()) return;
+      if (!NB.State.executeExploit('enemy', playable.uid, playable.targetSlot)) break;
+      exploits++;
       if (!(await NB.State.wait(620))) return;
     }
+    if (NB.State.checkWinCondition()) return;
 
     // 3) Verifica se ARCHON ativa OVERCLOCK (Unite Attack inimigo com Perfuração!)
     const readyEnemySlots = [];

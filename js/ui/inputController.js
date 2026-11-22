@@ -152,7 +152,8 @@
     if (!state.openingPlayerTurnPending) state.turn++;
     state.openingPlayerTurnPending = false;
     state.phase = 'PLAYER_MAIN';
-    state.player.summonedThisTurn = false;
+    state.player.summonsUsed = 0;
+    state.player.summonLimit = 1;
     state.selectedAttackers = [];
     state.overclockUnits = [];
     state.enemyOverclock = null;
@@ -684,7 +685,10 @@
     // Pós-Duelo / Extração de Dados
     const handlePostDuelAction = (action) => {
       const state = NB.State.get();
-      if (action === 'netmap') openNetMap();
+      if (action === 'campaign-ending') {
+        openNetMap();
+        NB.StoryUI.open('ending');
+      } else if (action === 'netmap') openNetMap();
       else if (action === 'title') openTitleScreen();
       else if (action === 'quick') startMatch({ mode: 'quick', boss: NB.Campaign.getRandomBoss(), autoSound: false });
       else if (action === 'rematch') startMatch({ mode: state.mode, boss: state.boss, challenge: state.challenge, autoSound: false });

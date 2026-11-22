@@ -4,8 +4,8 @@
   const pass = { name: 'Passe de ônibus', price: 12, fare: 1, minutes: 2880, trips: 6 };
   const navigator = { name: 'Scanner de rota', price: 125 };
   const merchants = {
-    cards: { name: 'Nara Vira-Fita', location: 'ringArchive', mission: 'Recuperar a caixa de cartas de Nara' },
-    gear: { name: 'Breno Frequência', location: 'garage', mission: 'Recuperar a bancada portátil de Breno' }
+    cards: { name: 'Nara Vira-Fita', approach: 'Você foi abordada por uma vendedora de cartas', portrait: './avatars/nara.webp', line: 'Tenho umas cartas que a Feira só vê de longe. Pode olhar antes de escolher.', location: 'ringArchive', mission: 'Recuperar a caixa de cartas de Nara' },
+    gear: { name: 'Breno Frequência', approach: 'Você foi abordada por um vendedor de equipamentos', portrait: './avatars/breno.webp', line: 'Tô vendendo equipamento revisado. Quer ver o que dá pra encaixar no teu terminal?', location: 'garage', mission: 'Recuperar a bancada portátil de Breno' }
   };
   const stakeCards = ['unit_33', 'unit_34', 'unit_35'];
   const prizes = ['unit_39', 'unit_40', 'unit_41', 'exploit_20'];
@@ -31,6 +31,7 @@
             ? known(id) : ['relay', 'bridge', 'tram', 'navigator'].includes(id)))].slice(0, 3) } : null,
       seen: Object.keys(merchants).filter(kind => listed(raw?.seen, kind)),
       discounts: Object.keys(merchants).filter(kind => listed(raw?.discounts, kind)),
+      missionsStarted: Object.keys(merchants).filter(kind => listed(raw?.missionsStarted, kind)),
       lastWagerDay: Number.isInteger(raw?.lastWagerDay) ? raw.lastWagerDay : -1,
       recoveryMisses: Number.isInteger(raw?.recoveryMisses) ? Math.max(0, Math.min(2, raw.recoveryMisses)) : 0,
       recoveryDay: Number.isInteger(raw?.recoveryDay) ? raw.recoveryDay : -1,
@@ -123,6 +124,15 @@
       ledger().seen.includes(kind) && !ledger().discounts.includes(kind);
   }
 
+  function startMission(kind) {
+    if (!missionAvailable(kind)) return false;
+    if (!ledger().missionsStarted.includes(kind)) {
+      ledger().missionsStarted.push(kind);
+      NB.Save.save();
+    }
+    return true;
+  }
+
   function finishMission(kind, won) {
     if (!missionAvailable(kind)) return '';
     if (won) {
@@ -130,12 +140,12 @@
       const reward = 15;
       state().city.credits += reward;
       NB.Save.save();
-      return `+15 créditos e 10% de desconto com ${merchants[kind].name}.`;
+      return `Missão concluída · ${merchants[kind].mission}. +15 créditos e 10% de desconto com ${merchants[kind].name}.`;
     }
     const fee = Math.min(state().city.credits, 3);
     state().city.credits -= fee;
     NB.Save.save();
-    return `O duelo custou ${fee} créditos. Você pode tentar novamente.`;
+    return `Missão em andamento · ${merchants[kind].mission}. O duelo custou ${fee} créditos. Você pode tentar novamente.`;
   }
 
   function wager() {
@@ -197,5 +207,5 @@
   }
 
   NB.CityCommerce = { normalize, pass, navigator, merchants, activePass, buyPass, createOffer, offer, price,
-    buyOffer, missionAvailable, finishMission, wager, beginWager, finishWager };
+    buyOffer, missionAvailable, startMission, finishMission, wager, beginWager, finishWager };
 })(window.NB = window.NB || {});

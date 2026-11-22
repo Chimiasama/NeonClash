@@ -1,0 +1,83 @@
+id,nome,tipo,raridade,base,bonus,total
+unit_01,"Kuroi-01",unit,,8.8,0,8.8
+unit_02,"Spidey-Drone",unit,,7.95,0,7.95
+unit_03,"Aegis-Wall",unit,,9.05,1.2,10.25
+unit_04,"Ghost-Runner",unit,,6.3,1.2,7.5
+unit_05,"Valkyrie-X",unit,,9.05,0,9.05
+unit_06,"Neon-Hound",unit,,7.3,1.6,8.9
+unit_07,"Chrome-Brute",unit,,12.3,0,12.3
+unit_08,"Data-Wraith",unit,,8.55,2.4,10.95
+unit_09,"Trojan-Mantis",unit,,7.8,0.9,8.7
+unit_10,"Bastion-Core",unit,,9.3,1.2,10.5
+unit_11,"Siphon-Viper",unit,,8.05,0.8,8.85
+unit_12,"Plague-Node",unit,,7.55,2.1,9.65
+unit_13,"Flash-Ronin",unit,,8.05,2.4,10.45
+unit_14,"Malware-Rex",unit,,10.55,0.9,11.45
+exploit_01,"Chip Overclock",exploit,,-4.3,2.4,-1.9
+exploit_02,"Spike Neural",exploit,,-4.3,4.8,0.5
+exploit_03,"Kill-Switch",exploit,,-6.1,5.2,-0.9
+exploit_04,"Patch v9",exploit,,-5.2,3.81,-1.39
+exploit_05,"Bomba EMP",exploit,,-5.2,6.6,1.4
+exploit_06,"Sifão de Memória",exploit,,-4.3,8.05,3.75
+unit_21,"Drone do Viaduto",unit,,6.7,0,6.7
+unit_22,"Moto-Fantasma",unit,,7.05,1.2,8.25
+unit_23,"Guarda da Feira",unit,,8.55,1.2,9.75
+exploit_07,"Recompilar",exploit,,-3.4,0.4,-3
+unit_24,"Mensageira de Fase",unit,,5.3,3.05,8.35
+unit_25,"Sentinela do Canal",unit,,6.55,2.33,8.88
+unit_26,"Escuta do Cais",unit,,6.05,2.2,8.25
+unit_27,"Condutor Bifásico",unit,,8.05,0.5,8.55
+exploit_08,"Passagem de Serviço",exploit,,-4.3,4.5,0.2
+exploit_09,"Cerâmica de Reparo",exploit,,-3.4,0.86,-2.54
+exploit_10,"Ferrugem Óptica",exploit,,-4.3,2.72,-1.58
+exploit_11,"Ponte Dupla",exploit,,-4.3,1.8,-2.5
+unit_28,"Condensador Coral",unit,,6.8,0.34,7.14
+unit_29,"Catadora de Ecos",unit,,6.05,1.5,7.55
+unit_30,"Ferro de Pulso",unit,,7.05,0.45,7.5
+exploit_12,"Ímã de Núcleo",exploit,,-4.3,1.75,-2.55
+exploit_13,"Janela Espectral",exploit,,-4.3,2.81,-1.49
+exploit_14,"Pressão de Sucata",exploit,,-4.3,3.2,-1.1
+exploit_15,"Rastreador de Lote",exploit,,-3.4,2.6,-0.8
+exploit_16,"Filtro de Isolamento",exploit,,-4.3,1.46,-2.84
+unit_31,"Auditora de Rede",unit,,6.8,1,7.8
+unit_32,"Vigia de Turno",unit,,6.05,1.2,7.25
+unit_33,"Estilhaço de Pulso",unit,,5.8,-0.5,5.3
+unit_34,"Anteparo de Rua",unit,,6.3,1.2,7.5
+exploit_17,"Formação de Retaguarda",exploit,,-5.2,1.2,-4
+exploit_18,"Escudo de Emergência",exploit,,-4.3,1.56,-2.74
+unit_35,"Biombo de Sucata",unit,,4.05,0.8,4.85
+unit_36,"Colosso do Viaduto",unit,,9.9,2.8,12.7
+unit_37,"Sonda de Bancada",unit,,5.3,0.92,6.22
+unit_38,"Vigia de Brecha",unit,,3.4,1.92,5.32
+exploit_19,"Curto de Placa",exploit,,-4.3,1.92,-2.38
+unit_39,"Âncora de Malha",unit,Rara,7.55,0.68,8.23
+unit_40,"Operadora de Reserva",unit,Rara,6.05,0.6,6.65
+unit_41,"Recuperador de Pulso",unit,Rara,7.05,0.41,7.46
+exploit_20,"Acoplador de Fase",exploit,Rara,-3.4,0.35,-3.05
+unit_42,"Escudo de Reboque",unit,Comum,5.8,0.9,6.7
+unit_43,"Guarda do Barramento",unit,Rara,7.15,0.9,8.05
+unit_44,"Chassi de Choque",unit,Incomum,7.05,0.34,7.39
+unit_45,"Técnica do Intervalo",unit,Comum,5.05,1.07,6.12
+unit_46,"Marcadora de Trincas",unit,Incomum,5.3,1.99,7.29
+unit_47,"Corta-Sinal",unit,Incomum,5.3,1.4,6.7
+unit_48,"Pulso de Amparo",unit,Incomum,6.05,0.78,6.83
+unit_49,"Observadora de Malha",unit,Incomum,5.05,2.81,7.86
+unit_50,"Muralha Basculante",unit,Incomum,6.9,0.8,7.7
+unit_51,"Estafeta dos Ecos",unit,Rara,5.3,2.55,7.85
+unit_52,"Drone de Bancada",unit,Comum,6.05,1.15,7.2
+unit_53,"Escudeira do Ringue",unit,Incomum,6.8,0.9,7.7
+unit_54,"Ponta de Retorno",unit,Rara,7.3,0.41,7.71
+unit_55,"Sombra de Desvio",unit,Comum,6.8,0.45,7.25
+unit_56,"Cargueira Blindada",unit,Rara,6.65,1.98,8.63
+exploit_21,"Corte de Guarda",exploit,Incomum,-4.3,1.4,-2.9
+exploit_22,"Sonda de Fratura",exploit,Incomum,-4.3,2.71,-1.59
+exploit_23,"Curto de Escudo",exploit,Incomum,-4.3,4.04,-0.26
+exploit_24,"Manutenção Expressa",exploit,Comum,-4.3,1.07,-3.23
+exploit_25,"Eco de Retaguarda",exploit,Rara,-5.2,1.98,-3.22
+exploit_26,"Ponte de Emergência",exploit,Incomum,-4.3,2.6,-1.7
+exploit_27,"Varredura Noturna",exploit,Comum,-3.4,2.81,-0.59
+exploit_28,"Ruído de Vizinhança",exploit,Rara,-5.2,3.74,-1.46
+exploit_29,"Reserva de Peças",exploit,Comum,-4.3,2.29,-2.01
+exploit_30,"Isolamento de Cabine",exploit,Rara,-5.2,2.03,-3.17
+exploit_31,"Canal Paralelo",exploit,Incomum,-6.1,4.5,-1.6
+exploit_32,"Barramento Triplo",exploit,Rara,-8.8,9,0.2

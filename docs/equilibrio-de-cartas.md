@@ -146,3 +146,16 @@ O catálogo tem **80 cartas** e a [régua por carta](poder-das-cartas-v0.5.csv) 
 - **Abordagens vencidas, 4 cartas.** Varredura Noturna e Reserva de Peças entram no grupo comum. Ruído de Vizinhança e Isolamento de Cabine entram no grupo raro. Os sorteios pulam cartas que já foram obtidas.
 
 As novas cartas têm arte procedural, com a mesma imagem por ID em partidas distintas. Raridade explícita aparece no inspetor e nas lojas. O registro 0.4 permanece como referência histórica.
+
+## Invocações extras 0.6
+
+O [registro de 82 cartas](poder-das-cartas-v0.6.csv) passa a estimar 4,5 PP brutos por janela adicional de invocação. O valor inclui o tempo ganho e a RAM que a nova unidade pode gerar. Os limites de três espaços, cartas disponíveis na mão e boot continuam valendo. O poder líquido desconta o Exploit consumido (2,5 PP) e o custo em RAM (0,9 PP por RAM).
+
+| Carta | Limite total | RAM | PP bruto | PP líquido | Obtenção e uso |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Canal Paralelo | 2 | 4 | 4,5 | −1,6 | Incomum, 92 créditos na Feira a partir do cap. 4. Cipher usa uma cópia. |
+| Barramento Triplo | 3 | 7 | 9,0 | +0,2 | Rara, 145 créditos na Feira a partir do cap. 6. Archon usa uma cópia. |
+
+Invocações já realizadas contam no total do turno. O maior limite em vigor prevalece, e um Exploit é recusado se o limite atual ou a ocupação da arena impedirem novas invocações. A IA pontua somente as invocações extras que pode usar com a mão e os espaços atuais.
+
+Em amostras de 100 partidas por confronto, Cipher usou Canal Paralelo em 34 a 39 partidas contra os três decks iniciais, que venceram de 23% a 57%. Contra o perfil de fim de campanha com Overclock, Archon usou Barramento Triplo em 6 de 100 partidas. Esse perfil venceu 54% com a lista original ou ao trocar uma cópia de Chip Overclock por um dos Exploits novos. O piloto de Kairo não encontrou uma oportunidade vantajosa para usar esses Exploits naquela amostra. A bateria separada do Playwright verifica as invocações extras e o uso delas pela IA com RAM, mão e espaço disponíveis.

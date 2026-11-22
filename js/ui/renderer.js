@@ -40,13 +40,9 @@
     document.getElementById('player-hp-bar').style.width = `${(state.player.hp / state.player.maxHp) * 100}%`;
 
     const summonInd = document.getElementById('player-summon-text');
-    if (state.player.summonedThisTurn) {
-      summonInd.textContent = 'UNIDADE: 0/1';
-      summonInd.classList.remove('avail');
-    } else {
-      summonInd.textContent = 'UNIDADE: 1/1';
-      summonInd.classList.add('avail');
-    }
+    const remaining = state.player.summonLimit - state.player.summonsUsed;
+    summonInd.textContent = `UNIDADES: ${remaining}/${state.player.summonLimit}`;
+    summonInd.classList.toggle('avail', remaining > 0);
 
     renderPhaseStripAndButtons(state);
     renderDefensePreview(state);
@@ -125,7 +121,7 @@
       lbl.textContent = 'FASE PRINCIPAL';
       hint.textContent = state.selectedHandUid
         ? 'Toque de novo na carta ou em EXECUTAR'
-        : 'Baixe 1 Unidade (+2 RAM) ou use Exploits';
+        : 'Baixe unidades nos espaços livres ou use Exploits.';
       if (readyCount > 0) {
         btnP.textContent = 'ATACAR';
         btnP.classList.add('amber');
@@ -231,7 +227,7 @@
           side === 'player' &&
           state.phase === 'PLAYER_MAIN' &&
           state.selectedHandUid &&
-          !state.player.summonedThisTurn
+          state.player.summonsUsed < state.player.summonLimit
         ) {
           const hItem = state.player.hand.find(c => c.uid === state.selectedHandUid);
           if (hItem && CARD_DB[hItem.cardId].kind === 'unit') {
@@ -620,6 +616,10 @@
       primaryBtn.dataset.action = 'netmap';
       secondaryBtn.textContent = 'REVANCHE';
       secondaryBtn.dataset.action = 'rematch';
+      if (boss.id === 'archon' && NB.Story.available(NB.Story.sceneById.ending) && NB.Save.get().city.district === 'archon') {
+        primaryBtn.textContent = 'DECIDIR O DESTINO DAS PROVAS';
+        primaryBtn.dataset.action = 'campaign-ending';
+      }
     } else if (state.challenge) {
       const won = winner === 'player';
       panel.classList.add(won ? 'victory' : 'defeat');
@@ -651,11 +651,11 @@
         document.getElementById('go-clue-text').textContent = state.commerceResult;
       } else if (state.routePactWon) {
         clueBox.style.display = 'flex';
-        document.getElementById('go-clue-title').textContent = 'ACORDO DAS ROTAS';
+        document.getElementById('go-clue-title').textContent = 'MISSÃO AVANÇOU · ACORDO DAS ROTAS';
         document.getElementById('go-clue-text').textContent = 'Prêmio: abordagens opcionais. Você pode recusar ou abandonar sem pagar. No capítulo 3, procure Maíra na Casa de Bombas para obter um módulo que desliga as abordagens.';
       } else if (state.hillPathLearned) {
         clueBox.style.display = 'flex';
-        document.getElementById('go-clue-title').textContent = 'ATALHO DA ALINE';
+        document.getElementById('go-clue-title').textContent = 'MISSÃO CONCLUÍDA · ATALHO DA ALINE';
         const card = NB.Cards.CARD_DB[state.residentReward];
         document.getElementById('go-clue-text').textContent = `Aline — ${NB.CityLife.hillPathLesson}` +
           (card ? ` Carta conquistada: ${card.name}.` : '');
