@@ -51,7 +51,7 @@
     return blocks;
   }
 
-  function pickOverclockBlocker(combinedAtk) {
+  function pickOverclockBlocker(combinedAtk, directDamage) {
     const state = NB.State.get();
     const defenders = state.enemy.field
       .map((u, idx) => NB.Combat.canBlock(u, state.enemy) ? { idx, u, isFirewall: NB.Cards.hasKeyword(u, 'FIREWALL') } : null)
@@ -61,7 +61,7 @@
     const fw = defenders.find(d => d.isFirewall);
     if (fw) return fw.idx;
 
-    if (combinedAtk >= state.enemy.hp || combinedAtk >= 6) {
+    if (directDamage >= state.enemy.hp || combinedAtk >= 6) {
       defenders.sort((a, b) => b.u.def - a.u.def);
       return defenders[0].idx;
     }

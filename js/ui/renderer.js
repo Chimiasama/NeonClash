@@ -84,7 +84,7 @@
       if (!attacker || !defender) continue;
       const partner = overclock && Number(attackSlot) === overclock.slots[0]
         ? state.enemy.field[overclock.slots[1]] : null;
-      const attack = partner ? overclock.combinedAtk + NB.Combat.overclockSynergy(attacker, partner)
+      const attack = partner ? NB.Combat.overclockDamage(overclock.combinedAtk, attacker, partner, true)
         : NB.Combat.clashDamage(attacker, defender, state.enemy.field);
       const counter = partner ? defender.atk : NB.Combat.clashDamage(defender, attacker);
       const before = remainingDef.get(defenseSlot) ?? defender.def;
@@ -164,10 +164,10 @@
         const totalAtk = sel.reduce((sum, slot) => sum + NB.CardEffects.attackPower(state.player.field[slot], state.player.field), 0);
         const first = state.player.field[sel[0]];
         const second = state.player.field[sel[1]];
-        hint.textContent = NB.Combat.overclockSynergy(first, second)
-          ? `${totalAtk} ATK · +1 de sinergia contra bloqueador`
-          : `Conectadas! Golpe combinado ${totalAtk} ATK + Perfuração`;
-        btnP.textContent = `DISPARAR (${totalAtk})`;
+        const direct = NB.Combat.overclockDamage(totalAtk, first, second, false);
+        const blocked = NB.Combat.overclockDamage(totalAtk, first, second, true);
+        hint.textContent = `${direct} ao HP sem bloqueio (+1 direto) · ${blocked} se bloqueado${blocked > totalAtk ? ' (+1 pela dupla)' : ''}`;
+        btnP.textContent = 'DISPARAR';
         btnP.classList.add('ram-surge');
         btnP.disabled = false;
       } else {
@@ -180,7 +180,7 @@
     } else if (state.phase === 'PLAYER_DEFENSE') {
       strip.classList.add('mode-defense');
       lbl.textContent = state.enemyOverclock
-        ? `⚡ OVERCLOCK ${state.enemyOverclock.combinedAtk} ATK` : 'FASE DE DEFESA';
+        ? `⚡ OVERCLOCK ${NB.Combat.overclockDamage(state.enemyOverclock.combinedAtk, null, null, false)} sem bloqueio` : 'FASE DE DEFESA';
       if (!state.player.field.some(unit => NB.Combat.canBlock(unit, state.player))) {
         hint.textContent = 'Sem unidades aptas para bloquear. Confirme para continuar.';
       } else if (state.enemyAttackers.length === 1) {
@@ -328,7 +328,7 @@
         ribText = 'ATACAR'; ribCls = 'atk';
       } else if (isEnemyOcMember) {
         const primarySlot = state.enemyOverclock.slots[0];
-        ribText = state.defenseMap[primarySlot] !== undefined ? 'UNITE BLOQ.' : `⚡ UNITE ${state.enemyOverclock.combinedAtk}`;
+        ribText = state.defenseMap[primarySlot] !== undefined ? 'UNITE BLOQ.' : `⚡ UNITE ${NB.Combat.overclockDamage(state.enemyOverclock.combinedAtk, null, null, false)}`;
         ribCls = state.defenseMap[primarySlot] !== undefined ? 'blk' : 'atk';
       } else if (side === 'enemy' && state.phase === 'PLAYER_DEFENSE' && state.enemyAttackers.includes(i)) {
         ribText = state.defenseMap[i] !== undefined ? 'BLOQUEADO' : 'ATACANDO';

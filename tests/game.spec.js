@@ -2383,3 +2383,36 @@ test('offers a tougher optional travel opponent to an equipped late-game deck', 
   expect(await page.evaluate(() => NB.CityLife.getTravelChallenge()?.label)).toBe('Elite · Especialista');
   expect(await page.evaluate(() => NB.CityLife.requiredTravelChallenge())).toBeNull();
 });
+
+test('adds one damage to unblocked Overclock for both sides without stacking affinity', async ({ page }) => {
+  await page.goto('/');
+  const result = await page.evaluate(async () => {
+    NB.State.wait = async () => true;
+    NB.AI.startEnemyTurn = () => {};
+    const run = async (side, affinity, blocked) => {
+      const target = side === 'player' ? 'enemy' : 'player';
+      NB.State.reset({ mode: 'quick', boss: NB.Campaign.NODES[0], openingSide: 'player' });
+      const state = NB.State.get();
+      const unit = id => ({ ...NB.State.createFieldUnit(id, 1, side), atk: 4, def: 12, booting: false });
+      state[side].field = [{ ...unit('unit_01'), affinity: 'pulso' }, { ...unit('unit_01'), affinity }, null];
+      state[target].field = [blocked ? { ...unit('unit_03'), atk: 0, def: 5 } : null, null, null];
+      const hp = state[target].hp;
+      if (side === 'player') {
+        state.player.ram = 3;
+        state.phase = 'PLAYER_OVERCLOCK';
+        state.overclockUnits = [0, 1];
+        await NB.Combat.executeOverclockAttack();
+      } else {
+        state.enemyOverclock = { slots: [0, 1], combinedAtk: 8 };
+        NB.Combat.preparePlayerDefense([0]);
+        await NB.Combat.confirmPlayerDefense();
+      }
+      return hp - state[target].hp;
+    };
+    return [
+      await run('player', 'sombra', false), await run('enemy', 'pulso', false),
+      await run('player', 'pulso', true), await run('enemy', 'sombra', true)
+    ];
+  });
+  expect(result).toEqual([9, 9, 3, 4]);
+});

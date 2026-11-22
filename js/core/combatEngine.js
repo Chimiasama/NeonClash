@@ -48,6 +48,10 @@
     return Number(Boolean(first.affinity && second.affinity && first.affinity !== second.affinity));
   }
 
+  function overclockDamage(base, first, second, blocked) {
+    return base + (blocked ? overclockSynergy(first, second) : 1);
+  }
+
   function clashDamage(attacker, defender, attackingField) {
     const atk = attackingField ? NB.CardEffects.attackPower(attacker, attackingField) : attacker.atk;
     return atk + affinityBonus({ ...attacker, atk }, defender);
@@ -204,7 +208,8 @@
     if (cardElB) cardElB.classList.add('anim-unite-lunge');
 
     // IA escolhe se bloqueia o Overclock (prioriza [FIREWALL] obrigatoriamente)
-    const blockerSlot = NB.AI.pickOverclockBlocker(combinedAtk);
+    const directDamage = overclockDamage(combinedAtk, unitA, unitB, false);
+    const blockerSlot = NB.AI.pickOverclockBlocker(combinedAtk, directDamage);
     const enemyPanel = document.getElementById('enemy-panel');
 
     if (blockerSlot !== -1) {
@@ -217,7 +222,7 @@
 
       const blockerDefBefore = blocker.def;
       const synergy = overclockSynergy(unitA, unitB);
-      const damage = combinedAtk + synergy;
+      const damage = overclockDamage(combinedAtk, unitA, unitB, true);
       const overflowDmg = Math.max(0, damage - blockerDefBefore);
 
       blocker.def -= damage;
@@ -284,7 +289,7 @@
       NB.Physics.fireLaserBeam(slotElB, enemyPanel, '#00F0FF', 9);
       if (!(await NB.State.wait(240))) return;
 
-      const hpDamage = NB.State.applyDirectDamage('enemy', combinedAtk, true, 'OVERCLOCK ');
+      const hpDamage = NB.State.applyDirectDamage('enemy', directDamage, true, 'OVERCLOCK ');
       if (hasDreno && hpDamage > 0) {
         NB.State.applyRamDrain('player', 1);
         NB.UI.renderAll();
@@ -363,7 +368,7 @@
 
       const blockerDefBefore = blocker.def;
       const synergy = overclockSynergy(unitA, unitB);
-      const damage = combinedAtk + synergy;
+      const damage = overclockDamage(combinedAtk, unitA, unitB, true);
       const overflowDmg = Math.max(0, damage - blockerDefBefore);
       blocker.def -= damage;
       const counterDmg = blocker.atk;
@@ -417,7 +422,7 @@
       NB.Physics.fireLaserBeam(slotElA, playerHud, '#FF0055', 9);
       NB.Physics.fireLaserBeam(slotElB, playerHud, '#FFB800', 9);
       if (!(await NB.State.wait(240))) return;
-      const hpDamage = NB.State.applyDirectDamage('player', combinedAtk, false, 'OVERCLOCK ');
+      const hpDamage = NB.State.applyDirectDamage('player', overclockDamage(combinedAtk, unitA, unitB, false), false, 'OVERCLOCK ');
       if (hasDreno && hpDamage > 0) {
         NB.State.applyRamDrain('enemy', 1);
         NB.UI.renderAll();
@@ -513,6 +518,7 @@
     affinityBonus,
     clashDamage,
     overclockSynergy,
+    overclockDamage,
     resolveCombatSequence,
     executeOverclockAttack,
     confirmPlayerAttack,
