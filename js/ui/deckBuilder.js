@@ -271,6 +271,9 @@
       (card.kind === 'unit' ? `UNIDADE · ${NB.Cards.affinityLabel(NB.Save.getAffinity(card.id))} · ` : 'EXPLOIT · ') + card.subtitle.toUpperCase();
     document.getElementById('insp-name').textContent = card.name.toUpperCase();
 
+    const { total: power } = NB.CardPower.byId[card.id];
+    document.getElementById('insp-power').textContent = `Poder estimado · ${power.toLocaleString('pt-BR')} PP`;
+
     const artStage = document.getElementById('insp-art-stage');
     artStage.innerHTML = '';
     artStage.appendChild(NB.Sprites.createArtMarkup(card.id, card.img, card.name));

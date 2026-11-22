@@ -107,11 +107,14 @@
 
     state.enemy.summonedThisTurn = false;
     state.enemy.counterFormation = false;
+    state.enemy.overclockCoupler = false;
+    state.enemy.overclockRefunded = false;
     state.enemy.hpShield = 0;
     state.enemy.field.forEach(u => {
       if (u) {
         u.booting = false;
         u.attacked = false;
+        u.overclockGuard = false;
       }
     });
 

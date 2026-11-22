@@ -2416,3 +2416,41 @@ test('adds one damage to unblocked Overclock for both sides without stacking aff
   });
   expect(result).toEqual([9, 9, 3, 4]);
 });
+
+test('resolves rare Overclock roles and registers power for the entire catalog', async ({ page }) => {
+  await page.goto('/');
+  const result = await page.evaluate(async () => {
+    NB.State.wait = async () => true;
+    NB.AI.startEnemyTurn = () => {};
+    NB.State.reset({ mode: 'quick', boss: NB.Campaign.NODES[0], openingSide: 'player' });
+    const state = NB.State.get();
+    const play = async (leader, partner, blockerDef) => {
+      const unit = (id, uid) => ({ ...NB.State.createFieldUnit(id, uid, 'player'), booting: false });
+      state.player.field = [unit(leader, 1), unit(partner, 2), null];
+      state.enemy.field = blockerDef ? [{ ...unit('unit_03', 3), atk: 4, def: blockerDef }, null, null] : [null, null, null];
+      state.player.ram = 3;
+      state.overclockUnits = [0, 1];
+      state.phase = 'PLAYER_OVERCLOCK';
+      await NB.Combat.executeOverclockAttack();
+    };
+    await play('unit_39', 'unit_40', 10);
+    const shieldAndGuard = [state.player.field[0].def, NB.Combat.canBlock(state.player.field[1], state.player)];
+    NB.Input.startPlayerTurn();
+    const cleared = state.player.field[1].overclockGuard;
+    await play('unit_41', 'unit_40', 5);
+    const refund = state.player.ram;
+    await play('unit_41', 'unit_40', 5);
+    const secondRefund = state.player.ram;
+    state.player.ram = 4;
+    state.player.hand = [{ cardId: 'exploit_20', uid: 20 }];
+    const cast = NB.State.executeExploit('player', 20);
+    await play('unit_39', 'unit_37', 5);
+    const consumedAndDestroyed = !state.player.overclockCoupler && !state.enemy.field[0];
+    const values = Object.keys(NB.Cards.CARD_DB).every(id => Number.isFinite(NB.CardPower.byId[id]?.total));
+    return { shieldAndGuard, cleared, refund, secondRefund, cast, consumedAndDestroyed, values };
+  });
+  expect(result).toEqual({
+    shieldAndGuard: [3, true], cleared: false, refund: 1, secondRefund: 0, cast: true,
+    consumedAndDestroyed: true, values: true
+  });
+});

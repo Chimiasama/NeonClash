@@ -8,7 +8,7 @@
 
   function canBlock(unit, actor) {
     return Boolean(unit && unit.def > 0 && !NB.Cards.hasKeyword(unit, 'ATTACK_ONLY') &&
-      (!unit.attacked || actor.counterFormation || NB.Cards.hasKeyword(unit, 'VIGILANCE')));
+      (!unit.attacked || unit.overclockGuard || actor.counterFormation || NB.Cards.hasKeyword(unit, 'VIGILANCE')));
   }
 
   function blockLimit(unit) {
@@ -48,8 +48,24 @@
     return Number(Boolean(first.affinity && second.affinity && first.affinity !== second.affinity));
   }
 
-  function overclockDamage(base, first, second, blocked) {
-    return base + (blocked ? overclockSynergy(first, second) : 1);
+  function overclockDamage(base, first, second, blocked, coupled = false) {
+    if (!blocked) return base + 1;
+    const neutralPair = Boolean(first.affinity) !== Boolean(second.affinity);
+    return base + (coupled && neutralPair ? 1 : overclockSynergy(first, second));
+  }
+
+  function overclockCounter(leader, blocker) {
+    return Math.max(0, blocker.atk - (NB.Cards.CARD_DB[leader.cardId].overclock?.counterReduction || 0));
+  }
+
+  function finishOverclockBonus(actor, leader, partner, destroyedBlocker) {
+    if (NB.Cards.CARD_DB[partner.cardId].overclock?.partnerBlock) partner.overclockGuard = true;
+    const refund = NB.Cards.CARD_DB[leader.cardId].overclock?.refund;
+    if (destroyedBlocker && refund && !actor.overclockRefunded) {
+      actor.ram += refund;
+      actor.overclockRefunded = true;
+      NB.Physics.showToast(`RECUPERADOR · +${refund} RAM`, 'var(--ram)');
+    }
   }
 
   function clashDamage(attacker, defender, attackingField) {
@@ -172,6 +188,8 @@
 
     // Deduz 3 RAM
     state.player.ram -= NB.Cards.OVERCLOCK_COST;
+    const coupled = state.player.overclockCoupler;
+    state.player.overclockCoupler = false;
     state.overclockUnits = [];
     state.phase = 'COMBAT_ANIM';
 
@@ -221,13 +239,13 @@
       if (!(await NB.State.wait(220))) return;
 
       const blockerDefBefore = blocker.def;
-      const synergy = overclockSynergy(unitA, unitB);
-      const damage = overclockDamage(combinedAtk, unitA, unitB, true);
+      const damage = overclockDamage(combinedAtk, unitA, unitB, true, coupled);
+      const synergy = damage > combinedAtk;
       const overflowDmg = Math.max(0, damage - blockerDefBefore);
 
       blocker.def -= damage;
       // Contra-ataque do bloqueador atinge a unidade líder (unitA)
-      const counterDmg = blocker.atk;
+      const counterDmg = overclockCounter(unitA, blocker);
       unitA.def -= counterDmg;
 
       NB.Audio.playClash();
@@ -253,6 +271,7 @@
       NB.UI.renderAll();
       if (!(await NB.State.wait(360))) return;
 
+      finishOverclockBonus(state.player, unitA, unitB, blocker.def <= 0);
       if (blocker.def <= 0) {
         NB.State.destroyUnit('enemy', blockerSlot, true);
         if (blockerSlotEl) NB.Physics.spawnFloatText(blockerSlotEl, 'DESTRUÍDO!', '#FF0055');
@@ -289,6 +308,7 @@
       NB.Physics.fireLaserBeam(slotElB, enemyPanel, '#00F0FF', 9);
       if (!(await NB.State.wait(240))) return;
 
+      finishOverclockBonus(state.player, unitA, unitB, false);
       const hpDamage = NB.State.applyDirectDamage('enemy', directDamage, true, 'OVERCLOCK ');
       if (hasDreno && hpDamage > 0) {
         NB.State.applyRamDrain('player', 1);
@@ -342,6 +362,8 @@
     const unitA = state.enemy.field[slotA];
     const unitB = state.enemy.field[slotB];
     const combinedAtk = enemyOverclock.combinedAtk;
+    const coupled = state.enemy.overclockCoupler;
+    state.enemy.overclockCoupler = false;
 
     if (!unitA || !unitB) return;
 
@@ -367,11 +389,11 @@
       if (!(await NB.State.wait(220))) return;
 
       const blockerDefBefore = blocker.def;
-      const synergy = overclockSynergy(unitA, unitB);
-      const damage = overclockDamage(combinedAtk, unitA, unitB, true);
+      const damage = overclockDamage(combinedAtk, unitA, unitB, true, coupled);
+      const synergy = damage > combinedAtk;
       const overflowDmg = Math.max(0, damage - blockerDefBefore);
       blocker.def -= damage;
-      const counterDmg = blocker.atk;
+      const counterDmg = overclockCounter(unitA, blocker);
       unitA.def -= counterDmg;
 
       NB.Audio.playClash();
@@ -389,6 +411,7 @@
       NB.UI.renderAll();
       if (!(await NB.State.wait(360))) return;
 
+      finishOverclockBonus(state.enemy, unitA, unitB, blocker.def <= 0);
       if (blocker.def <= 0) {
         NB.State.destroyUnit('player', defSlot, false);
         if (defSlotEl) NB.Physics.spawnFloatText(defSlotEl, 'DESTRUÍDO!', '#FF0055');
@@ -419,6 +442,7 @@
         }
       }
     } else {
+      finishOverclockBonus(state.enemy, unitA, unitB, false);
       NB.Physics.fireLaserBeam(slotElA, playerHud, '#FF0055', 9);
       NB.Physics.fireLaserBeam(slotElB, playerHud, '#FFB800', 9);
       if (!(await NB.State.wait(240))) return;
@@ -519,6 +543,7 @@
     clashDamage,
     overclockSynergy,
     overclockDamage,
+    overclockCounter,
     resolveCombatSequence,
     executeOverclockAttack,
     confirmPlayerAttack,

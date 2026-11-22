@@ -130,7 +130,7 @@ A normalização do save deriva aliados antigos da evidência da conclusão paci
 
 O [guia de equilíbrio PvE](equilibrio-de-cartas.md) reúne a régua de pontos, os níveis de encontro e os resultados das simulações.
 
-O catálogo atual tem **51 cartas**, sendo 32 unidades e 19 Exploits. Cada deck do jogador tem 20 cartas e aceita até duas cópias de cada ID. Há 12 cartas base antes da escolha do deck inicial. A coleção usa ID estável, metadados de arte, descrição e atributos. Cartas novas entram pelo catálogo em `cards.js` e pela respectiva rota de aquisição. IDs têm lacunas históricas e o sufixo maior não representa a contagem.
+O catálogo atual tem **55 cartas**, sendo 35 unidades e 20 Exploits. Cada deck do jogador tem 20 cartas e aceita até duas cópias de cada ID. Há 12 cartas base antes da escolha do deck inicial. A coleção usa ID estável, metadados de arte, descrição e atributos. Cartas novas entram pelo catálogo em `cards.js` e pela respectiva rota de aquisição. IDs têm lacunas históricas e o sufixo maior não representa a contagem.
 
 1. Cada lado começa com 0 RAM. Kairo tem 20 HP. A partida distribui quatro cartas iniciais por lado. A mão comporta seis cartas, com descarte quando uma compra excede esse limite. Quando o deck fica vazio, o descarte é embaralhado para continuar comprando. A unidade atingida pelo Kill-Switch vai para a área de removidas e fica fora da reciclagem. O botão LOG e a tela de resultado permitem consultar as cartas que cada lado jogou, o descarte atual e as cartas removidas. Cada entrada abre a arte e os atributos de catálogo.
 2. Em seu turno, Kairo pode invocar uma unidade se houver posição livre, obter a RAM da carta e usar Exploits enquanto puder pagar. Uma unidade normalmente passa por boot antes de poder atacar. O turno seguinte libera as unidades e compra uma carta. A IA segue fluxo de compra, invocação, Exploits e ataque, com perfil do oponente.
@@ -227,7 +227,7 @@ A Galeria registra o quadro quando sua imagem termina de carregar e a moldura ap
 
 ## Conteúdo atual e metas
 
-O jogo disponível tem 51 cartas, 10 bairros, 23 locais, 34 personagens com função no jogo, quatro chefes, quatro desafios de arquétipo e 37 cenas da investigação. O [plano de expansão](plano-expansao.md) descreve a meta de 500 cartas, sendo 495 encontráveis e cinco secretas de missão. Os roteiros de construção e descrições de moradores nos demais arquivos de `docs/` registram escopo planejado além dos recursos já descritos aqui.
+O jogo disponível tem 55 cartas, 10 bairros, 23 locais, 34 personagens com função no jogo, quatro chefes, quatro desafios de arquétipo e 37 cenas da investigação. O [plano de expansão](plano-expansao.md) descreve a meta de 500 cartas, sendo 495 encontráveis e cinco secretas de missão. Os roteiros de construção e descrições de moradores nos demais arquivos de `docs/` registram escopo planejado além dos recursos já descritos aqui.
 
 O lote piloto usa arte procedural. Condensador Coral, Ímã de Núcleo e Janela Espectral são vendidos na Feira. Catadora de Ecos, Ferro de Pulso e Pressão de Sucata são prêmios das primeiras vitórias sobre Giba, Aline e Nanda, respectivamente. Os três adversários também usam cartas do lote.
 

@@ -84,9 +84,9 @@
       if (!attacker || !defender) continue;
       const partner = overclock && Number(attackSlot) === overclock.slots[0]
         ? state.enemy.field[overclock.slots[1]] : null;
-      const attack = partner ? NB.Combat.overclockDamage(overclock.combinedAtk, attacker, partner, true)
+      const attack = partner ? NB.Combat.overclockDamage(overclock.combinedAtk, attacker, partner, true, state.enemy.overclockCoupler)
         : NB.Combat.clashDamage(attacker, defender, state.enemy.field);
-      const counter = partner ? defender.atk : NB.Combat.clashDamage(defender, attacker);
+      const counter = partner ? NB.Combat.overclockCounter(attacker, defender) : NB.Combat.clashDamage(defender, attacker);
       const before = remainingDef.get(defenseSlot) ?? defender.def;
       const bonuses = partner ? { attack: 0, counter: 0 } : NB.Combat.clashAffinity(attacker, defender, state.enemy.field);
       const pierce = partner ? Math.max(0, attack - before) : 0;
@@ -165,8 +165,8 @@
         const first = state.player.field[sel[0]];
         const second = state.player.field[sel[1]];
         const direct = NB.Combat.overclockDamage(totalAtk, first, second, false);
-        const blocked = NB.Combat.overclockDamage(totalAtk, first, second, true);
-        hint.textContent = `${direct} ao HP sem bloqueio (+1 direto) · ${blocked} se bloqueado${blocked > totalAtk ? ' (+1 pela dupla)' : ''}`;
+        const blocked = NB.Combat.overclockDamage(totalAtk, first, second, true, state.player.overclockCoupler);
+        hint.textContent = `${direct} ao HP sem bloqueio (+1 direto) · ${blocked} se bloqueado${blocked > totalAtk ? ' (+1 de sinergia)' : ''}`;
         btnP.textContent = 'DISPARAR';
         btnP.classList.add('ram-surge');
         btnP.disabled = false;

@@ -37,7 +37,11 @@
     { id: 'unit_07', price: 135, chapter: 4 },
     { id: 'unit_10', price: 110, chapter: 4 },
     { id: 'unit_14', price: 160, chapter: 5 },
-    { id: 'exploit_05', price: 95, chapter: 5 }
+    { id: 'exploit_05', price: 95, chapter: 5 },
+    { id: 'unit_39', price: 110, chapter: 3 },
+    { id: 'unit_40', price: 95, chapter: 3 },
+    { id: 'unit_41', price: 120, chapter: 4 },
+    { id: 'exploit_20', price: 75, chapter: 3 }
   ];
 
   const traces = {

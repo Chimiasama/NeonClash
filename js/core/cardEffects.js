@@ -128,6 +128,8 @@
         NB.State.drawCard(side);
         if (bonus) NB.State.drawCard(side);
         if (top && side === 'player') NB.Physics.showToast(`VARREDURA · ${NB.Cards.CARD_DB[top.cardId].name}${bonus ? ' · COMPRA EXTRA' : ''}`, 'var(--cyan)');
+      } else if (type === 'overclockCoupler') {
+        actor.overclockCoupler = true;
       } else if (type === 'counterFormation') {
         actor.counterFormation = true;
       } else if (type === 'hpShield') {
@@ -181,6 +183,13 @@
       if (type === 'direct' || type === 'discardDamage') {
         const damage = type === 'direct' ? value : discardDamage(actor, effect);
         return sum + (damage >= opponent.hp ? 100 : damage * 1.3);
+      }
+      if (type === 'overclockCoupler') {
+        const ready = actor.field.filter(unit => NB.Combat.canAttack(unit, actor.field));
+        return sum + (!actor.overclockCoupler && (side === 'player' || state.boss?.canOverclock) &&
+          actor.ram >= card.cost + NB.Cards.OVERCLOCK_COST &&
+          ready.some(unit => unit.affinity) && ready.some(unit => !unit.affinity) &&
+          opponent.field.some(unit => NB.Combat.canBlock(unit, opponent)) ? 1 : 0);
       }
       if (type === 'counterFormation') {
         const candidates = actor.field.filter(unit => NB.Combat.canAttack(unit, actor.field) &&

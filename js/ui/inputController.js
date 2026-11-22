@@ -125,11 +125,14 @@
     state.selectedHandUid = null;
     state.pendingTarget = null;
     state.player.counterFormation = false;
+    state.player.overclockCoupler = false;
+    state.player.overclockRefunded = false;
     state.player.hpShield = 0;
     state.player.field.forEach(u => {
       if (u) {
         u.booting = false;
         u.attacked = false;
+        u.overclockGuard = false;
       }
     });
 

@@ -123,3 +123,16 @@ A [planilha CSV](equilibrio-simulacoes-v0.2.csv) contém as taxas por iniciativa
 Execute `node scripts/simular-combates.mjs 200` na raiz para repetir a bateria 0.3. Para repetir a versão 0.2, use o simulador do commit `a5d2bcd` com 400 partidas por cenário. A saída é CSV e a quantidade deve ser par. A simulação usa o motor real de regras, a IA dos NPCs, os decks reais e sementes fixas. O piloto de Kairo escolhe cartas e bloqueios por heurística. Na matriz principal ele ataca com todas as unidades prontas e reserva os testes de Overclock para cenários separados. Interfaces, animações e persistência são simuladas em memória. A partida é encerrada para análise após 30 ciclos de Kairo e sem desfecho conta como ausência de vitória. As taxas são referências comparativas do piloto, e medir dificuldade humana exige playtest.
 
 Referências de design de cartas e restrições por ambiente em [Magic, New World Order](https://magic.wizards.com/en/news/making-magic/new-world-order-2011-12-05), [Magic, listas de restrição](https://magic.wizards.com/en/banned-restricted-list) e [Hearthstone, ajuste de Vol’jin](https://hearthstone.blizzard.com/en-us/news/24008697/28-2-patch-notes).
+
+## Registro de cartas 0.4
+
+A [tabela por carta](poder-das-cartas-v0.4.csv) contém base, bônus e total estimado para as 55 cartas do catálogo. O módulo `NB.CardPower` calcula o registro a partir das fichas e mostra o total no Inspetor de Meu Deck. Os valores são hipóteses de uma mesa disputada, sem alterar a IA ou o nível do encontro. Um Exploit pode ter valor líquido negativo e ainda resolver uma situação decisiva. Por exemplo, a estimativa do Acoplador inclui a chance de a dupla certa ser bloqueada, o custo da carta e o custo de 1 RAM.
+
+| Carta rara | Bônus de Overclock estimado | Total | Feira |
+| --- | ---: | ---: | --- |
+| Âncora de Malha | 0,68 PP | 8,23 PP | Cap. 4 · 110 cr |
+| Operadora de Reserva | 0,60 PP | 6,65 PP | Cap. 4 · 95 cr |
+| Recuperador de Pulso | 0,41 PP | 7,46 PP | Cap. 5 · 120 cr |
+| Acoplador de Fase | 0,35 PP | −3,05 PP | Cap. 4 · 75 cr |
+
+Na Âncora, conte 2 DEF preservadas ponderadas pela frequência de liderar um Overclock bloqueado. Na Operadora, conte uma oportunidade parcial de bloqueio. O Recuperador devolve 1 RAM se liderar e destruir o bloqueador, no máximo uma vez por turno. O Acoplador vale para o próximo Overclock do turno e só muda a sinergia de uma dupla Neutra + afinidade que seja bloqueada. O bônus de dano direto segue valendo apenas no ramo sem bloqueio. Os quatro efeitos precisam de testes de desempenho em decks dedicados antes de revisar a régua.

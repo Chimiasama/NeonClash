@@ -522,6 +522,23 @@
     'Causa 2 de dano à DEF de uma unidade inimiga. Pode destruí-la se ela tiver 2 DEF ou menos.',
     [{ type: 'damage', target: 'selected', value: 2 }]);
 
+  addUnit('unit_39', 'Âncora de Malha', 'Liderança de Overclock', 2, 5, 'malha', [],
+    'Ao liderar um Overclock bloqueado, recebe 2 a menos de dano do contra-ataque.');
+  CARD_DB.unit_39.overclock = { counterReduction: 2 };
+  addUnit('unit_40', 'Operadora de Reserva', 'Retaguarda de Overclock', 2, 3, 'sombra', [],
+    'Como segunda unidade de um Overclock, pode bloquear até o início do seu próximo turno.');
+  CARD_DB.unit_40.overclock = { partnerBlock: true };
+  addUnit('unit_41', 'Recuperador de Pulso', 'Recarga de Overclock', 3, 3, 'pulso', [],
+    'Ao liderar um Overclock que destrói o bloqueador, recupera 1 RAM. Uma vez por turno.');
+  CARD_DB.unit_41.overclock = { refund: 1 };
+  addExploit('exploit_20', 'Acoplador de Fase', 'Sinergia de Overclock', 1, 'none',
+    'No próximo Overclock deste turno, uma unidade Neutra e outra com afinidade podem ganhar o bônus contra um bloqueador.',
+    [{ type: 'overclockCoupler' }]);
+  for (const id of ['unit_39', 'unit_40', 'unit_41', 'exploit_20']) {
+    CARD_DB[id].rarity = 'rare';
+    CARD_DB[id].proceduralOnly = true;
+  }
+
   for (const id of ['unit_28', 'unit_29', 'unit_30', 'exploit_12', 'exploit_13', 'exploit_14', 'exploit_15', 'exploit_16', 'unit_31', 'unit_32', 'unit_33', 'unit_34', 'exploit_17', 'exploit_18', 'unit_37', 'unit_38', 'exploit_19']) {
     CARD_DB[id].proceduralOnly = true;
   }
