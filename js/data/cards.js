@@ -63,7 +63,7 @@
       short: 'DRN',
       icon: '⟐',
       color: '#E879F9',
-      desc: 'Ao causar dano direto ao HP do hacker inimigo, rouba 1 de RAM dele para você.'
+      desc: 'Ao causar dano direto ao HP, transfere até 1 RAM do adversário para quem controla a unidade.'
     },
     RESONANCE: { tag: 'RESSONÂNCIA', short: 'RES', icon: '◈', color: '#88e8fc',
       desc: 'Ativa com outra unidade aliada da mesma afinidade não neutra.' },
@@ -104,7 +104,7 @@
       img: './cards/unit_02.webp',
       accent: '#39FF14',
       ability: 'EXTRA_RAM',
-      lore: 'Rasteja pelos dutos de fibra ótica desviando energia residual direto para o deck de Kairo.',
+      lore: 'Rasteja pelos dutos de fibra ótica desviando energia residual para alimentar o deck de quem controla o drone.',
       desc: 'Coletor de pacotes: gera +3 RAM total ao entrar no campo para acelerar Exploits e Overclock.'
     },
     unit_03: {
@@ -120,7 +120,7 @@
       img: './cards/unit_03.webp',
       accent: '#38BDF8',
       lore: 'Um protocolo militar roubado que projeta escudos hexagonais impenetráveis no ciberespaço.',
-      desc: '[FIREWALL] Muralha blindada de 7 DEF que obriga o inimigo a enfrentá-la antes de atingir seu HP. Gera +2 RAM.'
+      desc: '[FIREWALL] Muralha blindada de 7 DEF com prioridade para interceptar ataques e proteger o HP de quem controla a unidade. Gera +2 RAM.'
     },
     unit_04: {
       id: 'unit_04',
@@ -241,7 +241,7 @@
       img: './cards/unit_11.webp',
       accent: '#E879F9',
       lore: 'Serpente cibernética que crava presas de fibra ótica nos terminais rivais para sugar ciclos de RAM.',
-      desc: '[DRENO] Ao atingir o HP do hacker inimigo diretamente, rouba 1 de RAM dele para você. Gera +2 RAM.'
+      desc: '[DRENO] Ao causar dano direto ao HP, transfere até 1 RAM do adversário para quem controla a unidade. Gera +2 RAM.'
     },
     unit_12: {
       id: 'unit_12',
@@ -388,7 +388,7 @@
     unit_23: {
       ...CARD_DB.unit_03, id: 'unit_23', name: 'Guarda da Feira', atk: 3, def: 5, fallbackArt: 'unit_03', img: './cards/guarda-feira.webp',
       lore: 'A associação dos feirantes programou esta unidade para proteger suas bancas.',
-      desc: '[FIREWALL] Atrai confrontos e protege o HP de Kairo. Gera +2 RAM.'
+      desc: '[FIREWALL] Tem prioridade para interceptar ataques quando pode bloquear, protegendo o HP de quem controla a unidade. Gera +2 RAM.'
     }
   });
 
@@ -498,7 +498,7 @@
     'Até o início do seu próximo turno, unidades aliadas que atacaram podem bloquear se forem capazes de defender.',
     [{ type: 'counterFormation' }]);
   addExploit('exploit_18', 'Escudo de Emergência', 'Proteção', 2, 'none',
-    'Absorve até 4 de dano ao seu HP até o início do seu próximo turno. O escudo não acumula.',
+    'Protege quem joga esta carta, absorvendo até 4 de dano ao HP até o início do próximo turno desse lado. O escudo não acumula.',
     [{ type: 'hpShield', value: 4 }]);
 
   addUnit('unit_35', 'Biombo de Sucata', 'Muralha comum', 0, 3, 'malha', ['GUARD_ONLY', 'MULTI_BLOCK'],

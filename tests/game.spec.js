@@ -2683,3 +2683,19 @@ test('continues an existing adventure or resets it only after confirmation', asy
   await page.getByRole('button', { name: 'Escolher Equilibrado' }).click();
   await expect(page.getByRole('dialog', { name: 'Prólogo de Kairo' })).toBeVisible();
 });
+
+test('describes the Feira guard relative to its controller on either side of the duel', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    NB.Input.startMatch({ mode: 'campaign', boss: NB.Campaign.getNodeById('cipher') });
+    const state = NB.State.get();
+    state.player.field[0] = NB.State.createFieldUnit('unit_23', 1, 'player');
+    state.enemy.field[0] = NB.State.createFieldUnit('unit_23', 2, 'enemy');
+  });
+  for (const side of ['enemy', 'player']) {
+    await page.evaluate(side => NB.UI.openVisorForField(side, 0), side);
+    await expect(page.locator('#visor-title')).toHaveText('GUARDA DA FEIRA');
+    await expect(page.locator('#visor-desc')).toContainText('HP de quem controla a unidade');
+    await expect(page.locator('#visor-desc')).not.toContainText(/Kairo|Cipher/i);
+  }
+});
